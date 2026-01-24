@@ -47,15 +47,17 @@
     <div class="banner-section">
       <van-swipe :autoplay="3000" indicator-color="#ffd700">
         <van-swipe-item v-for="(banner, index) in banners" :key="index">
-          <img :src="banner" class="banner-img" />
+          <img :src="banner" class="banner-img" @error="handleImageError" @load="handleImageLoad" />
         </van-swipe-item>
       </van-swipe>
     </div>
 
     <!-- 邀请好友横幅 -->
     <div class="invite-banner" @click="handleInvite">
-      <van-icon name="volume-o" size="18" color="#FDB927" />
-      <span>Invite friends and get ₱188 cash bonus instantly</span>
+      <van-icon name="volume-o" size="18" color="#552583" />
+      <div class="notice-marquee">
+        <div class="notice-text">{{ noticeText }}</div>
+      </div>
     </div>
 
     <!-- Jackpot 显示 -->
@@ -144,6 +146,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
+import { userApi } from '@/api/modules/user'
+import type { AdItem, NoticeItem } from '@/api/modules/user'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -162,11 +166,15 @@ const username = computed(() => userStore.userInfo?.username || 'Guest')
 const balance = computed(() => (userStore.userInfo ? '0.00' : '0.00'))
 
 // 轮播图
-const banners = ref([
-  'https://via.placeholder.com/750x360/FF6B00/FFFFFF?text=Daily+Mystery+Bonus',
-  'https://via.placeholder.com/750x360/FFD700/000000?text=Welcome+Bonus',
-  'https://via.placeholder.com/750x360/1E90FF/FFFFFF?text=VIP+Rewards',
-])
+const banners = ref<string[]>([])
+const adList = ref<AdItem[]>([])
+
+// 公告列表
+const noticeList = ref<NoticeItem[]>([])
+const noticeText = computed(() => {
+  if (noticeList.value.length === 0) return 'Welcome to LK698.COM'
+  return noticeList.value.map((notice) => notice.content).join('  •  ')
+})
 
 // Jackpot 数字
 const jackpotDigits = computed(() => {
@@ -293,8 +301,60 @@ const handleService = () => {
   showToast('联系客服')
 }
 
+// 获取广告列表
+const fetchAdList = async () => {
+  try {
+    const res = await userApi.getAdList()
+    console.log('广告列表响应:', res)
+
+    // 响应拦截器已经处理过，直接返回data部分
+    if (res?.list && res.list.length > 0) {
+      adList.value = res.list
+      banners.value = res.list.map((ad) => ad.image)
+      console.log('Banner图片列表:', banners.value)
+    } else {
+      console.log('接口没有返回数据，使用默认图片')
+      // 如果接口没有数据，使用默认图片
+      banners.value = [
+        'https://via.placeholder.com/750x360/552583/FDB927?text=Welcome+Bonus',
+        'https://via.placeholder.com/750x360/FDB927/552583?text=Daily+Rewards',
+        'https://via.placeholder.com/750x360/552583/FFFFFF?text=VIP+Club',
+      ]
+    }
+  } catch (error) {
+    console.error('获取广告列表失败:', error)
+    // 失败时使用默认图片
+    banners.value = [
+      'https://via.placeholder.com/750x360/552583/FDB927?text=Welcome+Bonus',
+      'https://via.placeholder.com/750x360/FDB927/552583?text=Daily+Rewards',
+      'https://via.placeholder.com/750x360/552583/FFFFFF?text=VIP+Club',
+    ]
+  }
+}
+
+// 获取公告列表
+const fetchNoticeList = async () => {
+  try {
+    const res = await userApi.getNoticeList()
+    console.log('公告列表响应:', res)
+
+    if (res?.list && res.list.length > 0) {
+      noticeList.value = res.list
+    }
+  } catch (error) {
+    console.error('获取公告列表失败:', error)
+  }
+}
+
 // Jackpot 数字滚动效果
 onMounted(() => {
+  // 获取广告列表
+  fetchAdList()
+
+  // 获取公告列表
+  fetchNoticeList()
+
+  // Jackpot 滚动
   setInterval(() => {
     jackpotValue.value += Math.floor(Math.random() * 100)
   }, 2000)
@@ -434,7 +494,7 @@ onMounted(() => {
     }
   }
 
-  // 邀请好友横幅
+  // 邀请好友横幅（公告跑马灯）
   .invite-banner {
     margin: 0 16px 12px;
     padding: 12px 16px;
@@ -446,14 +506,36 @@ onMounted(() => {
     gap: 8px;
     cursor: pointer;
     transition: $transition-base;
+    overflow: hidden;
 
     &:active {
       background: rgba(253, 185, 39, 0.2);
     }
 
-    span {
-      color: $secondary-color;
-      font-size: 13px;
+    .notice-marquee {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      height: 20px;
+
+      .notice-text {
+        display: inline-block;
+        white-space: nowrap;
+        color: $primary-color;
+        font-size: 13px;
+        font-weight: 500;
+        animation: marquee 20s linear infinite;
+        padding-left: 100%;
+      }
+    }
+  }
+
+  @keyframes marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-100%);
     }
   }
 

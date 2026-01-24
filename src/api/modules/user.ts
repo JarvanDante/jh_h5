@@ -11,15 +11,14 @@ export interface LoginParams {
 export interface RegisterParams {
   username: string
   password: string
-  confirmPassword: string
-  inviteCode?: string
+  time: string // 时间戳字符串
+  code: string
 }
 
 // 快速注册参数
 export interface QuickRegisterParams {
-  username: string
-  password: string
-  invite_code?: string
+  time: string // 时间戳字符串
+  domain: string
 }
 
 // 登录响应
@@ -35,6 +34,49 @@ export interface RegisterResponse {
   message?: string
 }
 
+// 验证码响应
+export interface CaptchaResponse {
+  code: string
+  image: string // base64 图片
+}
+
+// 广告项
+export interface AdItem {
+  before_login: number
+  image: string
+  name: string
+  position: number
+  sort: number
+  type: number
+  url: string
+}
+
+// 广告列表响应
+export interface AdListResponse {
+  code: number
+  msg: string
+  data: {
+    list: AdItem[]
+  }
+}
+
+// 公告项
+export interface NoticeItem {
+  content: string
+  created_at: string
+  title: string
+  url: string
+}
+
+// 公告列表响应
+export interface NoticeListResponse {
+  code: number
+  msg: string
+  data: {
+    list: NoticeItem[]
+  }
+}
+
 // 用户 API
 export const userApi = {
   // 登录
@@ -42,9 +84,14 @@ export const userApi = {
     return request.post('/user/login', data)
   },
 
+  // 获取验证码
+  getCaptcha(time: number): Promise<CaptchaResponse> {
+    return request.get(`/frontend/app/captcha?time=${time}`)
+  },
+
   // 注册
   register(data: RegisterParams): Promise<RegisterResponse> {
-    return request.post('/user/register', data)
+    return request.post('/frontend/app/register', data)
   },
 
   // 快速注册
@@ -53,12 +100,23 @@ export const userApi = {
   },
 
   // 获取用户信息
-  getUserInfo(): Promise<UserInfo> {
-    return request.get('/user/info')
+  getUserInfo(token?: string): Promise<UserInfo> {
+    const url = token ? `/frontend/app/user-info?token=${token}` : '/frontend/app/user-info'
+    return request.get(url)
   },
 
   // 登出
   logout(): Promise<void> {
     return request.post('/user/logout')
+  },
+
+  // 获取广告列表
+  getAdList(): Promise<AdListResponse> {
+    return request.get('/frontend/app/ad-list')
+  },
+
+  // 获取公告列表
+  getNoticeList(): Promise<NoticeListResponse> {
+    return request.get('/frontend/app/notice-list')
   },
 }

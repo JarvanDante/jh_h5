@@ -9,7 +9,7 @@
       <!-- Logo 区域 -->
       <div class="logo-section">
         <div class="logo-icon">🎰</div>
-        <div class="logo-text">JILIEVO.CC</div>
+        <div class="logo-text">LK698.COM</div>
       </div>
 
       <!-- 注册表单 -->
@@ -58,45 +58,44 @@
             />
           </div>
 
-          <!-- 邀请码（可选） -->
-          <div class="form-item">
+          <!-- 验证码 -->
+          <div class="form-item captcha-item">
+            <span class="required">*</span>
             <van-field
-              v-model="formData.inviteCode"
-              name="inviteCode"
-              placeholder="Invite code (optional)"
+              v-model="formData.captchaCode"
+              name="captchaCode"
+              placeholder="Captcha code"
+              :rules="[{ required: true, message: 'Please enter captcha code' }]"
             />
+            <div class="captcha-image" @click="refreshCaptcha">
+              <img v-if="captchaImage" :src="captchaImage" alt="Captcha" />
+              <span v-else class="captcha-loading">Loading...</span>
+            </div>
           </div>
 
           <!-- 协议勾选 -->
           <div class="agreement-section">
             <van-checkbox v-model="agreed" icon-size="18px">
               <span class="agreement-text">
-                I am 18 years old and agree to the terms & conditions of JILIEVO.CLUB
+                I am 18 years old and agree to the terms & conditions of LK698.COM
               </span>
             </van-checkbox>
           </div>
 
           <!-- 注册按钮 -->
           <div class="submit-button">
-            <van-button
-              block
-              :loading="loading"
-              :disabled="!agreed"
-              native-type="submit"
-              class="register-btn"
-            >
+            <!-- 普通注册按钮（黄色） -->
+            <van-button block :loading="loading" native-type="submit" class="register-btn">
               <span class="btn-text">Register</span>
               <span class="btn-icon">🎁</span>
             </van-button>
-          </div>
 
-          <!-- 快速注册按钮 -->
-          <div class="submit-button">
+            <!-- 快速注册按钮（紫色边框） -->
             <van-button
               block
-              :loading="loading"
-              :disabled="!agreed"
-              native-type="submit"
+              plain
+              :loading="quickLoading"
+              @click="handleQuickRegister"
               class="quick-register-btn"
             >
               <span class="btn-text">QuickRegister</span>
@@ -147,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
@@ -158,18 +157,49 @@ const route = useRoute()
 const userStore = useUserStore()
 
 const loading = ref(false)
+const quickLoading = ref(false)
 const agreed = ref(false)
+const captchaImage = ref('')
+const captchaTime = ref('') // 改为字符串类型
 
 const formData = reactive({
   username: '',
   password: '',
   confirmPassword: '',
-  inviteCode: '',
+  captchaCode: '',
 })
 
 // 验证密码是否一致
 const validatePassword = () => {
   return formData.password === formData.confirmPassword
+}
+
+// 获取当前域名
+const getCurrentDomain = () => {
+  return window.location.hostname
+}
+
+// 获取微秒时间戳（字符串）
+const getMicrosecondTimestamp = () => {
+  return String(Date.now() * 1000)
+}
+
+// 获取验证码
+const getCaptcha = async () => {
+  try {
+    captchaTime.value = getMicrosecondTimestamp()
+
+    // 直接使用图片 URL
+    captchaImage.value = `${import.meta.env.VITE_API_BASE_URL}/frontend/app/captcha?time=${captchaTime.value}`
+  } catch (error) {
+    console.error('Failed to get captcha:', error)
+    showToast('Failed to load captcha')
+  }
+}
+
+// 刷新验证码
+const refreshCaptcha = () => {
+  getCaptcha()
 }
 
 const onClickLeft = () => {
@@ -180,29 +210,40 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+// 普通注册
 const onSubmit = async () => {
   if (!agreed.value) {
     showToast('Please agree to the terms & conditions')
     return
   }
 
+  if (!formData.captchaCode) {
+    showToast('Please enter captcha code')
+    return
+  }
+
   try {
     loading.value = true
 
-    // 调用快速注册接口
-    const res = await userApi.quickRegister({
+    // 调用注册接口
+    const res = await userApi.register({
       username: formData.username,
       password: formData.password,
-      invite_code: formData.inviteCode || undefined,
+      time: captchaTime.value,
+      code: formData.captchaCode,
     })
 
-    // 保存 token 和用户信息
+    // 1. 先保存 token
     if (res.token) {
       userStore.setToken(res.token)
-    }
 
-    if (res.userInfo) {
-      userStore.setUserInfo(res.userInfo)
+      // 2. 然后请求用户信息接口
+      try {
+        const userInfo = await userApi.getUserInfo(res.token)
+        userStore.setUserInfo(userInfo)
+      } catch (error) {
+        console.error('Failed to get user info:', error)
+      }
     }
 
     showToast(res.message || 'Registration successful!')
@@ -215,8 +256,54 @@ const onSubmit = async () => {
     console.error('Registration failed:', error)
     const errorMsg = error?.response?.data?.message || error?.message || 'Registration failed'
     showToast(errorMsg)
+    // 刷新验证码
+    refreshCaptcha()
   } finally {
     loading.value = false
+  }
+}
+
+// 快速注册
+const handleQuickRegister = async () => {
+  if (!agreed.value) {
+    showToast('Please agree to the terms & conditions')
+    return
+  }
+
+  try {
+    quickLoading.value = true
+
+    // 调用快速注册接口
+    const res = await userApi.quickRegister({
+      time: getMicrosecondTimestamp(),
+      domain: getCurrentDomain(),
+    })
+
+    // 1. 先保存 token
+    if (res.token) {
+      userStore.setToken(res.token)
+
+      // 2. 然后请求用户信息接口
+      try {
+        const userInfo = await userApi.getUserInfo(res.token)
+        userStore.setUserInfo(userInfo)
+      } catch (error) {
+        console.error('Failed to get user info:', error)
+      }
+    }
+
+    showToast(res.message || 'Quick registration successful!')
+
+    // 跳转到首页
+    setTimeout(() => {
+      router.replace('/home')
+    }, 1000)
+  } catch (error: any) {
+    console.error('Quick registration failed:', error)
+    const errorMsg = error?.response?.data?.message || error?.message || 'Quick registration failed'
+    showToast(errorMsg)
+  } finally {
+    quickLoading.value = false
   }
 }
 
@@ -227,6 +314,11 @@ const handleSocialLogin = (platform: string) => {
 const goToLogin = () => {
   router.push('/login')
 }
+
+// 页面加载时获取验证码
+onMounted(() => {
+  getCaptcha()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -343,6 +435,41 @@ const goToLogin = () => {
             }
           }
         }
+
+        // 验证码输入框
+        &.captcha-item {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+
+          :deep(.van-field) {
+            flex: 1;
+          }
+
+          .captcha-image {
+            width: 120px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: $border-radius-md;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+
+            .captcha-loading {
+              color: rgba(255, 255, 255, 0.5);
+              font-size: 12px;
+            }
+          }
+        }
       }
 
       // 协议勾选
@@ -436,34 +563,29 @@ const goToLogin = () => {
             font-size: 20px;
           }
         }
-        .quick-register-btn {
-          background: transparent !important; // 无背景
-          background-color: transparent !important;
 
+        .quick-register-btn {
+          margin-top: 12px;
+          background: transparent !important;
+          border: 2px solid $primary-color !important;
           border-radius: 999px;
           height: 52px;
-
           font-size: 18px;
           font-weight: bold;
-          color: $text-color-light;
-
-          border: 1px solid $secondary-color;
-          box-shadow: 0 4px 16px rgba(253, 185, 39, 0.4);
-
+          color: #fff !important;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-
-          opacity: 1; // 你之前是0，会看不到
+          transition: $transition-base;
 
           &:active {
             transform: scale(0.98);
+            background: rgba(85, 37, 131, 0.1) !important;
           }
 
           &:disabled {
             opacity: 0.5;
-            box-shadow: none;
           }
 
           .btn-text {
