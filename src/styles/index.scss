@@ -1,3 +1,5 @@
+@import './variables.scss';
+
 // 重置样式
 * {
   margin: 0;
@@ -14,6 +16,8 @@ body,
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: $background-color;
+  color: $text-color;
 }
 
 // 滚动条样式
@@ -23,8 +27,12 @@ body,
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(85, 37, 131, 0.3);
   border-radius: 3px;
+  
+  &:hover {
+    background-color: rgba(85, 37, 131, 0.5);
+  }
 }
 
 ::-webkit-scrollbar-track {
@@ -53,6 +61,14 @@ body,
   text-overflow: ellipsis;
 }
 
+.ellipsis-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 // Flex 布局
 .flex {
   display: flex;
@@ -75,8 +91,190 @@ body,
   flex-direction: column;
 }
 
+.flex-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 // 安全区域适配
 .safe-area-bottom {
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+// 主题色工具类
+.text-primary {
+  color: $primary-color;
+}
+
+.text-secondary {
+  color: $secondary-color;
+}
+
+.text-white {
+  color: $text-color-light;
+}
+
+.text-dark {
+  color: $text-color;
+}
+
+.bg-primary {
+  background-color: $primary-color;
+}
+
+.bg-secondary {
+  background-color: $secondary-color;
+}
+
+.bg-white {
+  background-color: $background-color;
+}
+
+.bg-gradient-purple {
+  background: $gradient-purple;
+}
+
+.bg-gradient-gold {
+  background: $gradient-gold;
+}
+
+.bg-gradient-purple-gold {
+  background: $gradient-purple-gold;
+}
+
+// 边框工具类
+.border-primary {
+  border: 1px solid $primary-color;
+}
+
+.border-secondary {
+  border: 1px solid $secondary-color;
+}
+
+// 圆角工具类
+.rounded-sm {
+  border-radius: $border-radius-sm;
+}
+
+.rounded-md {
+  border-radius: $border-radius-md;
+}
+
+.rounded-lg {
+  border-radius: $border-radius-lg;
+}
+
+.rounded-xl {
+  border-radius: $border-radius-xl;
+}
+
+.rounded-full {
+  border-radius: $border-radius-round;
+}
+
+// 阴影工具类
+.shadow-sm {
+  box-shadow: $shadow-sm;
+}
+
+.shadow-md {
+  box-shadow: $shadow-md;
+}
+
+.shadow-lg {
+  box-shadow: $shadow-lg;
+}
+
+// 间距工具类
+.p-xs { padding: $padding-xs; }
+.p-sm { padding: $padding-sm; }
+.p-md { padding: $padding-md; }
+.p-lg { padding: $padding-lg; }
+.p-xl { padding: $padding-xl; }
+
+.pt-xs { padding-top: $padding-xs; }
+.pt-sm { padding-top: $padding-sm; }
+.pt-md { padding-top: $padding-md; }
+.pt-lg { padding-top: $padding-lg; }
+.pt-xl { padding-top: $padding-xl; }
+
+.pb-xs { padding-bottom: $padding-xs; }
+.pb-sm { padding-bottom: $padding-sm; }
+.pb-md { padding-bottom: $padding-md; }
+.pb-lg { padding-bottom: $padding-lg; }
+.pb-xl { padding-bottom: $padding-xl; }
+
+.pl-xs { padding-left: $padding-xs; }
+.pl-sm { padding-left: $padding-sm; }
+.pl-md { padding-left: $padding-md; }
+.pl-lg { padding-left: $padding-lg; }
+.pl-xl { padding-left: $padding-xl; }
+
+.pr-xs { padding-right: $padding-xs; }
+.pr-sm { padding-right: $padding-sm; }
+.pr-md { padding-right: $padding-md; }
+.pr-lg { padding-right: $padding-lg; }
+.pr-xl { padding-right: $padding-xl; }
+
+.m-xs { margin: $padding-xs; }
+.m-sm { margin: $padding-sm; }
+.m-md { margin: $padding-md; }
+.m-lg { margin: $padding-lg; }
+.m-xl { margin: $padding-xl; }
+
+.mt-xs { margin-top: $padding-xs; }
+.mt-sm { margin-top: $padding-sm; }
+.mt-md { margin-top: $padding-md; }
+.mt-lg { margin-top: $padding-lg; }
+.mt-xl { margin-top: $padding-xl; }
+
+.mb-xs { margin-bottom: $padding-xs; }
+.mb-sm { margin-bottom: $padding-sm; }
+.mb-md { margin-bottom: $padding-md; }
+.mb-lg { margin-bottom: $padding-lg; }
+.mb-xl { margin-bottom: $padding-xl; }
+
+.ml-xs { margin-left: $padding-xs; }
+.ml-sm { margin-left: $padding-sm; }
+.ml-md { margin-left: $padding-md; }
+.ml-lg { margin-left: $padding-lg; }
+.ml-xl { margin-left: $padding-xl; }
+
+.mr-xs { margin-right: $padding-xs; }
+.mr-sm { margin-right: $padding-sm; }
+.mr-md { margin-right: $padding-md; }
+.mr-lg { margin-right: $padding-lg; }
+.mr-xl { margin-right: $padding-xl; }
+
+// 字体大小工具类
+.text-xs { font-size: $font-size-xs; }
+.text-sm { font-size: $font-size-sm; }
+.text-md { font-size: $font-size-md; }
+.text-lg { font-size: $font-size-lg; }
+.text-xl { font-size: $font-size-xl; }
+.text-xxl { font-size: $font-size-xxl; }
+
+// 字体粗细
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-bold { font-weight: 700; }
+
+// 文本对齐
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+// 过渡动画
+.transition-fast {
+  transition: all $transition-fast;
+}
+
+.transition-base {
+  transition: all $transition-base;
+}
+
+.transition-slow {
+  transition: all $transition-slow;
+}
+
