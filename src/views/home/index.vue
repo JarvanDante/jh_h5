@@ -87,47 +87,60 @@
       </div>
     </div>
 
-    <!-- 搜索栏 -->
-    <div class="search-section">
-      <div class="hot-icon" @click="handleHot">
-        <van-icon name="fire" size="32" color="#FDB927" />
-        <span>Hot</span>
-      </div>
-      <van-search
-        v-model="searchValue"
-        placeholder="Search"
-        shape="round"
-        background="transparent"
-      />
-    </div>
-
-    <!-- 游戏分类 -->
-    <div class="category-section">
-      <div class="category-item" @click="handleCategory('favorite')">
-        <van-icon name="star" size="32" color="#552583" />
-        <span>My favorite</span>
-      </div>
-      <div class="category-item" @click="handleCategory('slots')">
-        <van-icon name="apps-o" size="32" color="#552583" />
-        <span>Slots</span>
-      </div>
-    </div>
-
-    <!-- 游戏列表 -->
-    <div class="game-list">
-      <div v-for="game in games" :key="game.id" class="game-item" @click="handleGameClick(game)">
-        <img :src="game.cover" :alt="game.name" class="game-cover" />
-        <div class="game-info">
-          <div class="game-provider">{{ game.provider }}</div>
-          <div class="game-name">{{ game.name }}</div>
+    <!-- 搜索栏和游戏区域 -->
+    <div class="main-content">
+      <!-- 左侧游戏厅类型 -->
+      <div class="game-hall-sidebar">
+        <div
+          v-for="hall in gameHalls"
+          :key="hall.id"
+          class="hall-item"
+          :class="{ active: activeHall === hall.id }"
+          @click="selectHall(hall.id)"
+        >
+          <van-icon
+            :name="hall.icon"
+            size="32"
+            :color="activeHall === hall.id ? '#FDB927' : '#552583'"
+          />
+          <span>{{ hall.name }}</span>
         </div>
-        <van-icon
-          name="like"
-          :color="game.isFavorite ? '#ff6b6b' : '#999'"
-          size="20"
-          class="favorite-icon"
-          @click.stop="toggleFavorite(game)"
-        />
+      </div>
+
+      <!-- 右侧内容区域 -->
+      <div class="game-content">
+        <!-- 搜索栏 -->
+        <div class="search-bar">
+          <van-search
+            v-model="searchValue"
+            placeholder="Search"
+            shape="round"
+            background="transparent"
+          />
+        </div>
+
+        <!-- 游戏列表 -->
+        <div class="game-grid">
+          <div
+            v-for="game in filteredGames"
+            :key="game.id"
+            class="game-card"
+            @click="handleGameClick(game)"
+          >
+            <img :src="game.cover" :alt="game.name" class="game-cover" />
+            <div class="game-info">
+              <div class="game-provider">{{ game.provider }}</div>
+              <div class="game-name">{{ game.name }}</div>
+            </div>
+            <van-icon
+              name="like"
+              :color="game.isFavorite ? '#ff6b6b' : '#999'"
+              size="20"
+              class="favorite-icon"
+              @click.stop="toggleFavorite(game)"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -161,7 +174,9 @@ import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/modules/user'
+import { gameApi } from '@/api/modules/game'
 import type { AdItem, NoticeItem } from '@/api/modules/user'
+import type { GameCategory } from '@/api/modules/game'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -171,6 +186,28 @@ const activeTab = ref(0)
 const searchValue = ref('')
 const notificationCount = ref(3)
 const jackpotValue = ref(24765152108)
+const activeHall = ref('hot')
+
+// 游戏分类列表（从接口获取）
+const gameCategories = ref<GameCategory[]>([])
+
+// 游戏厅类型（固定的 Hot 和 My favorite + 动态的平台列表）
+const gameHalls = computed(() => {
+  const fixedHalls = [
+    { id: 'hot', name: 'Hot', icon: 'fire', platform: '' },
+    { id: 'favorite', name: 'My favorite', icon: 'star', platform: '' },
+  ]
+
+  // 从接口获取的平台列表
+  const platformHalls = gameCategories.value.map((category) => ({
+    id: category.platform.toLowerCase(),
+    name: category.platform,
+    icon: 'apps-o', // 可以根据 image_code 或 platform 设置不同图标
+    platform: category.platform,
+  }))
+
+  return [...fixedHalls, ...platformHalls]
+})
 
 // 登录状态
 const isLogin = computed(() => userStore.isLogin)
@@ -256,6 +293,38 @@ const games = ref([
     isFavorite: false,
   },
 ])
+
+// 过滤游戏列表
+const filteredGames = computed(() => {
+  let result = games.value
+
+  // 根据选中的游戏厅过滤
+  if (activeHall.value === 'favorite') {
+    result = result.filter((game) => game.isFavorite)
+  } else if (activeHall.value !== 'hot') {
+    // 如果选中的是平台，按平台过滤
+    const selectedHall = gameHalls.value.find((hall) => hall.id === activeHall.value)
+    if (selectedHall && selectedHall.platform) {
+      result = result.filter((game) => game.provider === selectedHall.platform)
+    }
+  }
+
+  // 根据搜索关键词过滤
+  if (searchValue.value) {
+    const keyword = searchValue.value.toLowerCase()
+    result = result.filter(
+      (game) =>
+        game.name.toLowerCase().includes(keyword) || game.provider.toLowerCase().includes(keyword),
+    )
+  }
+
+  return result
+})
+
+// 选择游戏厅
+const selectHall = (hallId: string) => {
+  activeHall.value = hallId
+}
 
 // 方法
 const goToLogin = () => {
@@ -376,6 +445,21 @@ const fetchNoticeList = async () => {
   }
 }
 
+// 获取游戏分类列表
+const fetchGameCategories = async () => {
+  try {
+    const res = await gameApi.getGameCategories()
+    console.log('游戏分类响应:', res)
+
+    if (res?.categories && res.categories.length > 0) {
+      gameCategories.value = res.categories
+      console.log('游戏分类列表:', gameCategories.value)
+    }
+  } catch (error) {
+    console.error('获取游戏分类失败:', error)
+  }
+}
+
 // Jackpot 数字滚动效果
 onMounted(() => {
   // 获取广告列表
@@ -383,6 +467,9 @@ onMounted(() => {
 
   // 获取公告列表
   fetchNoticeList()
+
+  // 获取游戏分类列表
+  fetchGameCategories()
 
   // Jackpot 滚动
   setInterval(() => {
@@ -673,7 +760,145 @@ onMounted(() => {
     }
   }
 
+  // 主内容区域（左侧边栏 + 右侧游戏区）
+  .main-content {
+    display: flex;
+    gap: 8px;
+    padding: 0 8px 16px;
+    min-height: 400px;
+  }
+
+  // 左侧游戏厅类型边栏
+  .game-hall-sidebar {
+    width: 80px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .hall-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 12px 8px;
+      background: $background-color;
+      border: 2px solid $border-color;
+      border-radius: $border-radius-lg;
+      cursor: pointer;
+      transition: $transition-base;
+      box-shadow: $shadow-sm;
+
+      &.active {
+        background: rgba(253, 185, 39, 0.1);
+        border-color: $secondary-color;
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      span {
+        color: $text-color;
+        font-size: 11px;
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.2;
+      }
+    }
+  }
+
+  // 右侧游戏内容区域
+  .game-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+
   // 搜索栏
+  .search-bar {
+    :deep(.van-search) {
+      padding: 0;
+
+      .van-search__content {
+        background: $background-color-light;
+        border: 1px solid $border-color;
+      }
+
+      input {
+        color: $text-color;
+
+        &::placeholder {
+          color: $text-color-secondary;
+        }
+      }
+    }
+  }
+
+  // 游戏网格（一行3个）
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+
+    .game-card {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.3s;
+      box-shadow: $shadow-sm;
+      background: $background-color;
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      .game-cover {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+      }
+
+      .game-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 6px;
+        background: linear-gradient(to top, rgba(31, 31, 31, 0.95), transparent);
+
+        .game-provider {
+          color: $secondary-color;
+          font-size: 9px;
+          margin-bottom: 2px;
+        }
+
+        .game-name {
+          color: $text-color-light;
+          font-size: 11px;
+          font-weight: bold;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .favorite-icon {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 4px;
+        border-radius: 50%;
+      }
+    }
+  }
+
+  // 搜索栏（旧版，已删除）
   .search-section {
     padding: 0 16px;
     display: flex;
@@ -713,95 +938,14 @@ onMounted(() => {
     }
   }
 
-  // 游戏分类
+  // 游戏分类（旧版，已删除）
   .category-section {
-    display: flex;
-    gap: 16px;
-    padding: 0 16px;
-    margin-bottom: 16px;
-
-    .category-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      padding: 16px;
-      background: $background-color;
-      border: 2px solid $primary-color;
-      border-radius: $border-radius-lg;
-      cursor: pointer;
-      transition: $transition-base;
-      box-shadow: $shadow-sm;
-
-      &:active {
-        transform: scale(0.95);
-        background: rgba(85, 37, 131, 0.05);
-      }
-
-      span {
-        color: $text-color;
-        font-size: 13px;
-        font-weight: 500;
-      }
-    }
+    display: none;
   }
 
-  // 游戏列表
+  // 游戏列表（旧版，已删除）
   .game-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    padding: 0 16px;
-
-    .game-item {
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.3s;
-      box-shadow: $shadow-sm;
-
-      &:active {
-        transform: scale(0.95);
-      }
-
-      .game-cover {
-        width: 100%;
-        height: 160px;
-        object-fit: cover;
-      }
-
-      .game-info {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 8px;
-        background: linear-gradient(to top, rgba(31, 31, 31, 0.9), transparent);
-
-        .game-provider {
-          color: $secondary-color;
-          font-size: 11px;
-          margin-bottom: 2px;
-        }
-
-        .game-name {
-          color: $text-color-light;
-          font-size: 13px;
-          font-weight: bold;
-        }
-      }
-
-      .favorite-icon {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 6px;
-        border-radius: 50%;
-      }
-    }
+    display: none;
   }
 
   // 右侧悬浮按钮
