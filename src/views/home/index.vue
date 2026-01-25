@@ -66,9 +66,23 @@
       <div class="jackpot-content">
         <div class="jackpot-title">JACKPOT</div>
         <div class="jackpot-amount">
-          <span v-for="(digit, index) in jackpotDigits" :key="index" class="digit">{{
-            digit
-          }}</span>
+          <div v-for="digitInfo in jackpotDigits" :key="digitInfo.key" class="digit-wrapper">
+            <div class="digit-scroll" :class="{ 'digit-rolling': digitInfo.changed }">
+              <template v-if="digitInfo.changed">
+                <span class="digit">0</span>
+                <span class="digit">1</span>
+                <span class="digit">2</span>
+                <span class="digit">3</span>
+                <span class="digit">4</span>
+                <span class="digit">5</span>
+                <span class="digit">6</span>
+                <span class="digit">7</span>
+                <span class="digit">8</span>
+                <span class="digit">9</span>
+              </template>
+              <span class="digit">{{ digitInfo.value }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -172,13 +186,29 @@ const adList = ref<AdItem[]>([])
 // 公告列表
 const noticeList = ref<NoticeItem[]>([])
 const noticeText = computed(() => {
-  if (noticeList.value.length === 0) return 'Welcome to LK698.COM'
-  return noticeList.value.map((notice) => notice.content).join('  •  ')
+  if (noticeList.value.length === 0) return 'Welcome to JILIEVO.CC'
+  return noticeList.value.map((notice) => notice.title).join('  •  ')
 })
 
 // Jackpot 数字
+const previousJackpotValue = ref(24765152108)
 const jackpotDigits = computed(() => {
-  return jackpotValue.value.toString().split('')
+  const current = jackpotValue.value.toString().split('')
+  const previous = previousJackpotValue.value.toString().split('')
+
+  // 补齐位数，确保长度一致
+  while (current.length < previous.length) {
+    current.unshift('0')
+  }
+  while (previous.length < current.length) {
+    previous.unshift('0')
+  }
+
+  return current.map((digit, index) => ({
+    value: digit,
+    changed: digit !== previous[index],
+    key: `${index}-${digit}-${digit !== previous[index] ? Date.now() : 'static'}`,
+  }))
 })
 
 // 游戏列表
@@ -356,13 +386,14 @@ onMounted(() => {
 
   // Jackpot 滚动
   setInterval(() => {
+    previousJackpotValue.value = jackpotValue.value
     jackpotValue.value += Math.floor(Math.random() * 100)
   }, 2000)
 })
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
+@use '@/styles/variables.scss' as *;
 
 .home-page {
   min-height: 100vh;
@@ -565,17 +596,19 @@ onMounted(() => {
     }
 
     .jackpot-icon {
-      width: 60px;
-      height: 60px;
-      font-size: 48px;
+      width: 50px;
+      height: 50px;
+      font-size: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
       z-index: 1;
     }
 
     .jackpot-content {
       flex: 1;
+      min-width: 0;
       z-index: 1;
     }
 
@@ -585,26 +618,58 @@ onMounted(() => {
       font-weight: bold;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       margin-bottom: 8px;
+      text-align: center;
     }
 
     .jackpot-amount {
       display: flex;
       justify-content: center;
-      gap: 4px;
+      gap: 2px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+
+      .digit-wrapper {
+        min-width: 20px;
+        max-width: 28px;
+        flex: 0 1 auto;
+        height: 36px;
+        background: $gradient-gold;
+        border-radius: 4px;
+        box-shadow: $shadow-md;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .digit-scroll {
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+        &.digit-rolling {
+          animation: rollToTarget 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+      }
 
       .digit {
-        display: inline-block;
-        width: 28px;
-        height: 40px;
-        background: $gradient-gold;
+        display: block;
+        width: 100%;
+        height: 36px;
         color: $text-color;
-        font-size: 24px;
+        font-size: 20px;
         font-weight: bold;
         text-align: center;
-        line-height: 40px;
-        border-radius: 6px;
-        box-shadow: $shadow-md;
+        line-height: 36px;
+        flex-shrink: 0;
       }
+    }
+  }
+
+  @keyframes rollToTarget {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-360px);
     }
   }
 
