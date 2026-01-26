@@ -337,6 +337,13 @@ const handleLogout = async () => {
 
 // 页面加载时获取用户信息
 onMounted(() => {
+  // 检查是否登录
+  if (!userStore.isLogin) {
+    showToast('Please login first')
+    router.push('/login')
+    return
+  }
+
   // 清除可能损坏的数据
   try {
     // 如果已登录，自动刷新用户信息

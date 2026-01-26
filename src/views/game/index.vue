@@ -33,9 +33,11 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { gameApi } from '@/api/modules/game'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
 const loading = ref(true)
 const error = ref(false)
@@ -84,6 +86,14 @@ const enterGame = async () => {
 }
 
 onMounted(() => {
+  // 检查是否登录，如果未登录直接跳转到登录页，不显示游戏页面
+  if (!userStore.isLogin) {
+    showToast('Please login first')
+    router.push('/login')
+    return
+  }
+
+  // 已登录才进入游戏
   enterGame()
 })
 
