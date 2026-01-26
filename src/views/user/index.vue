@@ -24,8 +24,14 @@
         </div>
         <div class="balance-row">
           <van-icon name="balance-o" size="20" color="#fff" />
-          <span class="amount">{{ balance }}</span>
-          <van-icon name="replay" size="20" color="#fff" @click="refreshBalance" />
+          <div class="amount">{{ displayBalance }}</div>
+          <van-icon
+            name="replay"
+            size="20"
+            color="#fff"
+            :class="{ rotating: isRefreshing }"
+            @click="refreshBalance"
+          />
         </div>
       </div>
 
@@ -171,6 +177,32 @@ const balance = computed(() => {
 const messageCount = ref(7)
 const supportCount = ref(7)
 
+// 余额动画相关
+const isRefreshing = ref(false)
+const displayBalance = ref('0.00')
+
+// 数字滚动动画 - 简单的数字递增效果
+const animateBalance = (oldValue: string, newValue: string) => {
+  const oldNum = parseFloat(oldValue) || 0
+  const newNum = parseFloat(newValue) || 0
+  const duration = 800 // 动画持续时间
+  const steps = 30 // 动画步数
+  const stepDuration = duration / steps
+  const increment = (newNum - oldNum) / steps
+
+  let currentStep = 0
+  const timer = setInterval(() => {
+    currentStep++
+    if (currentStep >= steps) {
+      displayBalance.value = newValue
+      clearInterval(timer)
+    } else {
+      const currentValue = oldNum + increment * currentStep
+      displayBalance.value = currentValue.toFixed(2)
+    }
+  }, stepDuration)
+}
+
 // 方法
 const copyId = () => {
   // 复制 ID 到剪贴板
@@ -183,6 +215,13 @@ const refreshBalance = async () => {
     showToast('Please login first')
     return
   }
+
+  if (isRefreshing.value) {
+    return // 防止重复点击
+  }
+
+  isRefreshing.value = true
+  const oldBalance = displayBalance.value
 
   try {
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
@@ -244,7 +283,9 @@ const refreshBalance = async () => {
                 balance: retryResult.data.balance || '0.00',
               })
             }
-            // showToast('Balance refreshed')
+
+            // 触发余额动画
+            animateBalance(oldBalance, retryResult.data.balance || '0.00')
           }
         } else {
           // 刷新失败，跳转到登录页
@@ -258,6 +299,7 @@ const refreshBalance = async () => {
         showToast('Please login again')
         router.push('/login')
       }
+      isRefreshing.value = false
       return
     }
 
@@ -272,13 +314,19 @@ const refreshBalance = async () => {
           balance: refreshBalanceResult.data.balance || '0.00',
         })
       }
-      // showToast('Balance refreshed')
+
+      // 触发余额动画
+      animateBalance(oldBalance, refreshBalanceResult.data.balance || '0.00')
     } else {
       showToast(refreshBalanceResult.msg || 'Failed to refresh balance')
     }
   } catch (error) {
     console.error('Failed to refresh balance:', error)
     showToast('Failed to refresh balance')
+  } finally {
+    setTimeout(() => {
+      isRefreshing.value = false
+    }, 1000) // 确保动画完成后才允许再次点击
   }
 }
 
@@ -352,6 +400,9 @@ onMounted(() => {
     return
   }
 
+  // 初始化显示余额
+  displayBalance.value = balance.value
+
   // 清除可能损坏的数据
   try {
     // 如果已登录，自动刷新余额
@@ -366,6 +417,15 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 @use '@/styles/variables.scss' as *;
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .user-page {
   min-height: 100vh;
@@ -469,9 +529,10 @@ onMounted(() => {
         margin-top: 4px;
 
         .amount {
-          font-size: 28px;
+          font-size: 17px;
           font-weight: bold;
           color: #fdb927;
+          transition: all 0.3s ease;
         }
 
         .van-icon {
@@ -480,6 +541,10 @@ onMounted(() => {
 
           &:active {
             transform: scale(0.9);
+          }
+
+          &.rotating {
+            animation: rotate 1s linear;
           }
         }
       }
