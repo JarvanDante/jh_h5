@@ -23,8 +23,8 @@
           <span class="value">{{ accountNumber }}</span>
         </div>
         <div class="balance-row">
-          <span class="amount">{{ balance }}</span>
           <van-icon name="balance-o" size="20" color="#fff" />
+          <span class="amount">{{ balance }}</span>
           <van-icon name="replay" size="20" color="#fff" @click="refreshBalance" />
         </div>
       </div>
@@ -153,7 +153,21 @@ const defaultAvatar = '/lion-avatar..png'
 // 用户数据
 const userId = computed(() => userStore.userInfo?.id || '285560778')
 const accountNumber = computed(() => userStore.userInfo?.username || '9186570127')
-const balance = computed(() => userStore.userInfo?.balance || '0.00')
+const balance = computed(() => {
+  // 优先从 localStorage 中的 user_balance 获取余额
+  try {
+    const userBalance = localStorage.getItem('user_balance')
+    if (userBalance) {
+      const balanceData = JSON.parse(userBalance)
+      return balanceData.balance || '0.00'
+    }
+  } catch (error) {
+    console.error('Failed to parse user_balance from localStorage:', error)
+  }
+
+  // 如果没有余额数据，从用户信息中获取
+  return userStore.userInfo?.balance || '0.00'
+})
 const messageCount = ref(7)
 const supportCount = ref(7)
 
@@ -172,19 +186,20 @@ const refreshBalance = async () => {
 
   try {
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
-    const userInfoUrl = `${apiBaseUrl}/frontend/app/user-info`
 
-    const response = await fetch(userInfoUrl, {
+    // 先调用刷新余额接口
+    const refreshBalanceUrl = `${apiBaseUrl}/frontend/balance/refresh-balance`
+    const refreshBalanceResponse = await fetch(refreshBalanceUrl, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${userStore.token}`,
       },
     })
 
-    const result = await response.json()
+    const refreshBalanceResult = await refreshBalanceResponse.json()
 
     // 检查 token 是否过期
-    if (result.code === 401 || result.code === 403) {
+    if (refreshBalanceResult.code === 401 || refreshBalanceResult.code === 403) {
       // Token 过期，尝试刷新
       const refreshToken = userStore.refreshToken
       if (refreshToken) {
@@ -208,8 +223,8 @@ const refreshBalance = async () => {
             userStore.setRefreshToken(refreshResult.data.refresh_token)
           }
 
-          // 使用新 token 重新请求用户信息
-          const retryResponse = await fetch(userInfoUrl, {
+          // 使用新 token 重新请求余额
+          const retryResponse = await fetch(refreshBalanceUrl, {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${refreshResult.data.token}`,
@@ -219,22 +234,17 @@ const refreshBalance = async () => {
           const retryResult = await retryResponse.json()
 
           if (retryResult.code === 0 && retryResult.data) {
-            userStore.setUserInfo({
-              id: retryResult.data.user_id || userStore.userInfo?.id || 0,
-              username: retryResult.data.username || userStore.userInfo?.username || '',
-              nickname:
-                retryResult.data.nickname ||
-                retryResult.data.username ||
-                userStore.userInfo?.nickname ||
-                '',
-              avatar: retryResult.data.avatar || userStore.userInfo?.avatar || '',
-              mobile: retryResult.data.mobile || userStore.userInfo?.mobile || '',
-              email: retryResult.data.email || userStore.userInfo?.email || '',
-              balance: retryResult.data.balance || '0.00',
-              realname: retryResult.data.realname || userStore.userInfo?.realname || '',
-              grade_name: retryResult.data.grade_name || userStore.userInfo?.grade_name || '',
-            })
-            showToast('Balance refreshed')
+            // 保存余额信息到 localStorage
+            localStorage.setItem('user_balance', JSON.stringify(retryResult.data))
+
+            // 更新用户信息中的余额
+            if (userStore.userInfo) {
+              userStore.setUserInfo({
+                ...userStore.userInfo,
+                balance: retryResult.data.balance || '0.00',
+              })
+            }
+            // showToast('Balance refreshed')
           }
         } else {
           // 刷新失败，跳转到登录页
@@ -251,22 +261,20 @@ const refreshBalance = async () => {
       return
     }
 
-    if (result.code === 0 && result.data) {
-      userStore.setUserInfo({
-        id: result.data.user_id || userStore.userInfo?.id || 0,
-        username: result.data.username || userStore.userInfo?.username || '',
-        nickname:
-          result.data.nickname || result.data.username || userStore.userInfo?.nickname || '',
-        avatar: result.data.avatar || userStore.userInfo?.avatar || '',
-        mobile: result.data.mobile || userStore.userInfo?.mobile || '',
-        email: result.data.email || userStore.userInfo?.email || '',
-        balance: result.data.balance || '0.00',
-        realname: result.data.realname || userStore.userInfo?.realname || '',
-        grade_name: result.data.grade_name || userStore.userInfo?.grade_name || '',
-      })
-      showToast('Balance refreshed')
+    if (refreshBalanceResult.code === 0 && refreshBalanceResult.data) {
+      // 保存余额信息到 localStorage
+      localStorage.setItem('user_balance', JSON.stringify(refreshBalanceResult.data))
+
+      // 更新用户信息中的余额
+      if (userStore.userInfo) {
+        userStore.setUserInfo({
+          ...userStore.userInfo,
+          balance: refreshBalanceResult.data.balance || '0.00',
+        })
+      }
+      // showToast('Balance refreshed')
     } else {
-      showToast(result.msg || 'Failed to refresh balance')
+      showToast(refreshBalanceResult.msg || 'Failed to refresh balance')
     }
   } catch (error) {
     console.error('Failed to refresh balance:', error)
@@ -346,7 +354,7 @@ onMounted(() => {
 
   // 清除可能损坏的数据
   try {
-    // 如果已登录，自动刷新用户信息
+    // 如果已登录，自动刷新余额
     if (userStore.isLogin) {
       refreshBalance()
     }

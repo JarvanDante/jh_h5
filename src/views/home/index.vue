@@ -231,7 +231,21 @@ const isLogin = computed(() => userStore.isLogin)
 
 // 用户信息
 const username = computed(() => userStore.userInfo?.username || 'Guest')
-const balance = computed(() => (userStore.userInfo ? '0.00' : '0.00'))
+const balance = computed(() => {
+  // 优先从 localStorage 中的 user_balance 获取余额
+  try {
+    const userBalance = localStorage.getItem('user_balance')
+    if (userBalance) {
+      const balanceData = JSON.parse(userBalance)
+      return balanceData.balance || '0.00'
+    }
+  } catch (error) {
+    console.error('Failed to parse user_balance from localStorage:', error)
+  }
+
+  // 如果没有余额数据，从用户信息中获取
+  return userStore.userInfo?.balance || '0.00'
+})
 
 // 轮播图
 const banners = ref<string[]>([])
@@ -359,7 +373,7 @@ const goToLogin = () => {
 
 const goToUser = () => {
   if (!isLogin.value) {
-    showToast('请先登录')
+    showToast('Please login first')
     router.push('/login')
     return
   }
@@ -372,7 +386,7 @@ const showMenu = () => {
 
 const handleDeposit = () => {
   if (!isLogin.value) {
-    showToast('请先登录')
+    showToast('Please login first')
     router.push('/login')
     return
   }
@@ -381,7 +395,7 @@ const handleDeposit = () => {
 
 const handleWithdrawal = () => {
   if (!isLogin.value) {
-    showToast('请先登录')
+    showToast('Please login first')
     router.push('/login')
     return
   }
@@ -390,7 +404,7 @@ const handleWithdrawal = () => {
 
 const handleInvite = () => {
   if (!isLogin.value) {
-    showToast('请先登录')
+    showToast('Please login first')
     router.push('/login')
     return
   }
@@ -564,6 +578,25 @@ onMounted(() => {
 
   // 获取游戏列表
   fetchGameList()
+
+  // 如果已登录，尝试从 localStorage 刷新余额显示
+  if (isLogin.value) {
+    try {
+      const userBalance = localStorage.getItem('user_balance')
+      if (userBalance) {
+        const balanceData = JSON.parse(userBalance)
+        // 触发响应式更新
+        if (userStore.userInfo && balanceData.balance) {
+          userStore.setUserInfo({
+            ...userStore.userInfo,
+            balance: balanceData.balance,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load balance from localStorage:', error)
+    }
+  }
 
   // Jackpot 滚动
   setInterval(() => {

@@ -84,7 +84,7 @@ const balance = computed(() => (userStore.userInfo ? '0.00' : '0.00'))
 ```typescript
 const handleDeposit = () => {
   if (!isLogin.value) {
-    showToast('请先登录')
+    showToast('Please login first')
     router.push('/login')
     return
   }
@@ -151,7 +151,7 @@ const handleDeposit = () => {
 ```typescript
 const handleDeposit = () => {
   if (!isLogin.value) {
-    showToast('请先登录')
+    showToast('Please login first')
     router.push('/login')
     return
   }
@@ -164,7 +164,7 @@ const handleDeposit = () => {
 ```typescript
 const handleWithdrawal = () => {
   if (!isLogin.value) {
-    showToast('请先登录')
+    showToast('Please login first')
     router.push('/login')
     return
   }
@@ -177,7 +177,7 @@ const handleWithdrawal = () => {
 ```typescript
 const handleInvite = () => {
   if (!isLogin.value) {
-    showToast('请先登录')
+    showToast('Please login first')
     router.push('/login')
     return
   }
@@ -190,7 +190,7 @@ const handleInvite = () => {
 ```typescript
 const goToUser = () => {
   if (!isLogin.value) {
-    showToast('请先登录')
+    showToast('Please login first')
     router.push('/login')
     return
   }
@@ -290,7 +290,7 @@ router.beforeEach((to, from, next) => {
 
   // 需要登录的页面
   if (to.meta.requiresAuth && !userStore.isLogin) {
-    showToast('请先登录')
+    showToast('Please login first')
     next({
       path: '/login',
       query: { redirect: to.fullPath },
@@ -446,7 +446,7 @@ if (userStore.isLogin) {
 
 ```typescript
 if (!isLogin.value) {
-  showToast('请先登录')
+  showToast('Please login first')
   router.push('/login')
   return
 }

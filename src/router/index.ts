@@ -100,7 +100,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth) {
     const userStore = useUserStore()
     if (!userStore.isLogin) {
-      showToast('请先登录')
+      showToast('Please login first')
       next({
         path: '/login',
         query: { redirect: to.fullPath },

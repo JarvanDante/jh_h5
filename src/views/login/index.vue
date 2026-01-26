@@ -2,8 +2,6 @@
   <div class="login-page">
     <van-nav-bar
       title="Login"
-      left-arrow
-      @click-left="onClickLeft"
       :style="{ background: 'linear-gradient(135deg, #552583 0%, #7B3FA8 100%)' }"
     />
 
@@ -91,10 +89,6 @@ const refreshCaptcha = () => {
   captchaUrl.value = `${apiBaseUrl}/frontend/app/captcha?time=${captchaTime.value}`
 }
 
-const onClickLeft = () => {
-  router.back()
-}
-
 const onSubmit = async () => {
   try {
     loading.value = true
@@ -164,6 +158,35 @@ const onSubmit = async () => {
       } catch (error) {
         console.error('Failed to fetch user info:', error)
         // 即使获取用户信息失败，也继续登录流程
+      }
+
+      // 调用刷新余额接口
+      try {
+        const refreshBalanceUrl = `${apiBaseUrl}/frontend/balance/refresh-balance`
+        const refreshBalanceResponse = await fetch(refreshBalanceUrl, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        const refreshBalanceResult = await refreshBalanceResponse.json()
+
+        if (refreshBalanceResult.code === 0 && refreshBalanceResult.data) {
+          // 保存余额信息到 localStorage
+          localStorage.setItem('user_balance', JSON.stringify(refreshBalanceResult.data))
+
+          // 更新用户信息中的余额
+          if (userStore.userInfo) {
+            userStore.setUserInfo({
+              ...userStore.userInfo,
+              balance: refreshBalanceResult.data.balance || '0.00',
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh balance:', error)
+        // 余额刷新失败不影响登录流程
       }
 
       showToast('Login successful')
