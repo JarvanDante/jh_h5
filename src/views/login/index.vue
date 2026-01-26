@@ -31,16 +31,22 @@
             placeholder="Enter password"
             :rules="[{ required: true, message: 'Please enter password' }]"
           />
+          <van-field
+            v-model="formData.captcha"
+            name="captcha"
+            label="Captcha code"
+            placeholder="Enter captcha code"
+            :rules="[{ required: true, message: 'Please enter captcha code' }]"
+          >
+            <template #button>
+              <img :src="captchaUrl" alt="captcha" class="captcha-image" @click="refreshCaptcha" />
+            </template>
+          </van-field>
         </van-cell-group>
 
         <div class="submit-button">
           <van-button round block color="#552583" native-type="submit" :loading="loading">
             Login
-          </van-button>
-
-          <!-- 测试用快速登录按钮 -->
-          <van-button round block plain color="#FDB927" @click="quickLogin" class="quick-login-btn">
-            Quick Login (Test)
           </van-button>
         </div>
 
@@ -67,7 +73,23 @@ const loading = ref(false)
 const formData = reactive({
   username: '',
   password: '',
+  captcha: '',
 })
+
+// 获取 API 基础路径
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+
+// 验证码时间戳 - 用于验证码和登录请求
+const captchaTime = ref(Date.now().toString())
+
+// 验证码URL - 使用完整的 API 路径
+const captchaUrl = ref(`${apiBaseUrl}/frontend/app/captcha?time=${captchaTime.value}`)
+
+// 刷新验证码
+const refreshCaptcha = () => {
+  captchaTime.value = Date.now().toString()
+  captchaUrl.value = `${apiBaseUrl}/frontend/app/captcha?time=${captchaTime.value}`
+}
 
 const onClickLeft = () => {
   router.back()
@@ -77,41 +99,96 @@ const onSubmit = async () => {
   try {
     loading.value = true
 
-    // 模拟登录请求
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // 模拟登录成功
-    const mockToken = 'mock-token-' + Date.now()
-    const mockUserInfo = {
-      id: 1,
-      username: formData.username,
-      nickname: formData.username,
-      avatar: '',
-      mobile: '',
-      email: '',
+    // 验证验证码
+    if (!formData.captcha) {
+      showToast('Please enter captcha code')
+      return
     }
 
-    userStore.setToken(mockToken)
-    userStore.setUserInfo(mockUserInfo)
+    // 调用真实的登录接口
+    const loginUrl = `${apiBaseUrl}/frontend/app/login`
+    const response = await fetch(loginUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        username: formData.username,
+        password: formData.password,
+        code: formData.captcha,
+        time: captchaTime.value,
+      }),
+    })
 
-    showToast('Login successful')
+    const result = await response.json()
 
-    // 跳转到之前的页面或首页
-    const redirect = route.query.redirect as string
-    router.replace(redirect || '/home')
+    if (result.code === 0 && result.data) {
+      // 登录成功
+      const { token, refresh_token } = result.data
+
+      // 保存 token
+      userStore.setToken(token)
+
+      // 保存 refresh_token
+      if (refresh_token) {
+        userStore.setRefreshToken(refresh_token)
+      }
+
+      // 使用 token 获取用户详细信息
+      try {
+        const userInfoUrl = `${apiBaseUrl}/frontend/app/user-info`
+        const userInfoResponse = await fetch(userInfoUrl, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        const userInfoResult = await userInfoResponse.json()
+
+        if (userInfoResult.code === 0 && userInfoResult.data) {
+          // 保存用户详细信息 - 使用 user_id 作为 id
+          userStore.setUserInfo({
+            id: userInfoResult.data.user_id || 0,
+            username: userInfoResult.data.username || formData.username,
+            nickname:
+              userInfoResult.data.nickname || userInfoResult.data.username || formData.username,
+            avatar: userInfoResult.data.avatar || '',
+            mobile: userInfoResult.data.mobile || '',
+            email: userInfoResult.data.email || '',
+            balance: userInfoResult.data.balance || '0.00',
+            realname: userInfoResult.data.realname || '',
+            grade_name: userInfoResult.data.grade_name || '',
+          })
+        }
+      } catch (error) {
+        console.error('Failed to fetch user info:', error)
+        // 即使获取用户信息失败，也继续登录流程
+      }
+
+      showToast('Login successful')
+
+      // 跳转到之前的页面或首页
+      const redirect = route.query.redirect as string
+      router.replace(redirect || '/home')
+    } else {
+      // 登录失败
+      showToast(result.msg || 'Login failed')
+      // 刷新验证码
+      refreshCaptcha()
+      // 清空验证码输入
+      formData.captcha = ''
+    }
   } catch (error) {
     console.error('Login failed:', error)
     showToast('Login failed')
+    // 刷新验证码
+    refreshCaptcha()
+    // 清空验证码输入
+    formData.captcha = ''
   } finally {
     loading.value = false
   }
-}
-
-// 快速登录（测试用）
-const quickLogin = () => {
-  formData.username = 'karson'
-  formData.password = '123456'
-  onSubmit()
 }
 
 // 跳转到注册页
@@ -167,13 +244,15 @@ const goToRegister = () => {
     .submit-button {
       margin-top: 24px;
       padding: 0 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    }
 
-      .quick-login-btn {
-        margin-top: 8px;
-      }
+    .captcha-image {
+      height: 40px;
+      width: 120px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 1px solid #ebedf0;
+      object-fit: cover;
     }
 
     .extra-links {

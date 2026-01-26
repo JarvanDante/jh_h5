@@ -10,9 +10,9 @@
     <!-- 标签页导航 -->
     <van-tabs
       v-model:active="activeTab"
-      color="#FDB927"
-      title-active-color="#FDB927"
-      background="#1f1f1f"
+      color="#552583"
+      title-active-color="#552583"
+      background="#fff"
     >
       <van-tab title="Events">
         <div class="promotion-list">
@@ -269,7 +269,7 @@ const handleClaimReward = (reward: any) => {
 
 .promotion-page {
   min-height: 100vh;
-  background: #000;
+  background: #f5f5f5;
   padding-bottom: 50px;
 
   .top-bar {
@@ -293,8 +293,8 @@ const handleClaimReward = (reward: any) => {
 
   :deep(.van-tabs) {
     .van-tabs__wrap {
-      background: #1f1f1f;
-      border-bottom: 1px solid #333;
+      background: #fff;
+      border-bottom: 1px solid #eee;
     }
 
     .van-tabs__nav {
@@ -317,7 +317,7 @@ const handleClaimReward = (reward: any) => {
     }
 
     .van-tabs__content {
-      background: #000;
+      background: #f5f5f5;
     }
   }
 
@@ -327,14 +327,19 @@ const handleClaimReward = (reward: any) => {
   }
 
   .promo-card {
-    background: #552583;
-    border: 2px solid #fdb927;
-    border-radius: 12px;
-    padding: 16px;
+    background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+    border: none;
+    border-radius: 16px;
+    padding: 20px;
     margin-bottom: 16px;
-    box-shadow: 0 4px 12px rgba(253, 185, 39, 0.3);
+    box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
     cursor: pointer;
     transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(85, 37, 131, 0.5);
+    }
 
     &:active {
       transform: scale(0.98);
@@ -345,8 +350,9 @@ const handleClaimReward = (reward: any) => {
 
       .site-badge {
         display: inline-block;
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
+        background: rgba(253, 185, 39, 0.2);
+        border: 1px solid #fdb927;
+        color: #fdb927;
         padding: 4px 12px;
         border-radius: 20px;
         font-size: 12px;
@@ -380,7 +386,10 @@ const handleClaimReward = (reward: any) => {
         .claim-btn {
           font-weight: bold;
           border-radius: 20px;
-          padding: 8px 20px;
+          padding: 8px 24px;
+          background: linear-gradient(135deg, #fdb927 0%, #ff9800 100%);
+          border: none;
+          box-shadow: 0 2px 8px rgba(253, 185, 39, 0.4);
         }
       }
 
@@ -388,11 +397,17 @@ const handleClaimReward = (reward: any) => {
         width: 100px;
         height: 100px;
         flex-shrink: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
         img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
           border-radius: 8px;
         }
       }
@@ -413,9 +428,10 @@ const handleClaimReward = (reward: any) => {
         }
 
         :deep(.van-cell) {
-          background: #1f1f1f;
-          border: 1px solid #333;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(253, 185, 39, 0.3);
           border-radius: 8px;
+          color: #fff;
         }
       }
 
@@ -436,8 +452,12 @@ const handleClaimReward = (reward: any) => {
 
   .history-list {
     .history-item {
-      background: #1f1f1f;
-      border: 1px solid #333;
+      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
       border-radius: 8px;
       padding: 16px;
       margin-bottom: 12px;
@@ -482,8 +502,12 @@ const handleClaimReward = (reward: any) => {
 
   .reward-list {
     .reward-item {
-      background: #1f1f1f;
-      border: 1px solid #333;
+      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
       border-radius: 8px;
       padding: 16px;
       margin-bottom: 12px;

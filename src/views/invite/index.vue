@@ -243,7 +243,7 @@ const copyLink = () => {
 
 .invite-page {
   min-height: 100vh;
-  background: #000;
+  background: #f5f5f5;
   padding-bottom: 50px;
 
   .top-bar {
@@ -273,32 +273,21 @@ const copyLink = () => {
     padding: 16px;
 
     .stat-card {
+      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
       padding: 20px 16px;
-      border-radius: 12px;
+      border-radius: 16px;
       text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
+      transition: all 0.3s ease;
 
-      &.blue {
-        background: #552583;
-      }
-
-      &.purple {
-        background: #552583;
-      }
-
-      &.purple-alt {
-        background: #552583;
-      }
-
-      &.blue-alt {
-        background: #552583;
+      &:active {
+        transform: scale(0.98);
       }
 
       .stat-label {
-        color: #fff;
+        color: rgba(255, 255, 255, 0.9);
         font-size: 13px;
         margin-bottom: 8px;
-        opacity: 0.95;
       }
 
       .stat-value {
@@ -312,39 +301,43 @@ const copyLink = () => {
   // 分享区域
   .share-section {
     margin: 0 16px 24px;
-    padding: 20px;
-    background: #1f1f1f;
-    border-radius: 12px;
+    padding: 24px;
+    background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
 
     .section-title {
       color: #fdb927;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: bold;
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
     }
 
     .share-label {
-      color: #999;
+      color: rgba(255, 255, 255, 0.8);
       font-size: 13px;
-      margin-bottom: 12px;
+      text-align: center;
+      margin-bottom: 20px;
     }
 
     .social-icons {
       display: flex;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       flex-wrap: wrap;
+      justify-content: center;
 
       .social-icon {
-        width: 48px;
-        height: 48px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: transform 0.2s;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 
         &:active {
           transform: scale(0.9);
@@ -375,7 +368,7 @@ const copyLink = () => {
         }
 
         &.share {
-          background: #5b7cff;
+          background: #fdb927;
         }
       }
     }
@@ -384,10 +377,10 @@ const copyLink = () => {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
-      background: #000;
-      border: 1px solid #333;
-      border-radius: 8px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(253, 185, 39, 0.3);
+      border-radius: 12px;
 
       .link-input {
         flex: 1;
@@ -397,6 +390,14 @@ const copyLink = () => {
         color: #fff;
         background: transparent;
       }
+
+      :deep(.van-button) {
+        background: linear-gradient(135deg, #fdb927 0%, #ff9800 100%);
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        box-shadow: 0 2px 8px rgba(253, 185, 39, 0.4);
+      }
     }
   }
 
@@ -405,7 +406,7 @@ const copyLink = () => {
     margin: 0 16px 24px;
 
     .section-title-large {
-      color: #fff;
+      color: #333;
       font-size: 22px;
       font-weight: bold;
       text-align: center;
@@ -413,13 +414,14 @@ const copyLink = () => {
     }
 
     .leaderboard-podium {
-      background: #552583;
+      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
       border-radius: 16px;
-      padding: 24px 16px;
+      padding: 32px 16px 24px;
       display: flex;
       justify-content: center;
       align-items: flex-end;
       gap: 16px;
+      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
 
       .podium-item {
         display: flex;
@@ -429,28 +431,28 @@ const copyLink = () => {
 
         .rank-badge {
           position: absolute;
-          top: -8px;
+          top: -12px;
           left: 50%;
           transform: translateX(-50%);
-          width: 28px;
-          height: 28px;
-          background: #fff;
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, #fdb927, #ff9800);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: bold;
-          font-size: 14px;
-          color: #552583;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          font-size: 16px;
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(253, 185, 39, 0.6);
         }
 
         .avatar {
           margin-bottom: 8px;
           border-radius: 50%;
           overflow: hidden;
-          border: 3px solid #fff;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          border: 3px solid #fdb927;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
           img {
             width: 100%;
@@ -461,13 +463,13 @@ const copyLink = () => {
 
         .username {
           color: #fff;
-          font-size: 12px;
+          font-size: 13px;
           margin-bottom: 4px;
         }
 
         .amount {
           color: #fdb927;
-          font-size: 13px;
+          font-size: 14px;
           font-weight: bold;
         }
 
@@ -475,6 +477,12 @@ const copyLink = () => {
           .avatar {
             width: 100px;
             height: 100px;
+          }
+
+          .rank-badge {
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
           }
         }
 
@@ -494,7 +502,7 @@ const copyLink = () => {
     margin: 0 16px 24px;
 
     .section-title-large {
-      color: #fff;
+      color: #333;
       font-size: 20px;
       font-weight: bold;
       text-align: center;
@@ -502,12 +510,13 @@ const copyLink = () => {
     }
 
     .rewards-list {
-      background: #552583;
+      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
       border-radius: 16px;
       padding: 16px;
       height: 280px;
       overflow: hidden;
       position: relative;
+      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
 
       .rewards-scroll-container {
         animation: continuousScroll 20s linear infinite;
@@ -516,15 +525,17 @@ const copyLink = () => {
       .reward-item {
         background: rgba(255, 255, 255, 0.95);
         border-radius: 24px;
-        padding: 12px 20px;
+        padding: 14px 20px;
         margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
         .reward-username {
           color: #333;
           font-size: 14px;
+          font-weight: 500;
           flex: 1;
         }
 
@@ -557,7 +568,7 @@ const copyLink = () => {
     margin: 0 16px 24px;
 
     .section-title-large {
-      color: #fff;
+      color: #333;
       font-size: 20px;
       font-weight: bold;
       text-align: center;
@@ -566,31 +577,40 @@ const copyLink = () => {
 
     .rewards-stats-list {
       .stats-item {
-        background: #1f1f1f;
-        border-radius: 12px;
-        padding: 16px;
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
         margin-bottom: 12px;
         display: flex;
         align-items: center;
         gap: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+
+        &:active {
+          transform: scale(0.98);
+        }
 
         .stats-icon {
-          width: 60px;
-          height: 60px;
-          font-size: 36px;
+          width: 64px;
+          height: 64px;
+          font-size: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          background: linear-gradient(135deg, #f5f5f5, #e5e5e5);
+          border-radius: 16px;
         }
 
         .stats-info {
           flex: 1;
 
           .stats-label {
-            color: #999;
+            color: #666;
             font-size: 14px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-weight: 500;
           }
 
           .stats-amount {
@@ -614,12 +634,13 @@ const copyLink = () => {
     margin: 0 16px 24px;
 
     .make-money-card {
-      background: #552583;
+      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
       border-radius: 16px;
       padding: 24px;
       display: flex;
       align-items: center;
       gap: 20px;
+      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
 
       .make-money-icon {
         width: 80px;
@@ -629,6 +650,8 @@ const copyLink = () => {
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        background: rgba(253, 185, 39, 0.2);
+        border-radius: 50%;
       }
 
       .make-money-content {
@@ -647,6 +670,7 @@ const copyLink = () => {
           font-size: 32px;
           font-weight: bold;
           margin-bottom: 8px;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .money-label {
@@ -662,7 +686,7 @@ const copyLink = () => {
     margin: 0 16px 24px;
 
     .section-title-large {
-      color: #fff;
+      color: #333;
       font-size: 20px;
       font-weight: bold;
       text-align: center;
@@ -670,12 +694,13 @@ const copyLink = () => {
     }
 
     .social-platforms {
-      background: #1f1f1f;
+      background: #fff;
       border-radius: 16px;
       padding: 24px;
       display: flex;
       justify-content: space-around;
       align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
       .platform-icon {
         width: 56px;
@@ -684,6 +709,12 @@ const copyLink = () => {
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+
+        &:active {
+          transform: scale(0.9);
+        }
 
         &.facebook {
           background: #1877f2;

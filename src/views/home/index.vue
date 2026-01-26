@@ -208,11 +208,11 @@ const gameList = ref<GameItem[]>([])
 const gameListTotal = ref(0)
 const gameListLoading = ref(false)
 
-// 游戏厅类型（固定的 Hot 和 My favorite + 动态的平台列表）
+// 游戏厅类型（固定的 Hot 和 favorite + 动态的平台列表）
 const gameHalls = computed(() => {
   const fixedHalls = [
     { id: 'hot', name: 'Hot', icon: 'fire', platform: '' },
-    { id: 'favorite', name: 'My favorite', icon: 'star', platform: '' },
+    { id: 'favorite', name: 'favorite', icon: 'star', platform: '' },
   ]
 
   // 从接口获取的平台列表

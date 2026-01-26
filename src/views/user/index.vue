@@ -139,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
@@ -153,7 +153,7 @@ const defaultAvatar = '/lion-avatar..png'
 // 用户数据
 const userId = computed(() => userStore.userInfo?.id || '285560778')
 const accountNumber = computed(() => userStore.userInfo?.username || '9186570127')
-const balance = computed(() => '6.80')
+const balance = computed(() => userStore.userInfo?.balance || '0.00')
 const messageCount = ref(7)
 const supportCount = ref(7)
 
@@ -164,8 +164,114 @@ const copyId = () => {
   showToast('ID copied')
 }
 
-const refreshBalance = () => {
-  showToast('Balance refreshed')
+const refreshBalance = async () => {
+  if (!userStore.isLogin) {
+    showToast('Please login first')
+    return
+  }
+
+  try {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+    const userInfoUrl = `${apiBaseUrl}/frontend/app/user-info`
+
+    const response = await fetch(userInfoUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${userStore.token}`,
+      },
+    })
+
+    const result = await response.json()
+
+    // 检查 token 是否过期
+    if (result.code === 401 || result.code === 403) {
+      // Token 过期，尝试刷新
+      const refreshToken = userStore.refreshToken
+      if (refreshToken) {
+        const refreshUrl = `${apiBaseUrl}/frontend/app/refresh-token`
+        const refreshResponse = await fetch(refreshUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            refresh_token: refreshToken,
+          }),
+        })
+
+        const refreshResult = await refreshResponse.json()
+
+        if (refreshResult.code === 0 && refreshResult.data?.token) {
+          // 更新 token
+          userStore.setToken(refreshResult.data.token)
+          if (refreshResult.data.refresh_token) {
+            userStore.setRefreshToken(refreshResult.data.refresh_token)
+          }
+
+          // 使用新 token 重新请求用户信息
+          const retryResponse = await fetch(userInfoUrl, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${refreshResult.data.token}`,
+            },
+          })
+
+          const retryResult = await retryResponse.json()
+
+          if (retryResult.code === 0 && retryResult.data) {
+            userStore.setUserInfo({
+              id: retryResult.data.user_id || userStore.userInfo?.id || 0,
+              username: retryResult.data.username || userStore.userInfo?.username || '',
+              nickname:
+                retryResult.data.nickname ||
+                retryResult.data.username ||
+                userStore.userInfo?.nickname ||
+                '',
+              avatar: retryResult.data.avatar || userStore.userInfo?.avatar || '',
+              mobile: retryResult.data.mobile || userStore.userInfo?.mobile || '',
+              email: retryResult.data.email || userStore.userInfo?.email || '',
+              balance: retryResult.data.balance || '0.00',
+              realname: retryResult.data.realname || userStore.userInfo?.realname || '',
+              grade_name: retryResult.data.grade_name || userStore.userInfo?.grade_name || '',
+            })
+            showToast('Balance refreshed')
+          }
+        } else {
+          // 刷新失败，跳转到登录页
+          userStore.logout()
+          showToast('Login expired, please login again')
+          router.push('/login')
+        }
+      } else {
+        // 没有 refresh_token，跳转到登录页
+        userStore.logout()
+        showToast('Please login again')
+        router.push('/login')
+      }
+      return
+    }
+
+    if (result.code === 0 && result.data) {
+      userStore.setUserInfo({
+        id: result.data.user_id || userStore.userInfo?.id || 0,
+        username: result.data.username || userStore.userInfo?.username || '',
+        nickname:
+          result.data.nickname || result.data.username || userStore.userInfo?.nickname || '',
+        avatar: result.data.avatar || userStore.userInfo?.avatar || '',
+        mobile: result.data.mobile || userStore.userInfo?.mobile || '',
+        email: result.data.email || userStore.userInfo?.email || '',
+        balance: result.data.balance || '0.00',
+        realname: result.data.realname || userStore.userInfo?.realname || '',
+        grade_name: result.data.grade_name || userStore.userInfo?.grade_name || '',
+      })
+      showToast('Balance refreshed')
+    } else {
+      showToast(result.msg || 'Failed to refresh balance')
+    }
+  } catch (error) {
+    console.error('Failed to refresh balance:', error)
+    showToast('Failed to refresh balance')
+  }
 }
 
 const goToMessages = () => {
@@ -228,6 +334,19 @@ const handleLogout = async () => {
     // 用户取消
   }
 }
+
+// 页面加载时获取用户信息
+onMounted(() => {
+  // 清除可能损坏的数据
+  try {
+    // 如果已登录，自动刷新用户信息
+    if (userStore.isLogin) {
+      refreshBalance()
+    }
+  } catch (error) {
+    console.error('Error on mount:', error)
+  }
+})
 </script>
 
 <style lang="scss" scoped>

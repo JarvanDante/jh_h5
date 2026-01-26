@@ -143,7 +143,7 @@ const handleDeposit = () => {
 
 .deposit-page {
   min-height: 100vh;
-  background: #000;
+  background: #f5f5f5;
   padding-bottom: 50px;
 
   .top-bar {
@@ -168,27 +168,29 @@ const handleDeposit = () => {
   // 在线存款标签
   .deposit-online-section {
     padding: 16px;
+    background: #fff;
+    margin-bottom: 16px;
 
     .section-header {
       display: flex;
       align-items: center;
       gap: 8px;
       padding-bottom: 12px;
-      border-bottom: 1px solid #333;
+      border-bottom: 2px solid #e5e7eb;
 
       .reco-badge {
         background: #ef4444;
         color: #fff;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 11px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 12px;
         font-weight: bold;
       }
 
       .section-title {
-        color: #fff;
+        color: #333;
         font-size: 16px;
-        font-weight: 500;
+        font-weight: 600;
       }
     }
   }
@@ -197,25 +199,32 @@ const handleDeposit = () => {
   .payment-methods {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: 8px;
     padding: 0 16px 16px;
 
     .payment-card {
       position: relative;
-      background: #552583;
-      border: 2px solid #552583;
-      border-radius: 12px;
-      padding: 16px 12px;
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 12px 8px;
       text-align: center;
       cursor: pointer;
       transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
 
       &.active {
-        background: #fdb927;
-        border-color: #fdb927;
+        background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+        border: 3px solid #fdb927;
+        box-shadow: 0 4px 16px rgba(85, 37, 131, 0.4);
 
         .method-name {
-          color: #1f1f1f;
+          color: #fff;
         }
       }
 
@@ -230,20 +239,20 @@ const handleDeposit = () => {
         background: #ef4444;
         color: #fff;
         padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 9px;
+        border-radius: 6px;
+        font-size: 8px;
         font-weight: bold;
       }
 
       .method-name {
-        color: #fff;
-        font-size: 16px;
-        font-weight: 500;
-        margin-bottom: 4px;
+        color: #552583;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 6px;
       }
 
       .method-icon {
-        font-size: 20px;
+        font-size: 32px;
       }
     }
   }
@@ -251,19 +260,20 @@ const handleDeposit = () => {
   // 提示信息
   .bonus-notice {
     margin: 0 16px 20px;
-    padding: 16px;
-    background: #1f1f1f;
-    border-radius: 12px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     display: flex;
     gap: 12px;
 
     .notice-icon {
-      font-size: 24px;
+      font-size: 32px;
       flex-shrink: 0;
     }
 
     .notice-text {
-      color: #e2e8f0;
+      color: #999;
       font-size: 13px;
       line-height: 1.6;
     }
@@ -285,7 +295,7 @@ const handleDeposit = () => {
 
       .currency {
         color: #fdb927;
-        font-size: 20px;
+        font-size: 28px;
         font-weight: bold;
       }
 
@@ -294,12 +304,12 @@ const handleDeposit = () => {
         background: transparent;
         border: none;
         outline: none;
-        color: #fff;
-        font-size: 20px;
+        color: #333;
+        font-size: 28px;
         font-weight: bold;
 
         &::placeholder {
-          color: #666;
+          color: #ccc;
         }
       }
     }
@@ -308,18 +318,20 @@ const handleDeposit = () => {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
+      padding: 10px 16px;
       background: #1f1f1f;
-      border-radius: 8px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
       .gift-label {
         color: #999;
         font-size: 13px;
+        font-weight: 600;
       }
 
       .gift-amount {
         color: #22c55e;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: bold;
       }
     }
@@ -333,21 +345,23 @@ const handleDeposit = () => {
     padding: 0 16px 20px;
 
     .amount-btn {
-      background: #1f1f1f;
-      border: 2px solid #333;
-      border-radius: 12px;
-      padding: 16px 12px;
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px 12px;
       text-align: center;
-      color: #999;
-      font-size: 16px;
-      font-weight: 500;
+      color: #552583;
+      font-size: 18px;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
       &.active {
-        background: #552583;
-        border-color: #552583;
+        background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+        border: 3px solid #fdb927;
         color: #fff;
+        box-shadow: 0 4px 16px rgba(85, 37, 131, 0.4);
       }
 
       &:active {
@@ -361,16 +375,18 @@ const handleDeposit = () => {
     padding: 0 16px;
 
     .deposit-btn {
-      background: $gradient-purple;
+      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
       color: #fff;
       border: none;
-      border-radius: 12px;
+      border-radius: 16px;
       font-size: 18px;
       font-weight: bold;
       height: 56px;
-      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
+      box-shadow: 0 4px 16px rgba(85, 37, 131, 0.4);
+      transition: all 0.3s ease;
 
       &:active {
+        transform: scale(0.98);
         opacity: 0.9;
       }
     }
