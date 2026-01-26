@@ -127,31 +127,43 @@
             class="game-card"
             @click="handleGameClick(game)"
           >
-            <img :src="game.cover" :alt="game.name" class="game-cover" />
+            <div class="game-image-wrapper">
+              <img :src="game.img" :alt="game.name" class="game-cover" />
+              <div class="game-overlay">
+                <van-icon name="play-circle" size="40" color="#fff" />
+              </div>
+            </div>
             <div class="game-info">
-              <div class="game-provider">{{ game.provider }}</div>
+              <div class="game-vendor">{{ game.vendor }}</div>
               <div class="game-name">{{ game.name }}</div>
             </div>
             <van-icon
               name="like"
-              :color="game.isFavorite ? '#ff6b6b' : '#999'"
+              :color="isGameFavorite(game.id) ? '#ff6b6b' : '#999'"
               size="20"
               class="favorite-icon"
               @click.stop="toggleFavorite(game)"
             />
+            <!-- 热门标签 -->
+            <div v-if="game.hot === 1" class="game-badge hot-badge">HOT</div>
+            <!-- 新游戏标签 -->
+            <div v-if="game.is_new === 1" class="game-badge new-badge">NEW</div>
+            <!-- 推荐标签 -->
+            <div v-if="game.recommend === 1" class="game-badge recommend-badge">⭐</div>
+          </div>
+
+          <!-- 加载中提示 -->
+          <div v-if="gameListLoading" class="loading-wrapper">
+            <van-loading type="spinner" size="24px">加载中...</van-loading>
+          </div>
+
+          <!-- 空状态 -->
+          <div v-if="!gameListLoading && filteredGames.length === 0" class="empty-wrapper">
+            <van-empty description="暂无游戏" />
           </div>
         </div>
       </div>
     </div>
-
-    <!-- 底部导航栏 -->
-    <van-tabbar v-model="activeTab" fixed placeholder active-color="#552583">
-      <van-tabbar-item icon="home-o">Home</van-tabbar-item>
-      <van-tabbar-item icon="gift-o">Promotion</van-tabbar-item>
-      <van-tabbar-item icon="friends-o">Invite</van-tabbar-item>
-      <van-tabbar-item icon="gold-coin-o">Deposit</van-tabbar-item>
-      <van-tabbar-item icon="manager-o" to="/user">Members</van-tabbar-item>
-    </van-tabbar>
 
     <!-- 右侧悬浮按钮 -->
     <div class="float-buttons">
@@ -176,7 +188,7 @@ import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/modules/user'
 import { gameApi } from '@/api/modules/game'
 import type { AdItem, NoticeItem } from '@/api/modules/user'
-import type { GameCategory } from '@/api/modules/game'
+import type { GameCategory, GameItem } from '@/api/modules/game'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -185,11 +197,16 @@ const userStore = useUserStore()
 const activeTab = ref(0)
 const searchValue = ref('')
 const notificationCount = ref(3)
-const jackpotValue = ref(24765152108)
+const jackpotValue = ref(2476515210800)
 const activeHall = ref('hot')
 
 // 游戏分类列表（从接口获取）
 const gameCategories = ref<GameCategory[]>([])
+
+// 游戏列表（从接口获取）
+const gameList = ref<GameItem[]>([])
+const gameListTotal = ref(0)
+const gameListLoading = ref(false)
 
 // 游戏厅类型（固定的 Hot 和 My favorite + 动态的平台列表）
 const gameHalls = computed(() => {
@@ -228,7 +245,7 @@ const noticeText = computed(() => {
 })
 
 // Jackpot 数字
-const previousJackpotValue = ref(24765152108)
+const previousJackpotValue = ref(2476515210800)
 const jackpotDigits = computed(() => {
   const current = jackpotValue.value.toString().split('')
   const previous = previousJackpotValue.value.toString().split('')
@@ -294,18 +311,25 @@ const games = ref([
   },
 ])
 
+// 收藏的游戏ID列表
+const favoriteGameIds = ref<number[]>([])
+
 // 过滤游戏列表
 const filteredGames = computed(() => {
-  let result = games.value
+  let result = gameList.value
 
   // 根据选中的游戏厅过滤
   if (activeHall.value === 'favorite') {
-    result = result.filter((game) => game.isFavorite)
+    // 显示收藏的游戏
+    result = result.filter((game) => favoriteGameIds.value.includes(game.id))
+  } else if (activeHall.value === 'hot') {
+    // 显示热门游戏
+    result = result.filter((game) => game.hot === 1)
   } else if (activeHall.value !== 'hot') {
     // 如果选中的是平台，按平台过滤
     const selectedHall = gameHalls.value.find((hall) => hall.id === activeHall.value)
     if (selectedHall && selectedHall.platform) {
-      result = result.filter((game) => game.provider === selectedHall.platform)
+      result = result.filter((game) => game.platform === selectedHall.platform)
     }
   }
 
@@ -314,7 +338,7 @@ const filteredGames = computed(() => {
     const keyword = searchValue.value.toLowerCase()
     result = result.filter(
       (game) =>
-        game.name.toLowerCase().includes(keyword) || game.provider.toLowerCase().includes(keyword),
+        game.name.toLowerCase().includes(keyword) || game.vendor.toLowerCase().includes(keyword),
     )
   }
 
@@ -324,6 +348,8 @@ const filteredGames = computed(() => {
 // 选择游戏厅
 const selectHall = (hallId: string) => {
   activeHall.value = hallId
+  // 切换游戏厅时重新加载游戏列表
+  fetchGameList()
 }
 
 // 方法
@@ -379,13 +405,37 @@ const handleCategory = (category: string) => {
   showToast(`分类: ${category}`)
 }
 
-const handleGameClick = (game: any) => {
-  showToast(`打开游戏: ${game.name}`)
+const handleGameClick = (game: GameItem) => {
+  // 检查是否有 game_id
+  if (!game.game_id) {
+    showToast('游戏暂不可用')
+    return
+  }
+
+  // 跳转到游戏页面
+  router.push({
+    path: '/game',
+    query: {
+      game_id: game.game_id,
+      key: game.code,
+    },
+  })
 }
 
-const toggleFavorite = (game: any) => {
-  game.isFavorite = !game.isFavorite
-  showToast(game.isFavorite ? '已添加到收藏' : '已取消收藏')
+const toggleFavorite = (game: GameItem) => {
+  const index = favoriteGameIds.value.indexOf(game.id)
+  if (index > -1) {
+    favoriteGameIds.value.splice(index, 1)
+    showToast('已取消收藏')
+  } else {
+    favoriteGameIds.value.push(game.id)
+    showToast('已添加到收藏')
+  }
+}
+
+// 检查游戏是否被收藏
+const isGameFavorite = (gameId: number) => {
+  return favoriteGameIds.value.includes(gameId)
 }
 
 const handleTelegram = () => {
@@ -460,6 +510,47 @@ const fetchGameCategories = async () => {
   }
 }
 
+// 获取游戏列表
+const fetchGameList = async () => {
+  try {
+    gameListLoading.value = true
+
+    // 根据当前选中的游戏厅构建请求参数
+    const params: any = {
+      page: 1,
+      size: 100, // 一次加载更多游戏
+    }
+
+    if (activeHall.value === 'hot') {
+      params.hot = 1
+    } else if (activeHall.value !== 'favorite') {
+      // 如果选中的是平台
+      const selectedHall = gameHalls.value.find((hall) => hall.id === activeHall.value)
+      if (selectedHall && selectedHall.platform) {
+        params.platform = selectedHall.platform
+      }
+    }
+
+    const res = await gameApi.getGameList(params)
+    console.log('游戏列表响应:', res)
+
+    if (res?.list && res.list.length > 0) {
+      gameList.value = res.list
+      gameListTotal.value = res.total
+      console.log('游戏列表:', gameList.value)
+    } else {
+      gameList.value = []
+      gameListTotal.value = 0
+    }
+  } catch (error) {
+    console.error('获取游戏列表失败:', error)
+    gameList.value = []
+    gameListTotal.value = 0
+  } finally {
+    gameListLoading.value = false
+  }
+}
+
 // Jackpot 数字滚动效果
 onMounted(() => {
   // 获取广告列表
@@ -470,6 +561,9 @@ onMounted(() => {
 
   // 获取游戏分类列表
   fetchGameCategories()
+
+  // 获取游戏列表
+  fetchGameList()
 
   // Jackpot 滚动
   setInterval(() => {
@@ -483,9 +577,40 @@ onMounted(() => {
 @use '@/styles/variables.scss' as *;
 
 .home-page {
+  position: relative;
   min-height: 100vh;
-  background: $background-color;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f8f8f8 40%,
+    #e8d5f0 70%,
+    #d4b5e8 85%,
+    #c8a5e0 100%
+  );
   padding-bottom: 50px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.03) 10px,
+      rgba(255, 255, 255, 0.03) 20px
+    );
+    backdrop-filter: blur(1px);
+    pointer-events: none;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
 
   // 顶部导航栏
   .top-bar {
@@ -505,7 +630,7 @@ onMounted(() => {
         width: 40px;
         height: 40px;
         border-radius: 8px;
-        background: $gradient-gold;
+        background: #fdb927;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -513,9 +638,9 @@ onMounted(() => {
       }
 
       .logo-text {
-        color: $secondary-color;
+        color: #fdb927;
         font-weight: bold;
-        font-size: 14px;
+        font-size: 16px;
       }
     }
 
@@ -528,7 +653,8 @@ onMounted(() => {
         font-weight: bold;
         border-radius: $border-radius-md;
         padding: 8px 20px;
-        color: $text-color;
+        background: #fdb927;
+        color: #1f1f1f;
       }
 
       .user-info {
@@ -548,7 +674,7 @@ onMounted(() => {
           }
 
           .balance {
-            color: $secondary-color;
+            color: #fdb927;
             font-size: 12px;
             font-weight: bold;
           }
@@ -565,32 +691,32 @@ onMounted(() => {
   .action-buttons {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 12px 16px;
+    gap: 10px;
+    padding: 8px 16px;
 
     .deposit-btn {
-      background: $background-color;
-      color: $primary-color;
-      border: 2px solid $primary-color;
-      border-radius: $border-radius-md;
+      background: transparent;
+      color: #fdb927;
+      border: 2px solid #fdb927;
+      border-radius: 20px;
       font-weight: bold;
-      font-size: 16px;
-      height: 48px;
+      font-size: 13px;
+      height: 32px;
       transition: $transition-base;
 
       &:active {
-        background: rgba(85, 37, 131, 0.1);
+        background: rgba(253, 185, 39, 0.1);
       }
     }
 
     .withdrawal-btn {
-      background: $gradient-gold;
-      color: $text-color;
+      background: #fdb927;
+      color: #1f1f1f;
       border: none;
-      border-radius: $border-radius-md;
+      border-radius: 20px;
       font-weight: bold;
-      font-size: 16px;
-      height: 48px;
+      font-size: 13px;
+      height: 32px;
       transition: $transition-base;
 
       &:active {
@@ -601,27 +727,27 @@ onMounted(() => {
 
   // 轮播图
   .banner-section {
-    padding: 0 16px;
-    margin-bottom: 12px;
+    padding: 0;
+    margin-bottom: 8px;
 
     .banner-img {
       width: 100%;
       height: 180px;
-      border-radius: 12px;
+      border-radius: 0;
       object-fit: cover;
     }
   }
 
   // 邀请好友横幅（公告跑马灯）
   .invite-banner {
-    margin: 0 16px 12px;
-    padding: 12px 16px;
+    margin: 0 12px 6px;
+    padding: 4px 10px;
     background: rgba(253, 185, 39, 0.1);
-    border: 1px solid $secondary-color;
-    border-radius: 24px;
+    border: 1px solid #fdb927;
+    border-radius: 20px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
     transition: $transition-base;
     overflow: hidden;
@@ -634,14 +760,15 @@ onMounted(() => {
       flex: 1;
       overflow: hidden;
       position: relative;
-      height: 20px;
+      height: 16px;
 
       .notice-text {
         display: inline-block;
         white-space: nowrap;
-        color: $primary-color;
-        font-size: 13px;
+        color: #fdb927;
+        font-size: 11px;
         font-weight: 500;
+        line-height: 16px;
         animation: marquee 20s linear infinite;
         padding-left: 100%;
       }
@@ -659,14 +786,14 @@ onMounted(() => {
 
   // Jackpot 显示
   .jackpot-section {
-    margin: 0 16px 16px;
-    padding: 16px;
-    background: $gradient-purple;
-    border: 2px solid $secondary-color;
+    margin: 0 12px 8px;
+    padding: 6px 10px;
+    background: #552583;
+    border: 2px solid #fdb927;
     border-radius: $border-radius-lg;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     position: relative;
     overflow: hidden;
     box-shadow: $shadow-lg;
@@ -683,9 +810,9 @@ onMounted(() => {
     }
 
     .jackpot-icon {
-      width: 50px;
-      height: 50px;
-      font-size: 40px;
+      width: 24px;
+      height: 24px;
+      font-size: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -697,31 +824,34 @@ onMounted(() => {
       flex: 1;
       min-width: 0;
       z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 24px;
     }
 
     .jackpot-title {
-      color: $secondary-color;
-      font-size: 14px;
+      color: #fdb927;
+      font-size: 11px;
       font-weight: bold;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      margin-bottom: 8px;
-      text-align: center;
+      flex-shrink: 0;
     }
 
     .jackpot-amount {
       display: flex;
-      justify-content: center;
-      gap: 2px;
+      justify-content: flex-start;
+      gap: 1px;
       flex-wrap: nowrap;
       overflow: hidden;
+      flex: 1;
 
       .digit-wrapper {
-        min-width: 20px;
-        max-width: 28px;
+        min-width: 16px;
+        max-width: 20px;
         flex: 0 1 auto;
-        height: 36px;
-        background: $gradient-gold;
-        border-radius: 4px;
+        height: 20px;
+        background: #fdb927;
+        border-radius: 2px;
         box-shadow: $shadow-md;
         overflow: hidden;
         position: relative;
@@ -740,12 +870,12 @@ onMounted(() => {
       .digit {
         display: block;
         width: 100%;
-        height: 36px;
-        color: $text-color;
-        font-size: 20px;
+        height: 20px;
+        color: #1f1f1f;
+        font-size: 13px;
         font-weight: bold;
         text-align: center;
-        line-height: 36px;
+        line-height: 20px;
         flex-shrink: 0;
       }
     }
@@ -783,26 +913,30 @@ onMounted(() => {
       justify-content: center;
       gap: 4px;
       padding: 12px 8px;
-      background: $background-color;
-      border: 2px solid $border-color;
-      border-radius: $border-radius-lg;
+      background: #552583;
+      border: 2px solid #552583;
+      border-radius: 12px;
       cursor: pointer;
       transition: $transition-base;
-      box-shadow: $shadow-sm;
+      box-shadow: 0 2px 8px rgba(85, 37, 131, 0.3);
 
       &.active {
-        background: rgba(253, 185, 39, 0.1);
-        border-color: $secondary-color;
+        border: 3px solid #fdb927;
+        box-shadow: 0 0 12px rgba(253, 185, 39, 0.6);
       }
 
       &:active {
         transform: scale(0.95);
       }
 
+      :deep(.van-icon) {
+        color: #fdb927 !important;
+      }
+
       span {
-        color: $text-color;
+        color: #fff;
         font-size: 11px;
-        font-weight: 500;
+        font-weight: 600;
         text-align: center;
         line-height: 1.2;
       }
@@ -824,16 +958,23 @@ onMounted(() => {
       padding: 0;
 
       .van-search__content {
-        background: $background-color-light;
-        border: 1px solid $border-color;
+        background: #1f1f1f;
+        border: 2px solid #552583;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(85, 37, 131, 0.2);
       }
 
       input {
-        color: $text-color;
+        color: #fff;
+        font-size: 14px;
 
         &::placeholder {
-          color: $text-color-secondary;
+          color: #666;
         }
+      }
+
+      .van-icon {
+        color: #fdb927;
       }
     }
   }
@@ -843,24 +984,73 @@ onMounted(() => {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+    min-height: 200px;
 
     .game-card {
       position: relative;
       border-radius: 8px;
-      overflow: hidden;
+      overflow: hidden !important;
       cursor: pointer;
-      transition: transform 0.3s;
       box-shadow: $shadow-sm;
       background: $background-color;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
+      // 点击动态效果
       &:active {
         transform: scale(0.95);
+        box-shadow: 0 2px 8px rgba(85, 37, 131, 0.3);
+
+        .game-image-wrapper {
+          .game-overlay {
+            opacity: 1;
+          }
+        }
       }
 
-      .game-cover {
+      // 悬停效果（PC端）
+      @media (hover: hover) {
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 16px rgba(85, 37, 131, 0.2);
+
+          .game-image-wrapper {
+            .game-overlay {
+              opacity: 1;
+            }
+          }
+        }
+      }
+
+      .game-image-wrapper {
+        position: relative;
         width: 100%;
         height: 100px;
-        object-fit: cover;
+        overflow: hidden;
+
+        .game-cover {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+
+        .game-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(85, 37, 131, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+      }
+
+      &:active .game-image-wrapper .game-cover {
+        transform: scale(1.1);
       }
 
       .game-info {
@@ -871,10 +1061,11 @@ onMounted(() => {
         padding: 6px;
         background: linear-gradient(to top, rgba(31, 31, 31, 0.95), transparent);
 
-        .game-provider {
-          color: $secondary-color;
+        .game-vendor {
+          color: #fdb927;
           font-size: 9px;
           margin-bottom: 2px;
+          font-weight: 600;
         }
 
         .game-name {
@@ -894,7 +1085,58 @@ onMounted(() => {
         background: rgba(255, 255, 255, 0.9);
         padding: 4px;
         border-radius: 50%;
+        transition: all 0.3s ease;
+        z-index: 2;
+
+        &:active {
+          transform: scale(1.2);
+        }
       }
+
+      // 游戏标签
+      .game-badge {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 9px;
+        font-weight: bold;
+        z-index: 2;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .hot-badge {
+        background: #ff4757;
+        color: #fff;
+      }
+
+      .new-badge {
+        background: #44a08d;
+        color: #fff;
+      }
+
+      .recommend-badge {
+        background: #fdb927;
+        color: #1f1f1f;
+        top: 24px;
+      }
+    }
+
+    .loading-wrapper {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 0;
+    }
+
+    .empty-wrapper {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 0;
     }
   }
 
@@ -951,7 +1193,7 @@ onMounted(() => {
   // 右侧悬浮按钮
   .float-buttons {
     position: fixed;
-    right: 16px;
+    right: calc(50% - 207px + 16px); // 414px / 2 = 207px，然后加上右边距
     bottom: 120px;
     display: flex;
     flex-direction: column;
@@ -982,23 +1224,13 @@ onMounted(() => {
       }
 
       &.service {
-        background: $gradient-purple-gold;
+        background: #552583;
       }
     }
-  }
 
-  // 底部导航栏样式
-  :deep(.van-tabbar) {
-    background: $background-color;
-    border-top: 1px solid $border-color;
-    box-shadow: 0 -2px 8px rgba(85, 37, 131, 0.1);
-
-    .van-tabbar-item__text {
-      font-size: 11px;
-    }
-
-    .van-tabbar-item--active {
-      color: $primary-color;
+    // 移动设备适配
+    @media (max-width: 414px) {
+      right: 16px;
     }
   }
 }

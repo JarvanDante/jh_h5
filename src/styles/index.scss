@@ -16,8 +16,12 @@ body,
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: $background-color;
+  background-color: #1a1a1a;
   color: $text-color;
+}
+
+body {
+  overflow: hidden;
 }
 
 // 滚动条样式
@@ -277,4 +281,3 @@ body,
 .transition-slow {
   transition: all $transition-slow;
 }
-

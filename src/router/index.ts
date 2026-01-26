@@ -42,6 +42,38 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/game',
+    name: 'Game',
+    component: () => import('@/views/game/index.vue'),
+    meta: {
+      title: '游戏',
+    },
+  },
+  {
+    path: '/promotion',
+    name: 'Promotion',
+    component: () => import('@/views/promotion/index.vue'),
+    meta: {
+      title: '促销活动',
+    },
+  },
+  {
+    path: '/invite',
+    name: 'Invite',
+    component: () => import('@/views/invite/index.vue'),
+    meta: {
+      title: '邀请好友',
+    },
+  },
+  {
+    path: '/deposit',
+    name: 'Deposit',
+    component: () => import('@/views/deposit/index.vue'),
+    meta: {
+      title: '存款',
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/error/404.vue'),
