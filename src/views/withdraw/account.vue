@@ -3,117 +3,193 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">add account</span>
+      <span class="title">my account</span>
       <div class="placeholder"></div>
     </div>
 
     <!-- 内容区域 -->
     <div class="content">
-      <!-- 提现方式选择 -->
-      <div class="withdraw-methods">
-        <div
-          v-for="method in withdrawMethods"
-          :key="method.id"
-          class="method-tab"
-          :class="{ active: selectedMethod === method.id }"
-          @click="selectMethod(method.id)"
-        >
-          {{ method.name }}
-        </div>
-      </div>
-
-      <!-- 提示信息 -->
-      <div class="notice-list">
-        <div class="notice-item">
-          <span class="notice-number">1.</span>
-          <span class="notice-text notice-red">
-            To ensure fast remittance, please fill in your full name, which should be consistent
-            with the account.
-          </span>
-        </div>
-        <div class="notice-item">
-          <span class="notice-number">2.</span>
-          <span class="notice-text">
-            Please check your account information. Transfers will not be made to incorrect accounts.
-          </span>
-        </div>
-      </div>
-
-      <!-- 表单 -->
-      <van-form @submit="handleSubmit">
-        <!-- 姓名输入 -->
-        <div class="form-item">
-          <div class="form-label">Name <span class="required">*</span></div>
-          <van-field
-            v-model="formData.name"
-            placeholder="Please enter your name"
-            :border="false"
-            class="custom-field"
-          />
-        </div>
-
-        <!-- 账号输入 -->
-        <div class="form-item">
-          <div class="form-label">
-            {{ selectedMethod === 'gcash' ? 'Gcash Account' : 'Maya Account' }}
-            <span class="required">*</span>
+      <!-- 如果有银行卡数据，只显示列表 -->
+      <div v-if="bankCards.length > 0" class="bank-cards-view">
+        <!-- 提现方式选择 -->
+        <div class="withdraw-methods">
+          <div
+            v-for="method in withdrawMethods"
+            :key="method.id"
+            class="method-tab"
+            :class="{ active: selectedMethod === method.id }"
+            @click="selectMethod(method.id)"
+          >
+            {{ method.name }}
           </div>
-          <div class="account-input-wrapper">
-            <div class="country-code">
-              <img
-                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Cpath fill='%230038A8' d='M32 5H4a4 4 0 0 0-4 4v9h36V9a4 4 0 0 0-4-4z'/%3E%3Cpath fill='%23CE1126' d='M4 31h28a4 4 0 0 0 4-4v-9H0v9a4 4 0 0 0 4 4z'/%3E%3Cpath fill='%23FFF' d='M0 13h36v10H0z'/%3E%3Cpath fill='%23FCD116' d='m5 16 1.5 1.5L5 19l1.5 1.5L5 22h3l-1.5-1.5L8 19l-1.5-1.5L8 16H5zm0 0 1.5 1.5L5 19l1.5 1.5L5 22h3l-1.5-1.5L8 19l-1.5-1.5L8 16H5z'/%3E%3C/svg%3E"
-                alt="PH"
-                class="flag-icon"
-              />
-              <span>+63</span>
+        </div>
+
+        <!-- 银行卡列表 -->
+        <div class="bank-card-list">
+          <div
+            v-for="card in filteredBankCards"
+            :key="card.id"
+            class="bank-card-item"
+            :class="{ default: card.is_default === 1 }"
+          >
+            <div class="card-content">
+              <div class="card-icon">
+                <img
+                  v-if="card.type === 1"
+                  src="/gcash-icon.png"
+                  alt="GCash"
+                  class="payment-icon"
+                />
+                <img
+                  v-else-if="card.type === 2"
+                  src="/maya-icon.png"
+                  alt="Maya"
+                  class="payment-icon"
+                />
+                <van-icon v-else name="card" size="40" color="#552583" />
+              </div>
+              <div class="card-info">
+                <div class="card-name">{{ getCardTypeName(card.type) }}</div>
+                <div class="card-number">{{ maskCardNumber(card.card_no) }}</div>
+              </div>
+              <div v-if="card.is_default === 1" class="default-badge">
+                <van-icon name="success" size="18" color="#fff" />
+                <span>default</span>
+              </div>
             </div>
-            <van-field
-              v-model="formData.accountNumber"
-              type="tel"
-              placeholder="9186570128"
-              :border="false"
-              class="account-field"
-            />
+
+            <!-- 非默认卡片显示操作按钮 -->
+            <div v-if="card.is_default !== 1" class="card-actions">
+              <van-button
+                class="action-btn set-default-btn"
+                size="small"
+                @click="handleSetDefault(card.id)"
+              >
+                Set Default
+              </van-button>
+              <van-button class="action-btn delete-btn" size="small" @click="handleDelete(card.id)">
+                Delete
+              </van-button>
+            </div>
           </div>
         </div>
 
-        <!-- 提交按钮 -->
-        <div class="submit-wrapper">
-          <van-button class="submit-btn" block native-type="submit">add account</van-button>
+        <!-- 添加账户按钮 -->
+        <div class="add-account-section">
+          <div class="add-account-btn" @click="showAddForm">
+            <van-icon name="plus" size="20" color="#3b82f6" />
+            <span>add account</span>
+          </div>
         </div>
-      </van-form>
+      </div>
+
+      <!-- 如果没有银行卡数据，显示空状态 -->
+      <div v-else class="empty-state">
+        <van-empty description="No bank account yet" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
-import { withdrawApi } from '@/api'
+import { showToast, showDialog } from 'vant'
+import { getBankCardList, setDefaultBankCard, deleteBankCard, type BankCard } from '@/api'
 
 const router = useRouter()
 
 // 选中的提现方式
-const selectedMethod = ref('gcash')
+const selectedMethod = ref(1) // 1=Gcash, 2=Maya
 
 // 提现方式列表
 const withdrawMethods = ref([
-  { id: 'gcash', name: 'Gcash' },
-  { id: 'maya', name: 'Maya' },
+  { id: 1, name: 'Gcash' },
+  { id: 2, name: 'Maya' },
 ])
 
-// 表单数据
-const formData = reactive({
-  name: '',
-  accountNumber: '',
+// 银行卡列表
+const bankCards = ref<BankCard[]>([])
+
+// 根据选中的方式过滤银行卡
+const filteredBankCards = computed(() => {
+  return bankCards.value.filter((card) => card.type === selectedMethod.value)
 })
 
+// 加载银行卡列表
+const loadBankCards = async () => {
+  try {
+    const res = await getBankCardList()
+    bankCards.value = res.list || []
+  } catch (error) {
+    console.error('Failed to load bank cards:', error)
+  }
+}
+
 // 选择提现方式
-const selectMethod = (methodId: string) => {
+const selectMethod = (methodId: number) => {
   selectedMethod.value = methodId
-  // 切换方式时清空账号
-  formData.accountNumber = ''
+}
+
+// 获取卡类型名称
+const getCardTypeName = (type: number) => {
+  return type === 1 ? 'Gcash' : type === 2 ? 'Maya' : 'Bank Card'
+}
+
+// 遮罩卡号
+const maskCardNumber = (cardNo: string) => {
+  if (!cardNo || cardNo.length < 4) return cardNo
+  const lastFour = cardNo.slice(-4)
+  return `*******${lastFour}`
+}
+
+// 显示添加表单
+const showAddForm = () => {
+  router.push('/withdraw/add-account')
+}
+
+// 设置默认银行卡
+const handleSetDefault = async (cardId: number) => {
+  try {
+    const res = await setDefaultBankCard(cardId)
+    if (res.success) {
+      showToast('Set as default successfully')
+      // 重新加载银行卡列表
+      await loadBankCards()
+    } else {
+      showToast(res.message || 'Failed to set default')
+    }
+  } catch (error: any) {
+    console.error('设置默认银行卡失败:', error)
+    showToast(error.message || 'Failed to set default')
+  }
+}
+
+// 删除银行卡
+const handleDelete = async (cardId: number) => {
+  try {
+    await showDialog({
+      title: 'Confirm Delete',
+      message: 'Are you sure you want to delete this account?',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      confirmButtonColor: '#ee0a24',
+    })
+
+    const res = await deleteBankCard(cardId)
+    if (res.success) {
+      showToast('Deleted successfully')
+      // 重新加载银行卡列表
+      await loadBankCards()
+    } else {
+      showToast(res.message || 'Failed to delete')
+    }
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      showToast(error.message || 'Failed to delete')
+    }
+  }
 }
 
 // 返回
@@ -121,48 +197,10 @@ const goBack = () => {
   router.back()
 }
 
-// 提交表单
-const handleSubmit = async () => {
-  // 验证姓名
-  if (!formData.name || !formData.name.trim()) {
-    showToast('Please enter your name')
-    return
-  }
-
-  // 验证账号
-  if (!formData.accountNumber || !formData.accountNumber.trim()) {
-    showToast('Please enter your account number')
-    return
-  }
-
-  // 验证手机号格式（菲律宾手机号通常是10位数字，以9开头）
-  const phoneRegex = /^9\d{9}$/
-  if (!phoneRegex.test(formData.accountNumber)) {
-    showToast('Please enter a valid account number (10 digits starting with 9)')
-    return
-  }
-
-  try {
-    // 调用添加账户 API
-    const withdrawId = selectedMethod.value === 'gcash' ? 1 : 2 // 假设 gcash=1, maya=2
-    await withdrawApi.addWithdrawAccount({
-      withdraw_id: withdrawId,
-      bank_name: selectedMethod.value === 'gcash' ? 'Gcash' : 'Maya',
-      account_name: formData.name,
-      account_number: `+63${formData.accountNumber}`,
-      is_default: 1,
-    })
-
-    showToast('Account added successfully')
-    // 返回上一页
-    setTimeout(() => {
-      router.back()
-    }, 1000)
-  } catch (error: any) {
-    console.error('添加账户失败:', error)
-    showToast(error.message || 'Failed to add account')
-  }
-}
+// 页面加载时获取银行卡列表
+onMounted(() => {
+  loadBankCards()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -209,7 +247,6 @@ const handleSubmit = async () => {
       border-radius: 12px;
       padding: 16px;
       text-align: center;
-      color: $primary-color;
       font-size: 18px;
       font-weight: 600;
       cursor: pointer;
@@ -219,13 +256,28 @@ const handleSubmit = async () => {
       user-select: none;
       -webkit-tap-highlight-color: transparent;
 
-      &.active {
-        background: $gradient-purple;
-        border: 2px solid $secondary-color;
-        color: #fff;
-        box-shadow:
-          0 0 0 2px $secondary-color,
-          0 4px 16px rgba(85, 37, 131, 0.4);
+      // Gcash 默认蓝色
+      &:nth-child(1) {
+        color: #007dff;
+        border-color: #007dff;
+
+        &.active {
+          background: linear-gradient(135deg, #007dff 0%, #0056b3 100%);
+          color: #fff;
+          box-shadow: 0 4px 16px rgba(0, 125, 255, 0.4);
+        }
+      }
+
+      // Maya 绿色
+      &:nth-child(2) {
+        color: #00d632;
+        border-color: #00d632;
+
+        &.active {
+          background: linear-gradient(135deg, #00d632 0%, #00a826 100%);
+          color: #fff;
+          box-shadow: 0 4px 16px rgba(0, 214, 50, 0.4);
+        }
       }
 
       &:active {
@@ -234,145 +286,163 @@ const handleSubmit = async () => {
     }
   }
 
-  // 提示信息
-  .notice-list {
-    margin-bottom: 32px;
-    background: #fff;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  // 银行卡列表视图
+  .bank-cards-view {
+    .bank-card-list {
+      margin-bottom: 24px;
 
-    .notice-item {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      line-height: 1.6;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-
-      .notice-number {
-        color: $danger-color;
-        font-size: 15px;
-        font-weight: 600;
-        flex-shrink: 0;
-      }
-
-      .notice-text {
-        color: #666;
-        font-size: 14px;
-
-        &.notice-red {
-          color: $danger-color;
-        }
-      }
-    }
-  }
-
-  // 表单项
-  .form-item {
-    margin-bottom: 24px;
-
-    .form-label {
-      color: #333;
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 12px;
-
-      .required {
-        color: $danger-color;
-        margin-left: 4px;
-      }
-    }
-
-    .custom-field {
-      background: #fff;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 16px;
-      color: #333;
-      font-size: 15px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-      :deep(.van-field__control) {
-        color: #333;
-
-        &::placeholder {
-          color: #999;
-        }
-      }
-    }
-
-    // 账号输入包装器
-    .account-input-wrapper {
-      display: flex;
-      align-items: center;
-      background: #fff;
-      border: 2px solid $success-color;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-      .country-code {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+      .bank-card-item {
+        background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+        border: 2px solid #fdb927;
+        border-radius: 16px;
         padding: 16px;
-        border-right: 2px solid #e5e7eb;
-        color: #333;
-        font-size: 15px;
-        font-weight: 600;
-        flex-shrink: 0;
+        margin-bottom: 16px;
+        box-shadow:
+          0 0 0 2px #fdb927,
+          0 4px 20px rgba(85, 37, 131, 0.3);
+        transition: all 0.3s ease;
 
-        .flag-icon {
-          width: 24px;
-          height: 24px;
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .card-content {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .card-icon {
+          width: 56px;
+          height: 56px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(255, 255, 255, 0.2);
           border-radius: 50%;
+          overflow: hidden;
+          flex-shrink: 0;
+
+          .payment-icon {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 50%;
+          }
         }
-      }
 
-      .account-field {
-        flex: 1;
-        background: transparent;
-        padding: 16px;
-        color: #333;
-        font-size: 15px;
+        .card-info {
+          flex: 1;
 
-        :deep(.van-field__control) {
-          color: #333;
+          .card-name {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+          }
 
-          &::placeholder {
-            color: #999;
+          .card-number {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+          }
+        }
+
+        .default-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(255, 255, 255, 0.25);
+          border-radius: 20px;
+          padding: 6px 14px;
+          flex-shrink: 0;
+
+          span {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+          }
+        }
+
+        .card-actions {
+          display: flex;
+          gap: 12px;
+          margin-top: 16px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(255, 255, 255, 0.2);
+
+          .action-btn {
+            flex: 1;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+
+            &.set-default-btn {
+              background: rgba(255, 255, 255, 0.9);
+              color: #552583;
+              border: none;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+              &:active {
+                transform: scale(0.98);
+                background: #fff;
+              }
+            }
+
+            &.delete-btn {
+              background: transparent;
+              color: #fff;
+              border: 2px solid rgba(255, 255, 255, 0.6);
+
+              &:active {
+                transform: scale(0.98);
+                background: rgba(255, 255, 255, 0.1);
+              }
+            }
           }
         }
       }
     }
-  }
 
-  // 提交按钮
-  .submit-wrapper {
-    margin-top: 40px;
+    .add-account-section {
+      .add-account-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: #fff;
+        border: 2px dashed #3b82f6;
+        border-radius: 16px;
+        padding: 20px;
+        color: #3b82f6;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
 
-    .submit-btn {
-      background: $gradient-purple;
-      color: #fff;
-      border: none;
-      border-radius: 16px;
-      font-size: 18px;
-      font-weight: bold;
-      height: 56px;
-      box-shadow: 0 4px 16px rgba(85, 37, 131, 0.4);
-      transition: all 0.3s ease;
-      touch-action: manipulation;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-
-      &:active {
-        transform: scale(0.98);
-        opacity: 0.9;
+        &:active {
+          transform: scale(0.98);
+          background: #f0f9ff;
+        }
       }
     }
+  }
+
+  // 空状态
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
   }
 }
 </style>

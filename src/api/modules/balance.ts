@@ -56,3 +56,47 @@ export interface RefreshBalanceResponse {
 export function refreshBalance() {
   return request.get<RefreshBalanceResponse>('/frontend/balance/refresh-balance')
 }
+
+// 银行卡信息
+export interface BankCard {
+  id: number
+  type: number // 1=GCASH 2=Maya
+  card_account: string
+  card_no: string
+  is_default: number // 0=否 1=是
+  created_at: string
+}
+
+// 获取银行卡列表
+export function getBankCardList() {
+  return request.get<{ list: BankCard[] }>('/frontend/balance/bank-card-list')
+}
+
+// 添加银行卡
+export interface AddBankCardParams {
+  type: number
+  card_account: string
+  card_no: string
+}
+
+export function addBankCard(params: AddBankCardParams) {
+  return request.post<{ success: boolean; message: string }>(
+    '/frontend/balance/add-bank-card',
+    params,
+  )
+}
+
+// 删除银行卡
+export function deleteBankCard(id: number) {
+  return request.post<{ success: boolean; message: string }>('/frontend/balance/delete-bank-card', {
+    id,
+  })
+}
+
+// 设置默认银行卡
+export function setDefaultBankCard(id: number) {
+  return request.post<{ success: boolean; message: string }>(
+    '/frontend/balance/set-default-bank-card',
+    { id },
+  )
+}

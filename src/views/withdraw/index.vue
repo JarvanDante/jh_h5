@@ -86,7 +86,7 @@
       </div>
 
       <!-- 无账户提示 -->
-      <div v-if="!hasAccount" class="no-account">
+      <div v-if="defaultBankCards.length === 0" class="no-account">
         <div class="no-account-icon">
           <van-icon name="card" size="80" color="#4b5563" />
         </div>
@@ -97,13 +97,20 @@
         </van-button>
       </div>
 
-      <!-- 已有账户显示 -->
-      <div v-else class="account-card">
-        <div class="account-info">
-          <div class="account-name">{{ selectedAccount.bankName }}</div>
-          <div class="account-number">{{ selectedAccount.accountNumber }}</div>
+      <!-- 银行卡列表 -->
+      <div v-else class="bank-card-list">
+        <div v-for="card in defaultBankCards" :key="card.id" class="bank-card-item">
+          <div class="card-icon">
+            <img v-if="card.type === 1" src="/gcash-icon.png" alt="GCash" class="payment-icon" />
+            <img v-else-if="card.type === 2" src="/maya-icon.png" alt="Maya" class="payment-icon" />
+            <van-icon v-else name="card" size="40" color="#552583" />
+          </div>
+          <div class="card-info">
+            <div class="card-name">{{ getCardTypeName(card.type) }}</div>
+            <div class="card-number">{{ maskCardNumber(card.card_no) }}</div>
+          </div>
+          <van-icon name="success" size="24" color="#552583" class="check-icon" />
         </div>
-        <van-icon name="edit" size="20" color="#3b82f6" @click="editAccount" />
       </div>
     </div>
 
@@ -118,7 +125,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showDialog } from 'vant'
-import { getWithdrawList, type WithdrawChannel, refreshBalance as refreshBalanceApi } from '@/api'
+import {
+  getWithdrawList,
+  type WithdrawChannel,
+  refreshBalance as refreshBalanceApi,
+  getBankCardList,
+  type BankCard,
+  setDefaultBankCard,
+} from '@/api'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
@@ -142,19 +156,18 @@ const selectedMethod = ref<number | null>(null)
 // 提现金额
 const withdrawAmount = ref('')
 
-// 是否有提现账户
-const hasAccount = ref(false)
-
-// 选中的账户
-const selectedAccount = ref({
-  bankName: 'Gcash',
-  accountNumber: '09123456789',
-})
+// 银行卡列表
+const bankCards = ref<BankCard[]>([])
 
 // 获取选中的提现渠道
 const selectedChannel = computed(() => {
   if (!selectedMethod.value) return null
   return withdrawChannels.value.find((channel) => channel.id === selectedMethod.value)
+})
+
+// 只显示默认的银行卡
+const defaultBankCards = computed(() => {
+  return bankCards.value.filter((card) => card.is_default === 1)
 })
 
 // 获取当前渠道的快捷金额列表
@@ -281,13 +294,29 @@ const goToMyAccount = () => {
 
 // 添加账户
 const addAccount = () => {
-  router.push('/withdraw/account')
+  router.push('/withdraw/add-account')
 }
 
-// 编辑账户
-const editAccount = () => {
-  showToast('Edit Account')
-  // TODO: 跳转到编辑账户页面
+// 加载银行卡列表
+const loadBankCards = async () => {
+  try {
+    const res = await getBankCardList()
+    bankCards.value = res.list || []
+  } catch (error) {
+    console.error('Failed to load bank cards:', error)
+  }
+}
+
+// 获取卡类型名称
+const getCardTypeName = (type: number) => {
+  return type === 1 ? 'Gcash' : type === 2 ? 'Maya' : 'Bank Card'
+}
+
+// 遮罩卡号
+const maskCardNumber = (cardNo: string) => {
+  if (!cardNo || cardNo.length < 4) return cardNo
+  const lastFour = cardNo.slice(-4)
+  return `*******${lastFour}`
 }
 
 // 处理提现
@@ -297,7 +326,7 @@ const handleWithdraw = () => {
     return
   }
 
-  if (!hasAccount.value) {
+  if (defaultBankCards.value.length === 0) {
     showToast('Please add a bank account first')
     return
   }
@@ -344,6 +373,7 @@ const handleWithdraw = () => {
 // 页面加载时获取提现渠道列表
 onMounted(() => {
   loadWithdrawChannels()
+  loadBankCards()
 
   // 如果已登录，加载用户余额
   if (userStore.isLogin && userStore.userInfo) {
@@ -673,27 +703,68 @@ onMounted(() => {
       }
     }
 
-    // 账户卡片
-    .account-card {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f5f5f5;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 16px;
+    // 银行卡列表
+    .bank-card-list {
+      .bank-card-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+        border: 2px solid #fdb927;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow:
+          0 0 0 2px #fdb927,
+          0 4px 16px rgba(85, 37, 131, 0.4);
+        transition: all 0.3s ease;
 
-      .account-info {
-        .account-name {
-          color: $primary-color;
-          font-size: 16px;
-          font-weight: 600;
-          margin-bottom: 6px;
+        &:last-child {
+          margin-bottom: 0;
         }
 
-        .account-number {
-          color: #666;
-          font-size: 14px;
+        .card-icon {
+          width: 50px;
+          height: 50px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 50%;
+          overflow: hidden;
+
+          .payment-icon {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 50%;
+          }
+        }
+
+        .card-info {
+          flex: 1;
+
+          .card-name {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+          }
+
+          .card-number {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+          }
+        }
+
+        .check-icon {
+          flex-shrink: 0;
+          background: #fff;
+          border-radius: 50%;
+          padding: 2px;
         }
       }
     }

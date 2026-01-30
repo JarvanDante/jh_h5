@@ -105,6 +105,15 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawAccount',
     component: () => import('@/views/withdraw/account.vue'),
     meta: {
+      title: '我的账户',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/withdraw/add-account',
+    name: 'WithdrawAddAccount',
+    component: () => import('@/views/withdraw/add-account.vue'),
+    meta: {
       title: '添加提现账户',
       requiresAuth: true,
     },

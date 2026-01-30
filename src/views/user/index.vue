@@ -165,7 +165,7 @@ const defaultAvatar = '/lion-avatar..png'
 
 // 用户数据
 const userId = computed(() => userStore.userInfo?.id || '285560778')
-const accountNumber = computed(() => userStore.userInfo?.username || '9186570127')
+const accountNumber = computed(() => userStore.userInfo?.username || '9188888888')
 const balance = computed(() => {
   // 优先从 localStorage 中的 user_balance 获取余额
   try {
