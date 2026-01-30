@@ -18,27 +18,25 @@
     <!-- 支付方式网格 -->
     <div class="payment-methods">
       <div
-        v-for="method in paymentMethods"
-        :key="method.id"
+        v-for="channel in paymentChannels"
+        :key="channel.id"
         class="payment-card"
-        :class="{ active: selectedMethod === method.id }"
-        @click="selectMethod(method.id)"
+        :class="{ active: selectedMethod === channel.id }"
+        @click="selectMethod(channel.id)"
       >
-        <span v-if="method.recommended" class="reco-badge-small">RECO</span>
+        <span v-if="channel.sort >= 90" class="reco-badge-small">RECO</span>
         <div class="card-content">
-          <div class="method-name">{{ method.name }}</div>
+          <div class="method-name">{{ channel.name }}</div>
           <div class="method-icon">🔥</div>
         </div>
       </div>
     </div>
 
-    <!-- 提示信息 -->
-    <div class="bonus-notice">
+    <!-- 提示信息 - 显示选中渠道的remark -->
+    <div v-if="selectedChannel && selectedChannel.remark" class="bonus-notice">
       <div class="notice-icon">🔥🔥</div>
       <div class="notice-text">
-        Dear Player, Enjoy a 1% bonus on all Gcash/Maya deposits! Keep both wallets ready to avoid
-        interruptions. Thanks for your support! we'll keep improving our services and benefits for
-        you!
+        {{ selectedChannel.remark }}
       </div>
     </div>
 
@@ -61,7 +59,7 @@
         v-for="amount in quickAmounts"
         :key="amount"
         class="amount-btn"
-        :class="{ active: depositAmount === amount.toString() }"
+        :class="{ active: parseFloat(depositAmount) === amount }"
         @click="selectAmount(amount)"
       >
         {{ formatAmount(amount) }}
@@ -76,9 +74,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
+import { getPaymentList, type PaymentChannel } from '@/api'
 
 const router = useRouter()
 
@@ -87,24 +86,29 @@ const goBack = () => {
   router.back()
 }
 
-// 选中的支付方式
-const selectedMethod = ref('gcash2')
+// 支付渠道列表
+const paymentChannels = ref<PaymentChannel[]>([])
+
+// 选中的支付方式ID
+const selectedMethod = ref<number | null>(null)
 
 // 存款金额
 const depositAmount = ref('100')
 
-// 支付方式列表
-const paymentMethods = ref([
-  { id: 'gcash2', name: 'Gcash²', recommended: true },
-  { id: 'gcash1', name: 'Gcash¹', recommended: true },
-  { id: 'gcash', name: 'Gcash', recommended: true },
-  { id: 'maya', name: 'maya', recommended: false },
-  { id: 'maya2', name: 'maya²', recommended: true },
-  { id: 'gotyme', name: 'Gotyme', recommended: true },
-])
+// 获取选中的支付渠道
+const selectedChannel = computed(() => {
+  if (!selectedMethod.value) return null
+  return paymentChannels.value.find((channel) => channel.id === selectedMethod.value)
+})
 
-// 快捷金额
-const quickAmounts = ref([100, 300, 500, 1000, 2000, 5000, 10000, 30000, 50000])
+// 获取当前渠道的快捷金额列表
+const quickAmounts = computed(() => {
+  if (!selectedChannel.value || !selectedChannel.value.money_list.length) {
+    return [100, 300, 500, 1000, 2000, 5000, 10000, 30000, 50000]
+  }
+  // 将字符串数组转换为数字数组
+  return selectedChannel.value.money_list.map((amount) => parseFloat(amount))
+})
 
 // 计算赠送金额（1%）
 const giftAmount = computed(() => {
@@ -112,9 +116,41 @@ const giftAmount = computed(() => {
   return (amount * 0.01).toFixed(2)
 })
 
+// 加载支付渠道列表
+const loadPaymentChannels = async () => {
+  try {
+    const res = await getPaymentList()
+    paymentChannels.value = res.list || []
+
+    // 默认选中第一个渠道
+    if (paymentChannels.value.length > 0) {
+      selectedMethod.value = paymentChannels.value[0].id
+
+      // 自动选中第一个快捷金额
+      const firstChannel = paymentChannels.value[0]
+      if (firstChannel.money_list && firstChannel.money_list.length > 0) {
+        depositAmount.value = firstChannel.money_list[0]
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load payment channels:', error)
+    showToast('Failed to load payment methods')
+  }
+}
+
 // 选择支付方式
-const selectMethod = (methodId: string) => {
-  selectedMethod.value = methodId
+const selectMethod = (channelId: number) => {
+  selectedMethod.value = channelId
+  // 切换支付方式时，重置金额为第一个快捷金额
+  const channel = paymentChannels.value.find((c) => c.id === channelId)
+  if (channel && channel.money_list && channel.money_list.length > 0) {
+    // 直接从渠道的money_list获取第一个金额并转换为数字
+    const firstAmount = parseFloat(channel.money_list[0])
+    // 转换回字符串时保持数字格式，不要添加小数点
+    depositAmount.value = String(firstAmount)
+  } else {
+    depositAmount.value = ''
+  }
 }
 
 // 选择快捷金额
@@ -137,12 +173,39 @@ const showHistory = () => {
 
 // 处理存款
 const handleDeposit = () => {
+  if (!selectedMethod.value) {
+    showToast('Please select a payment method')
+    return
+  }
+
   if (!depositAmount.value || parseFloat(depositAmount.value) <= 0) {
     showToast('Please enter a valid amount')
     return
   }
-  showToast(`Depositing ₱${depositAmount.value} via ${selectedMethod.value}`)
+
+  const channel = selectedChannel.value
+  if (channel) {
+    const amount = parseFloat(depositAmount.value)
+
+    // 检查金额范围
+    if (amount < channel.each_min) {
+      showToast(`Minimum amount is ₱${channel.each_min}`)
+      return
+    }
+
+    if (channel.each_max > 0 && amount > channel.each_max) {
+      showToast(`Maximum amount is ₱${channel.each_max}`)
+      return
+    }
+
+    showToast(`Depositing ₱${depositAmount.value} via ${channel.name}`)
+  }
 }
+
+// 页面加载时获取支付渠道列表
+onMounted(() => {
+  loadPaymentChannels()
+})
 </script>
 
 <style lang="scss" scoped>

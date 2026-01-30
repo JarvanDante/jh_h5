@@ -12,7 +12,13 @@
       <div class="info-card">
         <div class="card-header">
           <span class="card-title">Account Balance</span>
-          <van-icon name="replay" size="20" color="#3b82f6" @click="refreshBalance" />
+          <van-icon
+            name="replay"
+            size="20"
+            color="#3b82f6"
+            :class="{ rotating: isRefreshing }"
+            @click="refreshBalance"
+          />
         </div>
         <div class="card-amount">{{ formatAmount(accountBalance) }}</div>
       </div>
@@ -32,33 +38,44 @@
     <!-- 提现方式选择 -->
     <div class="withdraw-methods">
       <div
-        v-for="method in withdrawMethods"
-        :key="method.id"
+        v-for="channel in withdrawChannels"
+        :key="channel.id"
         class="method-tab"
-        :class="{ active: selectedMethod === method.id }"
-        @click="selectMethod(method.id)"
+        :class="{ active: selectedMethod === channel.id }"
+        @click="selectMethod(channel.id)"
       >
-        {{ method.name }}
+        {{ channel.name }}
       </div>
     </div>
 
-    <!-- 快捷金额选择 -->
-    <div class="quick-amounts">
-      <div
-        v-for="amount in quickAmounts"
-        :key="amount"
-        class="amount-btn"
-        :class="{ active: withdrawAmount === amount.toString() }"
-        @click="selectAmount(amount)"
-      >
-        {{ formatAmount(amount) }}
+    <!-- 金额选择卡片 -->
+    <div class="amount-card">
+      <!-- 快捷金额选择 -->
+      <div class="quick-amounts">
+        <div
+          v-for="amount in quickAmounts"
+          :key="amount"
+          class="amount-btn"
+          :class="{
+            active: parseFloat(withdrawAmount) === amount,
+            disabled: amount > accountBalance,
+          }"
+          @click="amount <= accountBalance && selectAmount(amount)"
+        >
+          {{ formatAmount(amount) }}
+        </div>
       </div>
-    </div>
 
-    <!-- 金额范围提示 -->
-    <div class="amount-range">
-      <van-icon name="balance-o" size="20" color="#999" />
-      <span>{{ minAmount }} - {{ formatAmount(maxAmount) }}</span>
+      <!-- 金额输入框 -->
+      <div class="amount-input-wrapper">
+        <span class="currency-symbol">₱</span>
+        <input
+          v-model="withdrawAmount"
+          type="number"
+          :placeholder="`${minAmount} - ${formatAmount(maxAmount)}`"
+          class="amount-input"
+        />
+      </div>
     </div>
 
     <!-- 提现账户管理 -->
@@ -98,11 +115,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showDialog } from 'vant'
+import { getWithdrawList, type WithdrawChannel, refreshBalance as refreshBalanceApi } from '@/api'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 账户余额
 const accountBalance = ref(0.0)
@@ -110,8 +130,14 @@ const accountBalance = ref(0.0)
 // 流水要求
 const rolloverRequirement = ref(0.0)
 
-// 选中的提现方式
-const selectedMethod = ref('gcash')
+// 是否正在刷新余额
+const isRefreshing = ref(false)
+
+// 提现渠道列表
+const withdrawChannels = ref<WithdrawChannel[]>([])
+
+// 选中的提现方式ID
+const selectedMethod = ref<number | null>(null)
 
 // 提现金额
 const withdrawAmount = ref('')
@@ -125,20 +151,52 @@ const selectedAccount = ref({
   accountNumber: '09123456789',
 })
 
-// 提现方式列表
-const withdrawMethods = ref([
-  { id: 'gcash', name: 'Gcash' },
-  { id: 'maya', name: 'Maya' },
-])
+// 获取选中的提现渠道
+const selectedChannel = computed(() => {
+  if (!selectedMethod.value) return null
+  return withdrawChannels.value.find((channel) => channel.id === selectedMethod.value)
+})
 
-// 快捷金额
-const quickAmounts = ref([100.0, 300.0, 800.0, 1000.0, 3000.0, 8000.0, 10000.0, 2000.0, 50000.0])
+// 获取当前渠道的快捷金额列表
+const quickAmounts = computed(() => {
+  if (!selectedChannel.value || !selectedChannel.value.money_list.length) {
+    return [100.0, 300.0, 800.0, 1000.0, 3000.0, 8000.0, 10000.0, 2000.0, 50000.0]
+  }
+  // 将字符串数组转换为数字数组
+  return selectedChannel.value.money_list.map((amount) => parseFloat(amount))
+})
 
 // 最小金额
-const minAmount = ref(50.0)
+const minAmount = computed(() => {
+  return selectedChannel.value?.each_min || 50.0
+})
 
 // 最大金额
-const maxAmount = ref(50000.0)
+const maxAmount = computed(() => {
+  return selectedChannel.value?.each_max || 50000.0
+})
+
+// 加载提现渠道列表
+const loadWithdrawChannels = async () => {
+  try {
+    const res = await getWithdrawList()
+    withdrawChannels.value = res.list || []
+
+    // 默认选中第一个渠道
+    if (withdrawChannels.value.length > 0) {
+      selectedMethod.value = withdrawChannels.value[0].id
+
+      // 自动选中第一个快捷金额
+      const firstChannel = withdrawChannels.value[0]
+      if (firstChannel.money_list && firstChannel.money_list.length > 0) {
+        withdrawAmount.value = firstChannel.money_list[0]
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load withdraw channels:', error)
+    showToast('Failed to load withdrawal methods')
+  }
+}
 
 // 格式化金额显示
 const formatAmount = (amount: number) => {
@@ -146,8 +204,18 @@ const formatAmount = (amount: number) => {
 }
 
 // 选择提现方式
-const selectMethod = (methodId: string) => {
-  selectedMethod.value = methodId
+const selectMethod = (channelId: number) => {
+  selectedMethod.value = channelId
+  // 切换提现方式时，重置金额为第一个快捷金额
+  const channel = withdrawChannels.value.find((c) => c.id === channelId)
+  if (channel && channel.money_list && channel.money_list.length > 0) {
+    // 直接从渠道的money_list获取第一个金额并转换为数字
+    const firstAmount = parseFloat(channel.money_list[0])
+    // 转换回字符串时保持数字格式，不要添加小数点
+    withdrawAmount.value = String(firstAmount)
+  } else {
+    withdrawAmount.value = ''
+  }
 }
 
 // 选择快捷金额
@@ -156,9 +224,33 @@ const selectAmount = (amount: number) => {
 }
 
 // 刷新余额
-const refreshBalance = () => {
-  showToast('Refreshing balance...')
-  // TODO: 调用 API 刷新余额
+const refreshBalance = async () => {
+  if (isRefreshing.value) return
+
+  isRefreshing.value = true
+
+  try {
+    const res = await refreshBalanceApi()
+
+    // 更新余额显示
+    accountBalance.value = parseFloat(res.balance || '0')
+
+    // 更新用户store中的余额
+    if (userStore.userInfo) {
+      userStore.setUserInfo({
+        ...userStore.userInfo,
+        balance: res.balance || '0.00',
+      })
+    }
+  } catch (error) {
+    console.error('Failed to refresh balance:', error)
+    showToast('Failed to refresh balance')
+  } finally {
+    // 动画持续1秒后才能再次点击
+    setTimeout(() => {
+      isRefreshing.value = false
+    }, 1000)
+  }
 }
 
 // 刷新流水要求
@@ -200,6 +292,11 @@ const editAccount = () => {
 
 // 处理提现
 const handleWithdraw = () => {
+  if (!selectedMethod.value) {
+    showToast('Please select a withdrawal method')
+    return
+  }
+
   if (!hasAccount.value) {
     showToast('Please add a bank account first')
     return
@@ -217,7 +314,7 @@ const handleWithdraw = () => {
     return
   }
 
-  if (amount > maxAmount.value) {
+  if (maxAmount.value > 0 && amount > maxAmount.value) {
     showToast(`Maximum withdrawal amount is ₱${formatAmount(maxAmount.value)}`)
     return
   }
@@ -227,23 +324,45 @@ const handleWithdraw = () => {
     return
   }
 
-  showDialog({
-    title: 'Confirm Withdrawal',
-    message: `Withdraw ₱${formatAmount(amount)} to ${selectedAccount.value.bankName}?`,
-    showCancelButton: true,
-  })
-    .then(() => {
-      showToast('Withdrawal request submitted')
-      // TODO: 调用提现 API
+  const channel = selectedChannel.value
+  if (channel) {
+    showDialog({
+      title: 'Confirm Withdrawal',
+      message: `Withdraw ₱${formatAmount(amount)} via ${channel.name}?`,
+      showCancelButton: true,
     })
-    .catch(() => {
-      // 用户取消
-    })
+      .then(() => {
+        showToast('Withdrawal request submitted')
+        // TODO: 调用提现 API
+      })
+      .catch(() => {
+        // 用户取消
+      })
+  }
 }
+
+// 页面加载时获取提现渠道列表
+onMounted(() => {
+  loadWithdrawChannels()
+
+  // 如果已登录，加载用户余额
+  if (userStore.isLogin && userStore.userInfo) {
+    accountBalance.value = parseFloat(userStore.userInfo.balance || '0')
+  }
+})
 </script>
 
 <style lang="scss" scoped>
 @use '@/styles/variables.scss' as *;
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .withdraw-page {
   min-height: 100vh;
@@ -290,6 +409,19 @@ const handleWithdraw = () => {
           color: #666;
           font-size: 13px;
           font-weight: 500;
+        }
+
+        .van-icon {
+          cursor: pointer;
+          transition: opacity 0.3s;
+
+          &:active {
+            opacity: 0.7;
+          }
+
+          &.rotating {
+            animation: rotate 1s linear;
+          }
         }
       }
 
@@ -353,12 +485,22 @@ const handleWithdraw = () => {
     }
   }
 
+  // 金额选择卡片
+  .amount-card {
+    margin: 0 16px 20px;
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
   // 快捷金额选择
   .quick-amounts {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    padding: 0 16px 20px;
+    padding: 0 0 20px 0;
 
     .amount-btn {
       background: #fff;
@@ -385,21 +527,76 @@ const handleWithdraw = () => {
           0 4px 16px rgba(85, 37, 131, 0.4);
       }
 
-      &:active {
+      &.disabled {
+        background: #f5f5f5;
+        border: 2px solid #e5e7eb;
+        color: #ccc;
+        cursor: not-allowed;
+        opacity: 0.5;
+
+        &:active {
+          transform: none;
+        }
+      }
+
+      &:active:not(.disabled) {
         transform: scale(0.95);
       }
     }
   }
 
-  // 金额范围提示
-  .amount-range {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 16px 24px;
-    color: #666;
-    font-size: 16px;
-    font-weight: 600;
+  // 金额输入框
+  .amount-input-wrapper {
+    position: relative;
+    padding: 0;
+
+    .currency-symbol {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #fdb927;
+      font-size: 22px;
+      font-weight: bold;
+      pointer-events: none;
+      z-index: 1;
+      line-height: 1;
+    }
+
+    .amount-input {
+      width: 100%;
+      background: #e1d3f6;
+      border: 2px solid rgba(85, 37, 131, 0.2);
+      border-radius: 16px;
+      padding: 14px 20px 14px 45px;
+      color: #552583;
+      font-size: 18px;
+      font-weight: 700;
+      outline: none;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+
+      &::placeholder {
+        color: #fdb927;
+        font-weight: 600;
+      }
+
+      &:focus {
+        border-color: rgba(85, 37, 131, 0.4);
+        background: #e0d3f0;
+      }
+
+      // 移除number类型输入框的上下箭头
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      &[type='number'] {
+        -moz-appearance: textfield;
+      }
+    }
   }
 
   // 账户管理区域
@@ -408,15 +605,15 @@ const handleWithdraw = () => {
     background: #fff;
     border: 2px solid #e5e7eb;
     border-radius: 16px;
-    padding: 20px;
+    padding: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
     .section-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
+      margin-bottom: 5px;
+      padding-bottom: 5px;
       border-bottom: 2px solid #e5e7eb;
 
       .section-title {
@@ -440,10 +637,10 @@ const handleWithdraw = () => {
     // 无账户提示
     .no-account {
       text-align: center;
-      padding: 20px 0;
+      padding: 0px 0;
 
       .no-account-icon {
-        margin-bottom: 16px;
+        margin-bottom: 1px;
         opacity: 0.3;
       }
 
@@ -504,7 +701,7 @@ const handleWithdraw = () => {
 
   // 提现按钮
   .withdraw-action {
-    padding: 0 16px;
+    padding: 0 16px 20px 16px;
 
     .withdraw-btn {
       background: $gradient-purple;
