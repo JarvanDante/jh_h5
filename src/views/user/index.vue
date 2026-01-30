@@ -141,6 +141,9 @@
         <van-icon name="arrow" size="20" color="rgba(255,255,255,0.6)" />
       </div>
     </div>
+
+    <!-- 资金密码提示弹窗 -->
+    <FundPasswordDialog v-model:show="showFundPasswordDialog" @confirm="handleConfirmSetPassword" />
   </div>
 </template>
 
@@ -149,9 +152,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
+import FundPasswordDialog from '@/components/FundPasswordDialog.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+// 资金密码弹窗
+const showFundPasswordDialog = ref(false)
 
 // 默认狮子头像（本地图片）
 const defaultAvatar = '/lion-avatar..png'
@@ -278,8 +285,19 @@ const refreshBalance = async () => {
 
             // 更新用户信息中的余额
             if (userStore.userInfo) {
+              // 从 localStorage 获取完整的 user_info（包含 grade_id 和 is_pay_password）
+              let fullUserInfo = { ...userStore.userInfo }
+              try {
+                const storedUserInfo = localStorage.getItem('user_info')
+                if (storedUserInfo) {
+                  fullUserInfo = JSON.parse(storedUserInfo)
+                }
+              } catch (error) {
+                console.error('Failed to parse user_info:', error)
+              }
+
               userStore.setUserInfo({
-                ...userStore.userInfo,
+                ...fullUserInfo,
                 balance: retryResult.data.balance || '0.00',
               })
             }
@@ -309,8 +327,19 @@ const refreshBalance = async () => {
 
       // 更新用户信息中的余额
       if (userStore.userInfo) {
+        // 从 localStorage 获取完整的 user_info（包含 grade_id 和 is_pay_password）
+        let fullUserInfo = { ...userStore.userInfo }
+        try {
+          const storedUserInfo = localStorage.getItem('user_info')
+          if (storedUserInfo) {
+            fullUserInfo = JSON.parse(storedUserInfo)
+          }
+        } catch (error) {
+          console.error('Failed to parse user_info:', error)
+        }
+
         userStore.setUserInfo({
-          ...userStore.userInfo,
+          ...fullUserInfo,
           balance: refreshBalanceResult.data.balance || '0.00',
         })
       }
@@ -340,7 +369,29 @@ const handleWithdraw = () => {
     router.push('/login')
     return
   }
-  showToast('Withdraw')
+
+  // 检查是否设置了提现密码
+  try {
+    const storedUserInfo = localStorage.getItem('user_info')
+    if (storedUserInfo) {
+      const userInfo = JSON.parse(storedUserInfo)
+      if (userInfo.is_pay_password === 0 || !userInfo.is_pay_password) {
+        // 未设置提现密码，显示提示弹窗
+        showFundPasswordDialog.value = true
+        return
+      }
+    }
+  } catch (error) {
+    console.error('Failed to check pay password:', error)
+  }
+
+  // 已设置密码，直接跳转到提现页面
+  router.push('/withdraw')
+}
+
+// 确认设置密码
+const handleConfirmSetPassword = () => {
+  router.push('/withdraw/set-password')
 }
 
 const handleDeposit = () => {
@@ -392,7 +443,7 @@ const handleLogout = async () => {
 }
 
 // 页面加载时获取用户信息
-onMounted(() => {
+onMounted(async () => {
   // 检查是否登录
   if (!userStore.isLogin) {
     showToast('Please login first')
@@ -402,6 +453,180 @@ onMounted(() => {
 
   // 初始化显示余额
   displayBalance.value = balance.value
+
+  // 请求用户信息接口
+  try {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+    const userInfoUrl = `${apiBaseUrl}/frontend/app/user-info`
+
+    const response = await fetch(userInfoUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${userStore.token}`,
+      },
+    })
+
+    const result = await response.json()
+
+    // 检查 token 是否过期
+    if (result.code === 401 || result.code === 403) {
+      // Token 过期，尝试刷新
+      const refreshToken = userStore.refreshToken
+      if (refreshToken) {
+        const refreshUrl = `${apiBaseUrl}/frontend/app/refresh-token`
+        const refreshResponse = await fetch(refreshUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            refresh_token: refreshToken,
+          }),
+        })
+
+        const refreshResult = await refreshResponse.json()
+
+        if (refreshResult.code === 0 && refreshResult.data?.token) {
+          // 更新 token
+          userStore.setToken(refreshResult.data.token)
+          if (refreshResult.data.refresh_token) {
+            userStore.setRefreshToken(refreshResult.data.refresh_token)
+          }
+
+          // 使用新 token 重新请求用户信息
+          const retryResponse = await fetch(userInfoUrl, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${refreshResult.data.token}`,
+            },
+          })
+
+          const retryResult = await retryResponse.json()
+
+          if (retryResult.code === 0 && retryResult.data) {
+            // 获取现有的 user_info
+            let existingUserInfo = {}
+            try {
+              const storedUserInfo = localStorage.getItem('user_info')
+              if (storedUserInfo) {
+                existingUserInfo = JSON.parse(storedUserInfo)
+              }
+            } catch (error) {
+              console.error('Failed to parse existing user_info:', error)
+            }
+
+            // 合并数据，只覆盖特定字段
+            const updatedUserInfo = {
+              ...existingUserInfo,
+            }
+
+            // 明确覆盖这些字段（即使值为 0 或空字符串）
+            if ('grade_id' in retryResult.data) {
+              updatedUserInfo.grade_id = retryResult.data.grade_id
+            }
+            if ('grade_name' in retryResult.data) {
+              updatedUserInfo.grade_name = retryResult.data.grade_name
+            }
+            if ('is_pay_password' in retryResult.data) {
+              updatedUserInfo.is_pay_password = retryResult.data.is_pay_password
+            }
+
+            // 保存更新后的用户信息到 localStorage
+            localStorage.setItem('user_info', JSON.stringify(updatedUserInfo))
+            console.log('User info updated in localStorage:', updatedUserInfo)
+            console.log(
+              'Updated fields - grade_id:',
+              updatedUserInfo.grade_id,
+              'grade_name:',
+              updatedUserInfo.grade_name,
+              'is_pay_password:',
+              updatedUserInfo.is_pay_password,
+            )
+          }
+        } else {
+          // 刷新失败，跳转到登录页
+          userStore.logout()
+          showToast('Login expired, please login again')
+          router.push('/login')
+        }
+      } else {
+        // 没有 refresh_token，跳转到登录页
+        userStore.logout()
+        showToast('Please login again')
+        router.push('/login')
+      }
+    } else if (result.code === 0 && result.data) {
+      console.log('=== User Info API Success ===')
+      console.log('API response data:', result.data)
+
+      // 获取现有的 user_info
+      let existingUserInfo = {}
+      try {
+        const storedUserInfo = localStorage.getItem('user_info')
+        console.log('Existing user_info (raw):', storedUserInfo)
+        if (storedUserInfo) {
+          existingUserInfo = JSON.parse(storedUserInfo)
+          console.log('Existing user_info (parsed):', existingUserInfo)
+        }
+      } catch (error) {
+        console.error('Failed to parse existing user_info:', error)
+      }
+
+      // 合并数据，只覆盖特定字段
+      const updatedUserInfo = {
+        ...existingUserInfo,
+      }
+
+      console.log('Before update - updatedUserInfo:', updatedUserInfo)
+
+      // 明确覆盖这些字段（即使值为 0 或空字符串）
+      if ('grade_id' in result.data) {
+        console.log('Setting grade_id from', updatedUserInfo.grade_id, 'to', result.data.grade_id)
+        updatedUserInfo.grade_id = result.data.grade_id
+      } else {
+        console.log('grade_id NOT found in result.data')
+      }
+
+      if ('grade_name' in result.data) {
+        console.log(
+          'Setting grade_name from',
+          updatedUserInfo.grade_name,
+          'to',
+          result.data.grade_name,
+        )
+        updatedUserInfo.grade_name = result.data.grade_name
+      } else {
+        console.log('grade_name NOT found in result.data')
+      }
+
+      if ('is_pay_password' in result.data) {
+        console.log(
+          'Setting is_pay_password from',
+          updatedUserInfo.is_pay_password,
+          'to',
+          result.data.is_pay_password,
+        )
+        updatedUserInfo.is_pay_password = result.data.is_pay_password
+      } else {
+        console.log('is_pay_password NOT found in result.data')
+      }
+
+      console.log('After update - updatedUserInfo:', updatedUserInfo)
+
+      // 保存更新后的用户信息到 localStorage
+      localStorage.setItem('user_info', JSON.stringify(updatedUserInfo))
+      console.log('Saved to localStorage')
+
+      // 立即读取验证
+      const verification = localStorage.getItem('user_info')
+      console.log('Verification - localStorage user_info:', verification)
+      console.log('=== End User Info Update ===')
+    } else {
+      console.error('Failed to get user info:', result.msg || result)
+    }
+  } catch (error) {
+    console.error('Error fetching user info:', error)
+  }
 
   // 清除可能损坏的数据
   try {

@@ -2,7 +2,7 @@
   <div class="deposit-page">
     <!-- 顶部导航栏 -->
     <div class="top-bar">
-      <div class="placeholder"></div>
+      <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
       <span class="title">Deposit</span>
       <van-icon name="notes-o" size="24" color="#fff" @click="showHistory" />
     </div>
@@ -25,8 +25,10 @@
         @click="selectMethod(method.id)"
       >
         <span v-if="method.recommended" class="reco-badge-small">RECO</span>
-        <div class="method-name">{{ method.name }}</div>
-        <div class="method-icon">🔥</div>
+        <div class="card-content">
+          <div class="method-name">{{ method.name }}</div>
+          <div class="method-icon">🔥</div>
+        </div>
       </div>
     </div>
 
@@ -80,6 +82,11 @@ import { showToast } from 'vant'
 
 const router = useRouter()
 
+// 返回
+const goBack = () => {
+  router.back()
+}
+
 // 选中的支付方式
 const selectedMethod = ref('gcash2')
 
@@ -125,7 +132,7 @@ const formatAmount = (amount: number) => {
 
 // 显示历史记录
 const showHistory = () => {
-  showToast('Deposit History')
+  router.push('/deposit/history')
 }
 
 // 处理存款
@@ -206,22 +213,27 @@ const handleDeposit = () => {
       position: relative;
       background: #fff;
       border: 2px solid #e5e7eb;
-      border-radius: 16px;
-      padding: 12px 8px;
+      border-radius: 12px;
+      padding: 10px 12px;
       text-align: center;
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      aspect-ratio: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 60px;
 
       &.active {
         background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
-        border: 3px solid #fdb927;
-        box-shadow: 0 4px 16px rgba(85, 37, 131, 0.4);
+        border: 2px solid #fdb927;
+        box-shadow:
+          0 0 0 2px #fdb927,
+          0 4px 16px rgba(85, 37, 131, 0.4);
 
         .method-name {
           color: #fff;
@@ -244,15 +256,23 @@ const handleDeposit = () => {
         font-weight: bold;
       }
 
+      .card-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+      }
+
       .method-name {
         color: #552583;
         font-size: 14px;
         font-weight: 600;
-        margin-bottom: 6px;
       }
 
       .method-icon {
-        font-size: 32px;
+        font-size: 20px;
+        line-height: 1;
       }
     }
   }
@@ -356,12 +376,17 @@ const handleDeposit = () => {
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
 
       &.active {
         background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
-        border: 3px solid #fdb927;
+        border: 2px solid #fdb927;
         color: #fff;
-        box-shadow: 0 4px 16px rgba(85, 37, 131, 0.4);
+        box-shadow:
+          0 0 0 2px #fdb927,
+          0 4px 16px rgba(85, 37, 131, 0.4);
       }
 
       &:active {
@@ -384,6 +409,9 @@ const handleDeposit = () => {
       height: 56px;
       box-shadow: 0 4px 16px rgba(85, 37, 131, 0.4);
       transition: all 0.3s ease;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
 
       &:active {
         transform: scale(0.98);

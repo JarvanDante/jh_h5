@@ -74,6 +74,51 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/deposit/history',
+    name: 'DepositHistory',
+    component: () => import('@/views/deposit/history.vue'),
+    meta: {
+      title: '充值记录',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/withdraw',
+    name: 'Withdraw',
+    component: () => import('@/views/withdraw/index.vue'),
+    meta: {
+      title: '提现',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/withdraw/set-password',
+    name: 'WithdrawSetPassword',
+    component: () => import('@/views/withdraw/set-password.vue'),
+    meta: {
+      title: '设置提现密码',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/withdraw/account',
+    name: 'WithdrawAccount',
+    component: () => import('@/views/withdraw/account.vue'),
+    meta: {
+      title: '添加提现账户',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/withdraw/history',
+    name: 'WithdrawHistory',
+    component: () => import('@/views/withdraw/history.vue'),
+    meta: {
+      title: '提现记录',
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/error/404.vue'),

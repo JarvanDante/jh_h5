@@ -10,7 +10,9 @@ export interface UserInfo {
   email?: string
   balance?: string
   realname?: string
+  grade_id?: number
   grade_name?: string
+  is_pay_password?: number
 }
 
 export const useUserStore = defineStore(

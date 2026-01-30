@@ -587,8 +587,19 @@ onMounted(() => {
         const balanceData = JSON.parse(userBalance)
         // 触发响应式更新
         if (userStore.userInfo && balanceData.balance) {
+          // 从 localStorage 获取完整的 user_info（包含 grade_id 和 is_pay_password）
+          let fullUserInfo = { ...userStore.userInfo }
+          try {
+            const storedUserInfo = localStorage.getItem('user_info')
+            if (storedUserInfo) {
+              fullUserInfo = JSON.parse(storedUserInfo)
+            }
+          } catch (error) {
+            console.error('Failed to parse user_info:', error)
+          }
+
           userStore.setUserInfo({
-            ...userStore.userInfo,
+            ...fullUserInfo,
             balance: balanceData.balance,
           })
         }
