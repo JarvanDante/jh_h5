@@ -7,7 +7,8 @@
       <div class="placeholder"></div>
     </div>
 
-    <div class="content">
+    <!-- 设置密码表单 -->
+    <div v-if="!isSuccess" class="content">
       <!-- 标题 -->
       <div class="page-title">Set Withdraw Password</div>
 
@@ -61,17 +62,44 @@
         Withdraw Now
       </van-button>
     </div>
+
+    <!-- 成功页面 -->
+    <div v-else class="success-content">
+      <!-- 成功图标 -->
+      <div class="success-icon">
+        <van-icon name="success" size="80" color="#07c160" />
+      </div>
+
+      <!-- 成功标题 -->
+      <div class="success-title">Set successfully</div>
+
+      <!-- 成功提示 -->
+      <div class="success-message">
+        Your new password has been set. Please remember your password
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="action-buttons">
+        <van-button class="home-btn" block @click="goToHome">Return to homepage</van-button>
+        <van-button class="withdraw-btn" block @click="goToWithdraw">
+          Continue withdrawal
+        </van-button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+// 页面状态
+const isSuccess = ref(false)
 
 // 密码输入
 const newPassword = ref(['', '', '', '', '', ''])
@@ -85,6 +113,22 @@ const confirmPasswordRefs = ref<(HTMLInputElement | null)[]>([])
 
 // 提交状态
 const isSubmitting = ref(false)
+
+// 页面加载时检查是否已设置密码
+onMounted(() => {
+  try {
+    const storedUserInfo = localStorage.getItem('user_info')
+    if (storedUserInfo) {
+      const userInfo = JSON.parse(storedUserInfo)
+      // 如果已经设置了支付密码，直接显示成功页面
+      if (userInfo.is_pay_password === 1) {
+        isSuccess.value = true
+      }
+    }
+  } catch (error) {
+    console.error('Failed to check pay password status:', error)
+  }
+})
 
 // 处理新密码输入
 const handleNewPasswordInput = (index: number, event: Event) => {
@@ -173,11 +217,17 @@ const handleSubmit = async () => {
     return
   }
 
+  // 验证是否全是数字
+  if (!/^\d{6}$/.test(newPwd)) {
+    showToast('Password must be 6 digits')
+    return
+  }
+
   isSubmitting.value = true
 
   try {
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
-    const setPasswordUrl = `${apiBaseUrl}/frontend/user/set-pay-password`
+    const setPasswordUrl = `${apiBaseUrl}/frontend/app/set-pay-password`
 
     const response = await fetch(setPasswordUrl, {
       method: 'POST',
@@ -193,8 +243,6 @@ const handleSubmit = async () => {
     const result = await response.json()
 
     if (result.code === 0) {
-      showToast('Password set successfully')
-
       // 更新 localStorage 中的 is_pay_password
       try {
         const storedUserInfo = localStorage.getItem('user_info')
@@ -207,8 +255,8 @@ const handleSubmit = async () => {
         console.error('Failed to update user_info:', error)
       }
 
-      // 跳转到提现页面
-      router.replace('/withdraw')
+      // 显示成功页面
+      isSuccess.value = true
     } else {
       showToast(result.msg || 'Failed to set password')
     }
@@ -218,6 +266,16 @@ const handleSubmit = async () => {
   } finally {
     isSubmitting.value = false
   }
+}
+
+// 返回首页
+const goToHome = () => {
+  router.replace('/home')
+}
+
+// 继续提现
+const goToWithdraw = () => {
+  router.replace('/withdraw')
 }
 
 // 返回
@@ -337,6 +395,96 @@ const goBack = () => {
         opacity: 0.9;
       }
     }
+  }
+
+  // 成功页面
+  .success-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px 40px;
+    min-height: calc(100vh - 120px);
+
+    .success-icon {
+      margin-bottom: 32px;
+      animation: scaleIn 0.5s ease-out;
+    }
+
+    .success-title {
+      color: #fff;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .success-message {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 15px;
+      line-height: 1.6;
+      text-align: center;
+      margin-bottom: 48px;
+      max-width: 320px;
+    }
+
+    .action-buttons {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+
+      .home-btn {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: #fff;
+        border: none;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: bold;
+        height: 52px;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        transition: all 0.3s ease;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+
+        &:active {
+          transform: scale(0.98);
+          opacity: 0.9;
+        }
+      }
+
+      .withdraw-btn {
+        background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+        color: #fff;
+        border: none;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: bold;
+        height: 52px;
+        box-shadow: 0 4px 16px rgba(85, 37, 131, 0.4);
+        transition: all 0.3s ease;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+
+        &:active {
+          transform: scale(0.98);
+          opacity: 0.9;
+        }
+      }
+    }
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 </style>
