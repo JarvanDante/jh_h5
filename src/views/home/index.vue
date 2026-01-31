@@ -25,7 +25,16 @@
             <van-icon name="user-circle-o" size="24" color="#fff" />
             <div class="user-balance">
               <span class="username">{{ username }}</span>
-              <span class="balance">₱{{ balance }}</span>
+              <div class="balance-row">
+                <span class="balance">₱{{ balance }}</span>
+                <van-icon
+                  name="replay"
+                  size="16"
+                  color="#fdb927"
+                  :class="{ rotating: isRefreshing }"
+                  @click.stop="refreshBalance"
+                />
+              </div>
             </div>
           </div>
         </template>
@@ -187,6 +196,7 @@ import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/modules/user'
 import { gameApi } from '@/api/modules/game'
+import { refreshBalance as refreshBalanceApi } from '@/api'
 import type { AdItem, NoticeItem } from '@/api/modules/user'
 import type { GameCategory, GameItem } from '@/api/modules/game'
 
@@ -328,6 +338,9 @@ const games = ref([
 // 收藏的游戏ID列表
 const favoriteGameIds = ref<number[]>([])
 
+// 是否正在刷新余额
+const isRefreshing = ref(false)
+
 // 过滤游戏列表
 const filteredGames = computed(() => {
   let result = gameList.value
@@ -462,6 +475,35 @@ const handleWhatsapp = () => {
 
 const handleService = () => {
   showToast('联系客服')
+}
+
+// 刷新余额
+const refreshBalance = async () => {
+  if (isRefreshing.value) return
+
+  isRefreshing.value = true
+
+  try {
+    const res = await refreshBalanceApi()
+
+    // 更新用户store中的余额
+    if (userStore.userInfo) {
+      userStore.setUserInfo({
+        ...userStore.userInfo,
+        balance: res.balance || '0.00',
+      })
+    }
+
+    showToast('Balance refreshed')
+  } catch (error) {
+    console.error('Failed to refresh balance:', error)
+    showToast('Failed to refresh balance')
+  } finally {
+    // 动画持续1秒后才能再次点击
+    setTimeout(() => {
+      isRefreshing.value = false
+    }, 1000)
+  }
 }
 
 // 获取广告列表
@@ -620,6 +662,15 @@ onMounted(() => {
 <style lang="scss" scoped>
 @use '@/styles/variables.scss' as *;
 
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .home-page {
   position: relative;
   min-height: 100vh;
@@ -717,10 +768,30 @@ onMounted(() => {
             font-size: 14px;
           }
 
-          .balance {
-            color: #fdb927;
-            font-size: 12px;
-            font-weight: bold;
+          .balance-row {
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            .balance {
+              color: #fdb927;
+              font-size: 12px;
+              font-weight: bold;
+            }
+
+            .van-icon {
+              cursor: pointer;
+              transition: opacity 0.3s;
+
+              &:active {
+                opacity: 0.7;
+              }
+
+              &.rotating {
+                animation: rotate 1s linear;
+              }
+            }
           }
         }
       }
