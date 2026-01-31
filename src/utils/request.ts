@@ -149,13 +149,30 @@ class Request {
     return result.data || result
   }
 
-  async get<T = any>(url: string): Promise<T> {
-    const options: RequestInit = {
+  async get<T = any>(url: string, options?: { params?: Record<string, any> }): Promise<T> {
+    // 构建 query 参数
+    let fullUrl = url
+    if (options?.params) {
+      const queryString = new URLSearchParams(
+        Object.entries(options.params).reduce(
+          (acc, [key, value]) => {
+            if (value !== undefined && value !== null) {
+              acc[key] = String(value)
+            }
+            return acc
+          },
+          {} as Record<string, string>,
+        ),
+      ).toString()
+      fullUrl = `${url}?${queryString}`
+    }
+
+    const requestOptions: RequestInit = {
       headers: this.getHeaders(),
     }
 
-    const response = await fetch(`${apiBaseUrl}${url}`, options)
-    return this.handleResponse<T>(response, url, options)
+    const response = await fetch(`${apiBaseUrl}${fullUrl}`, requestOptions)
+    return this.handleResponse<T>(response, fullUrl, requestOptions)
   }
 
   async post<T = any>(url: string, data?: any): Promise<T> {

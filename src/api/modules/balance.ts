@@ -132,3 +132,40 @@ export interface CreateDepositOrderResponse {
 export function createDepositOrder(params: CreateDepositOrderParams) {
   return request.post<CreateDepositOrderResponse>('/frontend/balance/deposit-order', params)
 }
+
+// 账户明细项
+export interface BalanceLogItem {
+  trade_no: string
+  money: number
+  remark: string
+  type: number // 1=充值 2=提款 3=红利 4=返水 5=转账
+  symbol: string // +/-
+  status: number // 1=待处理 2=成功 3=失败
+  time: string
+  change_type: number // 1=转入 2=转出
+  channel?: string // 支付渠道
+}
+
+// 获取账户明细参数
+export interface GetBalanceLogParams {
+  start: string
+  end: string
+  type?: number // 1=充值 2=提款 3=红利 4=返水 5=转账
+  status?: number // 1=待处理 2=成功 3=失败
+  page?: number
+  size?: number
+}
+
+// 获取账户明细响应
+export interface GetBalanceLogResponse {
+  total_recharge: number
+  total_withdraw: number
+  total_bonus: number
+  total_rebate: number
+  list: BalanceLogItem[]
+  count: number
+}
+
+export function getBalanceLog(params: GetBalanceLogParams) {
+  return request.get<GetBalanceLogResponse>('/frontend/balance/balance-log', { params })
+}

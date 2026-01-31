@@ -52,23 +52,48 @@
 
       <div v-else class="record-list">
         <div v-for="record in depositRecords" :key="record.id" class="record-item">
-          <div class="record-header">
-            <span class="order-no">{{ record.orderNo }}</span>
-            <span class="status" :class="record.statusClass">{{ record.statusText }}</span>
+          <!-- 金额 - Amount 和金额在一行 -->
+          <div class="amount-row">
+            <span class="amount-label">Amount:</span>
+            <span class="amount-value">₱{{ record.amount }}</span>
           </div>
-          <div class="record-body">
-            <div class="info-row">
-              <span class="label">Amount:</span>
-              <span class="value">₱{{ record.amount }}</span>
+
+          <!-- 时间 -->
+          <div class="time-row">
+            <span class="time-label">Time:</span>
+            <span class="time-value">{{ record.time }}</span>
+          </div>
+
+          <!-- 订单号 + 复制按钮 + 状态 -->
+          <div class="order-row">
+            <div class="order-info">
+              <span class="order-no">{{ record.orderNo }}</span>
+              <div class="copy-btn" @click="copyOrderNo(record.orderNo)">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    x="8"
+                    y="8"
+                    width="12"
+                    height="12"
+                    rx="2"
+                    stroke="#552583"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
+                    stroke="#552583"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
             </div>
-            <div class="info-row">
-              <span class="label">Method:</span>
-              <span class="value">{{ record.method }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Time:</span>
-              <span class="value">{{ record.time }}</span>
-            </div>
+            <span class="status" :class="record.statusClass">{{ record.statusText }}</span>
           </div>
         </div>
       </div>
@@ -77,8 +102,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { showToast } from 'vant'
+import { getBalanceLog, type BalanceLogItem } from '@/api/modules/balance'
 
 const router = useRouter()
 
@@ -88,6 +115,7 @@ const showPeriodPicker = ref(false)
 // 充值记录相关
 const selectedPeriod = ref(0)
 const accumulatedDeposit = ref('0')
+const loading = ref(false)
 
 const periodOptions = [
   { text: 'Today', value: 0 },
@@ -105,6 +133,111 @@ const periods = [
 
 const depositRecords = ref<any[]>([])
 
+// 获取日期范围
+const getDateRange = (days: number) => {
+  const now = new Date()
+
+  let start: Date
+  let end: Date
+
+  if (days === 0) {
+    // Today: 当天开始时间 00:00:00 到当天结束时间 23:59:59
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+    end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+  } else {
+    // Last N Days: N天前的开始时间 00:00:00 到今天的结束时间 23:59:59
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - days, 0, 0, 0)
+    end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+  }
+
+  return {
+    start: formatDateTime(start),
+    end: formatDateTime(end),
+  }
+}
+
+// 格式化日期时间
+const formatDateTime = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+// 加载充值记录
+const loadDepositRecords = async () => {
+  if (loading.value) return
+
+  loading.value = true
+
+  try {
+    const { start, end } = getDateRange(selectedPeriod.value)
+
+    const res = await getBalanceLog({
+      start,
+      end,
+      type: 1, // 充值
+      page: 1,
+      size: 20,
+    })
+
+    console.log('API 响应:', res)
+
+    // 更新累计充值金额
+    accumulatedDeposit.value = res.total_recharge?.toFixed(2) || '0.00'
+
+    // 转换记录格式
+    depositRecords.value = (res.list || []).map((item: BalanceLogItem) => ({
+      id: item.trade_no,
+      orderNo: item.trade_no,
+      amount: item.money.toFixed(2),
+      method: item.remark || 'Online Payment',
+      time: item.time,
+      status: item.status,
+      statusText: getStatusText(item.status),
+      statusClass: getStatusClass(item.status),
+    }))
+
+    console.log('转换后的记录:', depositRecords.value)
+  } catch (error: any) {
+    showToast(error.message || 'Failed to load records')
+    console.error('加载充值记录失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 获取状态文本
+const getStatusText = (status: number) => {
+  switch (status) {
+    case 1:
+      return 'Pending'
+    case 2:
+      return 'Success'
+    case 3:
+      return 'Failed'
+    default:
+      return 'Unknown'
+  }
+}
+
+// 获取状态样式类
+const getStatusClass = (status: number) => {
+  switch (status) {
+    case 1:
+      return 'pending'
+    case 2:
+      return 'success'
+    case 3:
+      return 'failed'
+    default:
+      return ''
+  }
+}
+
 // 获取时间段文本
 const getPeriodText = (value: number) => {
   const option = periodOptions.find((o) => o.value === value)
@@ -115,19 +248,35 @@ const getPeriodText = (value: number) => {
 const selectPeriodOption = (value: number) => {
   selectedPeriod.value = value
   showPeriodPicker.value = false
-  // TODO: 调用 API 获取对应时间段的记录
+  loadDepositRecords()
 }
 
 // 选择时间段（从快捷按钮）
 const selectPeriod = (value: number) => {
   selectedPeriod.value = value
-  // TODO: 调用 API 获取对应时间段的记录
+  loadDepositRecords()
+}
+
+// 复制订单号
+const copyOrderNo = async (orderNo: string) => {
+  try {
+    await navigator.clipboard.writeText(orderNo)
+    showToast('Copied!')
+  } catch (error) {
+    console.error('复制失败:', error)
+    showToast('Copy failed')
+  }
 }
 
 // 返回
 const goBack = () => {
   router.back()
 }
+
+// 页面加载时获取数据
+onMounted(() => {
+  loadDepositRecords()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -334,26 +483,104 @@ const goBack = () => {
       border-radius: 12px;
       padding: 16px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
 
-      .record-header {
+      // 金额行 - Amount 和金额在一行
+      .amount-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 12px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid #f5f5f5;
 
-        .order-no {
-          color: $primary-color;
+        .amount-label {
+          color: #666;
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 500;
+        }
+
+        .amount-value {
+          color: $primary-color;
+          font-size: 20px;
+          font-weight: bold;
+        }
+      }
+
+      // 时间行
+      .time-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f0f0f0;
+
+        .time-label {
+          color: #666;
+          font-size: 13px;
+        }
+
+        .time-value {
+          color: #999;
+          font-size: 13px;
+        }
+      }
+
+      // 订单号 + 复制 + 状态行
+      .order-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+
+        .order-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex: 1;
+          min-width: 0;
+
+          .order-no {
+            color: $primary-color;
+            font-size: 11px;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .copy-btn {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+
+            svg {
+              display: block;
+            }
+
+            &:active {
+              background: rgba(85, 37, 131, 0.1);
+              transform: scale(0.95);
+            }
+
+            &:hover {
+              background: rgba(85, 37, 131, 0.05);
+            }
+          }
         }
 
         .status {
           padding: 4px 12px;
-          border-radius: 12px;
-          font-size: 12px;
+          border-radius: 10px;
+          font-size: 11px;
           font-weight: 600;
+          flex-shrink: 0;
 
           &.pending {
             background: rgba(255, 151, 106, 0.2);
@@ -368,28 +595,6 @@ const goBack = () => {
           &.failed {
             background: rgba(238, 10, 36, 0.2);
             color: $danger-color;
-          }
-        }
-      }
-
-      .record-body {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-
-        .info-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 14px;
-
-          .label {
-            color: #666;
-          }
-
-          .value {
-            color: #333;
-            font-weight: 500;
           }
         }
       }
