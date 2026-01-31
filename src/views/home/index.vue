@@ -26,7 +26,7 @@
             <div class="user-balance">
               <span class="username">{{ username }}</span>
               <div class="balance-row">
-                <span class="balance">₱{{ balance }}</span>
+                <span class="balance">₱{{ displayBalance }}</span>
                 <van-icon
                   name="replay"
                   size="16"
@@ -190,7 +190,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
@@ -341,6 +341,39 @@ const favoriteGameIds = ref<number[]>([])
 // 是否正在刷新余额
 const isRefreshing = ref(false)
 
+// 余额显示（用于动画）
+const displayBalance = ref('0.00')
+
+// 监听 balance 变化，同步更新 displayBalance（非刷新按钮触发的情况）
+watch(balance, (newVal) => {
+  // 只在非刷新状态下同步更新（避免干扰动画）
+  if (!isRefreshing.value) {
+    displayBalance.value = newVal
+  }
+})
+
+// 数字滚动动画 - 简单的数字递增效果
+const animateBalance = (oldValue: string, newValue: string) => {
+  const oldNum = parseFloat(oldValue) || 0
+  const newNum = parseFloat(newValue) || 0
+  const duration = 800 // 动画持续时间
+  const steps = 30 // 动画步数
+  const stepDuration = duration / steps
+  const increment = (newNum - oldNum) / steps
+
+  let currentStep = 0
+  const timer = setInterval(() => {
+    currentStep++
+    if (currentStep >= steps) {
+      displayBalance.value = newValue
+      clearInterval(timer)
+    } else {
+      const currentValue = oldNum + increment * currentStep
+      displayBalance.value = currentValue.toFixed(2)
+    }
+  }, stepDuration)
+}
+
 // 过滤游戏列表
 const filteredGames = computed(() => {
   let result = gameList.value
@@ -479,30 +512,145 @@ const handleService = () => {
 
 // 刷新余额
 const refreshBalance = async () => {
-  if (isRefreshing.value) return
+  if (!isLogin.value) {
+    showToast('Please login first')
+    router.push('/login')
+    return
+  }
+
+  if (isRefreshing.value) {
+    return // 防止重复点击
+  }
 
   isRefreshing.value = true
+  const oldBalance = displayBalance.value
 
   try {
-    const res = await refreshBalanceApi()
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 
-    // 更新用户store中的余额
-    if (userStore.userInfo) {
-      userStore.setUserInfo({
-        ...userStore.userInfo,
-        balance: res.balance || '0.00',
-      })
+    // 先调用刷新余额接口
+    const refreshBalanceUrl = `${apiBaseUrl}/frontend/balance/refresh-balance`
+    const refreshBalanceResponse = await fetch(refreshBalanceUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${userStore.token}`,
+      },
+    })
+
+    const refreshBalanceResult = await refreshBalanceResponse.json()
+
+    // 检查 token 是否过期
+    if (refreshBalanceResult.code === 401 || refreshBalanceResult.code === 403) {
+      // Token 过期，尝试刷新
+      const refreshToken = userStore.refreshToken
+      if (refreshToken) {
+        const refreshUrl = `${apiBaseUrl}/frontend/app/refresh-token`
+        const refreshResponse = await fetch(refreshUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            refresh_token: refreshToken,
+          }),
+        })
+
+        const refreshResult = await refreshResponse.json()
+
+        if (refreshResult.code === 0 && refreshResult.data?.token) {
+          // 更新 token
+          userStore.setToken(refreshResult.data.token)
+          if (refreshResult.data.refresh_token) {
+            userStore.setRefreshToken(refreshResult.data.refresh_token)
+          }
+
+          // 使用新 token 重新请求余额
+          const retryResponse = await fetch(refreshBalanceUrl, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${refreshResult.data.token}`,
+            },
+          })
+
+          const retryResult = await retryResponse.json()
+
+          if (retryResult.code === 0 && retryResult.data) {
+            // 保存余额信息到 localStorage
+            localStorage.setItem('user_balance', JSON.stringify(retryResult.data))
+
+            // 更新用户信息中的余额
+            if (userStore.userInfo) {
+              // 从 localStorage 获取完整的 user_info（包含 grade_id 和 is_pay_password）
+              let fullUserInfo = { ...userStore.userInfo }
+              try {
+                const storedUserInfo = localStorage.getItem('user_info')
+                if (storedUserInfo) {
+                  fullUserInfo = JSON.parse(storedUserInfo)
+                }
+              } catch (error) {
+                console.error('Failed to parse user_info:', error)
+              }
+
+              userStore.setUserInfo({
+                ...fullUserInfo,
+                balance: retryResult.data.balance || '0.00',
+              })
+            }
+
+            // 触发余额动画
+            animateBalance(oldBalance, retryResult.data.balance || '0.00')
+          }
+        } else {
+          // 刷新失败，跳转到登录页
+          userStore.logout()
+          showToast('Login expired, please login again')
+          router.push('/login')
+        }
+      } else {
+        // 没有 refresh_token，跳转到登录页
+        userStore.logout()
+        showToast('Please login again')
+        router.push('/login')
+      }
+      isRefreshing.value = false
+      return
     }
 
-    showToast('Balance refreshed')
+    if (refreshBalanceResult.code === 0 && refreshBalanceResult.data) {
+      // 保存余额信息到 localStorage
+      localStorage.setItem('user_balance', JSON.stringify(refreshBalanceResult.data))
+
+      // 更新用户信息中的余额
+      if (userStore.userInfo) {
+        // 从 localStorage 获取完整的 user_info（包含 grade_id 和 is_pay_password）
+        let fullUserInfo = { ...userStore.userInfo }
+        try {
+          const storedUserInfo = localStorage.getItem('user_info')
+          if (storedUserInfo) {
+            fullUserInfo = JSON.parse(storedUserInfo)
+          }
+        } catch (error) {
+          console.error('Failed to parse user_info:', error)
+        }
+
+        userStore.setUserInfo({
+          ...fullUserInfo,
+          balance: refreshBalanceResult.data.balance || '0.00',
+        })
+      }
+
+      // 触发余额动画
+      animateBalance(oldBalance, refreshBalanceResult.data.balance || '0.00')
+    } else {
+      showToast(refreshBalanceResult.msg || 'Failed to refresh balance')
+    }
   } catch (error) {
     console.error('Failed to refresh balance:', error)
     showToast('Failed to refresh balance')
   } finally {
-    // 动画持续1秒后才能再次点击
     setTimeout(() => {
       isRefreshing.value = false
-    }, 1000)
+    }, 1000) // 确保动画完成后才允许再次点击
   }
 }
 
@@ -609,6 +757,9 @@ const fetchGameList = async () => {
 
 // Jackpot 数字滚动效果
 onMounted(() => {
+  // 初始化显示余额
+  displayBalance.value = balance.value
+
   // 获取广告列表
   fetchAdList()
 
@@ -644,6 +795,9 @@ onMounted(() => {
             ...fullUserInfo,
             balance: balanceData.balance,
           })
+
+          // 更新显示余额
+          displayBalance.value = balanceData.balance
         }
       }
     } catch (error) {
