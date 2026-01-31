@@ -100,3 +100,35 @@ export function setDefaultBankCard(id: number) {
     { id },
   )
 }
+
+// 获取充值 nonce
+export interface DepositNonceResponse {
+  expires_in: number
+  nonce: string
+  timestamp: number
+}
+
+export function getDepositNonce() {
+  return request.get<DepositNonceResponse>('/frontend/balance/deposit-nonce')
+}
+
+// 创建充值订单
+export interface CreateDepositOrderParams {
+  payment_id: number
+  order_type: string
+  money: number
+  nonce: string
+}
+
+export interface CreateDepositOrderResponse {
+  channel_card_no: string
+  channel_name: string
+  image_url: string
+  order_sn: string
+  result: string
+  sys_trade_no: string
+}
+
+export function createDepositOrder(params: CreateDepositOrderParams) {
+  return request.post<CreateDepositOrderResponse>('/frontend/balance/deposit-order', params)
+}

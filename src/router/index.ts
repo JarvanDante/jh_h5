@@ -83,6 +83,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/deposit/payment',
+    name: 'DepositPayment',
+    component: () => import('@/views/deposit/payment.vue'),
+    meta: {
+      title: '支付',
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/withdraw',
     name: 'Withdraw',
     component: () => import('@/views/withdraw/index.vue'),

@@ -76,10 +76,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
-import { getPaymentList, type PaymentChannel } from '@/api'
+import { showToast, showLoadingToast, closeToast } from 'vant'
+import { getPaymentList, getDepositNonce, createDepositOrder, type PaymentChannel } from '@/api'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 返回
 const goBack = () => {
@@ -172,7 +174,14 @@ const showHistory = () => {
 }
 
 // 处理存款
-const handleDeposit = () => {
+const handleDeposit = async () => {
+  // 检查登录状态
+  if (!userStore.isLogin) {
+    showToast('Please login first')
+    router.push('/login')
+    return
+  }
+
   if (!selectedMethod.value) {
     showToast('Please select a payment method')
     return
@@ -184,21 +193,80 @@ const handleDeposit = () => {
   }
 
   const channel = selectedChannel.value
-  if (channel) {
-    const amount = parseFloat(depositAmount.value)
+  if (!channel) {
+    showToast('Payment channel not found')
+    return
+  }
 
-    // 检查金额范围
-    if (amount < channel.each_min) {
-      showToast(`Minimum amount is ₱${channel.each_min}`)
+  const amount = parseFloat(depositAmount.value)
+
+  // 检查金额范围
+  if (amount < channel.each_min) {
+    showToast(`Minimum amount is ₱${channel.each_min}`)
+    return
+  }
+
+  if (channel.each_max > 0 && amount > channel.each_max) {
+    showToast(`Maximum amount is ₱${channel.each_max}`)
+    return
+  }
+
+  try {
+    // 显示加载提示
+    showLoadingToast({
+      message: 'Processing...',
+      forbidClick: true,
+      duration: 0,
+    })
+
+    // 1. 先获取 nonce
+    const nonceRes = await getDepositNonce()
+    console.log('Nonce response:', nonceRes)
+
+    if (!nonceRes.nonce) {
+      closeToast()
+      showToast('Failed to get nonce')
       return
     }
 
-    if (channel.each_max > 0 && amount > channel.each_max) {
-      showToast(`Maximum amount is ₱${channel.each_max}`)
-      return
-    }
+    // 2. 创建充值订单
+    const orderRes = await createDepositOrder({
+      payment_id: channel.payment_id,
+      order_type: 'deposit',
+      money: amount,
+      nonce: nonceRes.nonce,
+    })
 
-    showToast(`Depositing ₱${depositAmount.value} via ${channel.name}`)
+    closeToast()
+
+    console.log('Deposit order response:', orderRes)
+
+    // 3. 处理返回结果 - 跳转到支付页面显示二维码
+    if (orderRes.result === 'ok' && orderRes.image_url) {
+      // 将订单数据编码后传递给支付页面
+      const orderData = encodeURIComponent(JSON.stringify(orderRes))
+      router.push({
+        path: '/deposit/payment',
+        query: {
+          data: orderData,
+          amount: amount.toString(),
+        },
+      })
+    } else {
+      showToast('Failed to create order')
+    }
+  } catch (error: any) {
+    closeToast()
+    console.error('Deposit failed:', error)
+
+    // 处理错误信息
+    if (error.response?.data?.msg) {
+      showToast(error.response.data.msg)
+    } else if (error.message) {
+      showToast(error.message)
+    } else {
+      showToast('Deposit failed, please try again')
+    }
   }
 }
 
