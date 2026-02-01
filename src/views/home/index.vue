@@ -593,12 +593,12 @@ const refreshBalance = async () => {
 
               userStore.setUserInfo({
                 ...fullUserInfo,
-                balance: retryResult.data.balance || '0.00',
+                balance: retryResult.data.balance || '0.000',
               })
             }
 
             // 触发余额动画
-            animateBalance(oldBalance, retryResult.data.balance || '0.00')
+            animateBalance(oldBalance, retryResult.data.balance || '0.000')
           }
         } else {
           // 刷新失败，跳转到登录页
@@ -635,12 +635,12 @@ const refreshBalance = async () => {
 
         userStore.setUserInfo({
           ...fullUserInfo,
-          balance: refreshBalanceResult.data.balance || '0.00',
+          balance: refreshBalanceResult.data.balance || '0.000',
         })
       }
 
       // 触发余额动画
-      animateBalance(oldBalance, refreshBalanceResult.data.balance || '0.00')
+      animateBalance(oldBalance, refreshBalanceResult.data.balance || '0.000')
     } else {
       showToast(refreshBalanceResult.msg || 'Failed to refresh balance')
     }
