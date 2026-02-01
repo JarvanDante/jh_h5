@@ -230,10 +230,12 @@ const loadDepositRecords = async (isLoadMore = false) => {
 
 // 瀑布流加载更多
 const onLoad = async () => {
-  if (finished.value) {
-    console.log('已经没有更多数据了')
+  // 防止重复加载
+  if (loading.value || finished.value) {
     return
   }
+
+  loading.value = true
 
   // 加载当前页数据
   await loadDepositRecords(currentPage.value > 1)
@@ -284,7 +286,9 @@ const selectPeriodOption = (value: number) => {
   currentPage.value = 1
   finished.value = false
   depositRecords.value = []
-  loadDepositRecords()
+  loading.value = false
+  // 手动触发加载
+  onLoad()
 }
 
 // 选择时间段（从快捷按钮）
@@ -294,7 +298,9 @@ const selectPeriod = (value: number) => {
   currentPage.value = 1
   finished.value = false
   depositRecords.value = []
-  loadDepositRecords()
+  loading.value = false
+  // 手动触发加载
+  onLoad()
 }
 
 // 复制订单号

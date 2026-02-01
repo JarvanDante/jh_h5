@@ -56,58 +56,66 @@
       </div>
 
       <!-- 记录列表 -->
-      <div v-if="withdrawalRecords.length === 0 && !loading" class="empty-state">
-        <van-icon name="search" size="80" color="#4b5563" />
-        <div class="empty-text">No Record</div>
-      </div>
+      <van-list
+        v-model:loading="loading"
+        :finished="finished"
+        :immediate-check="false"
+        finished-text="No more records"
+        @load="onLoad"
+      >
+        <div v-if="withdrawalRecords.length === 0 && !loading" class="empty-state">
+          <van-icon name="search" size="80" color="#4b5563" />
+          <div class="empty-text">No Record</div>
+        </div>
 
-      <div v-else class="record-list">
-        <div v-for="record in withdrawalRecords" :key="record.id" class="record-item">
-          <!-- 金额 - Amount 和金额在一行 -->
-          <div class="amount-row">
-            <span class="amount-label">Amount:</span>
-            <span class="amount-value">₱{{ record.amount }}</span>
-          </div>
-
-          <!-- 时间 -->
-          <div class="time-row">
-            <span class="time-label">Time:</span>
-            <span class="time-value">{{ record.time }}</span>
-          </div>
-
-          <!-- 订单号 + 复制按钮 + 状态 -->
-          <div class="order-row">
-            <div class="order-info">
-              <span class="order-no">{{ record.orderNo }}</span>
-              <div class="copy-btn" @click="copyOrderNo(record.orderNo)">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="8"
-                    y="8"
-                    width="12"
-                    height="12"
-                    rx="2"
-                    stroke="#552583"
-                    stroke-width="2"
-                  />
-                  <path
-                    d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
-                    stroke="#552583"
-                    stroke-width="2"
-                  />
-                </svg>
-              </div>
+        <div class="record-list">
+          <div v-for="record in withdrawalRecords" :key="record.id" class="record-item">
+            <!-- 金额 - Amount 和金额在一行 -->
+            <div class="amount-row">
+              <span class="amount-label">Amount:</span>
+              <span class="amount-value">₱{{ record.amount }}</span>
             </div>
-            <span class="status" :class="record.statusClass">{{ record.statusText }}</span>
+
+            <!-- 时间 -->
+            <div class="time-row">
+              <span class="time-label">Time:</span>
+              <span class="time-value">{{ record.time }}</span>
+            </div>
+
+            <!-- 订单号 + 复制按钮 + 状态 -->
+            <div class="order-row">
+              <div class="order-info">
+                <span class="order-no">{{ record.orderNo }}</span>
+                <div class="copy-btn" @click="copyOrderNo(record.orderNo)">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect
+                      x="8"
+                      y="8"
+                      width="12"
+                      height="12"
+                      rx="2"
+                      stroke="#552583"
+                      stroke-width="2"
+                    />
+                    <path
+                      d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
+                      stroke="#552583"
+                      stroke-width="2"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <span class="status" :class="record.statusClass">{{ record.statusText }}</span>
+            </div>
           </div>
         </div>
-      </div>
+      </van-list>
     </div>
 
     <!-- 审计日志 Tab -->
@@ -184,7 +192,7 @@ onMounted(() => {
     activeTab.value = 'audit'
   } else {
     // 默认加载提现记录
-    loadWithdrawRecords()
+    onLoad()
   }
 })
 
@@ -196,6 +204,7 @@ const showAuditPicker = ref(false)
 const selectedPeriod = ref(0)
 const accumulatedWithdraw = ref('0.00')
 const loading = ref(false)
+const finished = ref(false)
 const currentPage = ref(1)
 const pageSize = 5
 
@@ -263,10 +272,7 @@ const formatDateTime = (date: Date) => {
 }
 
 // 加载提现记录
-const loadWithdrawRecords = async () => {
-  if (loading.value) return
-
-  loading.value = true
+const loadWithdrawRecords = async (isLoadMore = false) => {
   try {
     const { start, end } = getDateRange(selectedPeriod.value)
 
@@ -278,11 +284,13 @@ const loadWithdrawRecords = async () => {
       size: pageSize,
     })
 
-    // 更新累计提现金额
-    accumulatedWithdraw.value = res.total_withdraw?.toFixed(2) || '0.00'
+    // 更新累计提现金额（只在第一页时更新）
+    if (currentPage.value === 1) {
+      accumulatedWithdraw.value = res.total_withdraw?.toFixed(2) || '0.00'
+    }
 
     // 转换记录格式
-    withdrawalRecords.value = (res.list || []).map((item: BalanceLogItem) => ({
+    const newRecords = (res.list || []).map((item: BalanceLogItem) => ({
       id: item.trade_no,
       orderNo: item.trade_no,
       amount: item.money.toFixed(2),
@@ -292,11 +300,39 @@ const loadWithdrawRecords = async () => {
       statusText: getStatusText(item.status),
       statusClass: getStatusClass(item.status),
     }))
+
+    // 如果是加载更多，追加数据；否则替换数据
+    if (isLoadMore) {
+      withdrawalRecords.value = [...withdrawalRecords.value, ...newRecords]
+    } else {
+      withdrawalRecords.value = newRecords
+    }
+
+    // 判断是否还有更多数据
+    if (newRecords.length < pageSize || withdrawalRecords.value.length >= res.count) {
+      finished.value = true
+    } else {
+      finished.value = false
+    }
   } catch (error: any) {
     showToast(error.message || 'Failed to load records')
   } finally {
     loading.value = false
   }
+}
+
+// 瀑布流加载更多
+const onLoad = async () => {
+  if (finished.value) {
+    console.log('已经没有更多数据了')
+    return
+  }
+
+  // 加载当前页数据
+  await loadWithdrawRecords(currentPage.value > 1)
+
+  // 加载完成后，页码+1，准备下次加载
+  currentPage.value++
 }
 
 // 获取状态文本
@@ -343,8 +379,13 @@ const getAuditTypeText = (value: string) => {
 const selectPeriodOption = (value: number) => {
   selectedPeriod.value = value
   showPeriodPicker.value = false
+  // 重置分页
   currentPage.value = 1
-  loadWithdrawRecords()
+  finished.value = false
+  withdrawalRecords.value = []
+  loading.value = false
+  // 手动触发加载
+  onLoad()
 }
 
 // 选择审计类型
@@ -357,8 +398,13 @@ const selectAuditType = (value: string) => {
 // 选择时间段（从快捷按钮）
 const selectPeriod = (value: number) => {
   selectedPeriod.value = value
+  // 重置分页
   currentPage.value = 1
-  loadWithdrawRecords()
+  finished.value = false
+  withdrawalRecords.value = []
+  loading.value = false
+  // 手动触发加载
+  onLoad()
 }
 
 // 复制订单号
