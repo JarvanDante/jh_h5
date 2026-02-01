@@ -324,13 +324,18 @@ const maskCardNumber = (cardNo: string) => {
 
 // 处理提现
 const handleWithdraw = async () => {
-  if (!selectedMethod.value) {
-    showToast('Please select a withdrawal method')
+  // 首先检查是否有默认银行卡
+  if (defaultBankCards.value.length === 0) {
+    showToast({
+      type: 'fail',
+      message: 'Please add a bank account first',
+      duration: 2000,
+    })
     return
   }
 
-  if (defaultBankCards.value.length === 0) {
-    showToast('Please add a bank account first')
+  if (!selectedMethod.value) {
+    showToast('Please select a withdrawal method')
     return
   }
 
@@ -371,14 +376,6 @@ const handleWithdraw = async () => {
     })
 
     // 显示加载提示
-    let toast = showToast({
-      type: 'loading',
-      message: 'Processing...',
-      duration: 0,
-      forbidClick: true,
-    })
-
-    // 显示加载提示
     showToast({
       type: 'loading',
       message: 'Processing...',
@@ -412,14 +409,6 @@ const handleWithdraw = async () => {
       // 第3步：提交提现申请
       // 获取默认银行卡ID
       const defaultCard = defaultBankCards.value[0]
-      if (!defaultCard) {
-        closeToast()
-        showToast({
-          type: 'fail',
-          message: 'Please add a bank account first',
-        })
-        return
-      }
 
       const withdrawRes = await withdraw({
         nonce: nonceRes.nonce,
