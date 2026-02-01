@@ -147,7 +147,7 @@ const handleSubmit = async () => {
     const res = await addBankCard({
       type: selectedMethod.value, // 1=Gcash, 2=Maya
       card_account: formData.name,
-      card_no: `+63${formData.accountNumber}`,
+      card_no: `${formData.accountNumber}`,
     })
 
     if (res.success) {
