@@ -180,6 +180,7 @@ const formatDateTime = (date: Date) => {
 
 // 加载充值记录
 const loadDepositRecords = async (isLoadMore = false) => {
+  loading.value = true
   try {
     const { start, end } = getDateRange(selectedPeriod.value)
 
@@ -230,12 +231,10 @@ const loadDepositRecords = async (isLoadMore = false) => {
 
 // 瀑布流加载更多
 const onLoad = async () => {
-  // 防止重复加载
-  if (loading.value || finished.value) {
+  if (finished.value) {
+    console.log('已经没有更多数据了')
     return
   }
-
-  loading.value = true
 
   // 加载当前页数据
   await loadDepositRecords(currentPage.value > 1)

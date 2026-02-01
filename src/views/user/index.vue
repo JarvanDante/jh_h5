@@ -556,17 +556,12 @@ onMounted(async () => {
         router.push('/login')
       }
     } else if (result.code === 0 && result.data) {
-      console.log('=== User Info API Success ===')
-      console.log('API response data:', result.data)
-
       // 获取现有的 user_info
       let existingUserInfo = {}
       try {
         const storedUserInfo = localStorage.getItem('user_info')
-        console.log('Existing user_info (raw):', storedUserInfo)
         if (storedUserInfo) {
           existingUserInfo = JSON.parse(storedUserInfo)
-          console.log('Existing user_info (parsed):', existingUserInfo)
         }
       } catch (error) {
         console.error('Failed to parse existing user_info:', error)
@@ -577,50 +572,30 @@ onMounted(async () => {
         ...existingUserInfo,
       }
 
-      console.log('Before update - updatedUserInfo:', updatedUserInfo)
-
       // 明确覆盖这些字段（即使值为 0 或空字符串）
       if ('grade_id' in result.data) {
-        console.log('Setting grade_id from', updatedUserInfo.grade_id, 'to', result.data.grade_id)
         updatedUserInfo.grade_id = result.data.grade_id
       } else {
         console.log('grade_id NOT found in result.data')
       }
 
       if ('grade_name' in result.data) {
-        console.log(
-          'Setting grade_name from',
-          updatedUserInfo.grade_name,
-          'to',
-          result.data.grade_name,
-        )
         updatedUserInfo.grade_name = result.data.grade_name
       } else {
         console.log('grade_name NOT found in result.data')
       }
 
       if ('is_pay_password' in result.data) {
-        console.log(
-          'Setting is_pay_password from',
-          updatedUserInfo.is_pay_password,
-          'to',
-          result.data.is_pay_password,
-        )
         updatedUserInfo.is_pay_password = result.data.is_pay_password
       } else {
         console.log('is_pay_password NOT found in result.data')
       }
 
-      console.log('After update - updatedUserInfo:', updatedUserInfo)
-
       // 保存更新后的用户信息到 localStorage
       localStorage.setItem('user_info', JSON.stringify(updatedUserInfo))
-      console.log('Saved to localStorage')
 
       // 立即读取验证
       const verification = localStorage.getItem('user_info')
-      console.log('Verification - localStorage user_info:', verification)
-      console.log('=== End User Info Update ===')
     } else {
       console.error('Failed to get user info:', result.msg || result)
     }
