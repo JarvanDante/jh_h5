@@ -11,7 +11,7 @@
       <!-- 时间筛选和累计充值 -->
       <div class="filter-section">
         <div class="accumulated">
-          <span class="label">Accumulated Deposit:</span>
+          <span class="label">Total Deposit:</span>
           <span class="amount">{{ accumulatedDeposit }}</span>
         </div>
         <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
