@@ -436,7 +436,7 @@ const handleDeposit = () => {
     router.push('/login')
     return
   }
-  showToast('存款')
+  router.push('/deposit')
 }
 
 const handleWithdrawal = () => {
@@ -445,7 +445,7 @@ const handleWithdrawal = () => {
     router.push('/login')
     return
   }
-  showToast('提款')
+  router.push('/withdraw')
 }
 
 const handleInvite = () => {
