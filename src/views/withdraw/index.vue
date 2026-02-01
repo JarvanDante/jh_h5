@@ -124,7 +124,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast, showDialog } from 'vant'
+import { showToast, showDialog, closeToast } from 'vant'
 import {
   getWithdrawList,
   type WithdrawChannel,
@@ -132,6 +132,9 @@ import {
   getBankCardList,
   type BankCard,
   setDefaultBankCard,
+  getWithdrawNonce,
+  withdraw,
+  recallGameBalance,
 } from '@/api'
 import { useUserStore } from '@/stores/user'
 
@@ -320,7 +323,7 @@ const maskCardNumber = (cardNo: string) => {
 }
 
 // 处理提现
-const handleWithdraw = () => {
+const handleWithdraw = async () => {
   if (!selectedMethod.value) {
     showToast('Please select a withdrawal method')
     return
@@ -354,19 +357,113 @@ const handleWithdraw = () => {
   }
 
   const channel = selectedChannel.value
-  if (channel) {
-    showDialog({
+  if (!channel) {
+    showToast('Please select a withdrawal method')
+    return
+  }
+
+  try {
+    // 显示确认对话框
+    await showDialog({
       title: 'Confirm Withdrawal',
-      message: `Withdraw ₱${formatAmount(amount)} via ${channel.name}?`,
+      message: `Withdraw ₱${formatAmount(amount)} ${channel.name}?`,
       showCancelButton: true,
     })
-      .then(() => {
-        showToast('Withdrawal request submitted')
-        // TODO: 调用提现 API
+
+    // 显示加载提示
+    let toast = showToast({
+      type: 'loading',
+      message: 'Processing...',
+      duration: 0,
+      forbidClick: true,
+    })
+
+    // 显示加载提示
+    showToast({
+      type: 'loading',
+      message: 'Processing...',
+      duration: 0,
+      forbidClick: true,
+    })
+
+    try {
+      // 第1步：一键回收游戏余额
+      const recallRes = await recallGameBalance()
+      if (!recallRes.success) {
+        closeToast()
+        showToast({
+          type: 'fail',
+          message: recallRes.message || 'Failed to recall game balance',
+        })
+        return
+      }
+
+      // 第2步：获取提现 nonce
+      const nonceRes = await getWithdrawNonce()
+      if (!nonceRes.nonce) {
+        closeToast()
+        showToast({
+          type: 'fail',
+          message: 'Failed to get nonce',
+        })
+        return
+      }
+
+      // 第3步：提交提现申请
+      // 获取默认银行卡ID
+      const defaultCard = defaultBankCards.value[0]
+      if (!defaultCard) {
+        closeToast()
+        showToast({
+          type: 'fail',
+          message: 'Please add a bank account first',
+        })
+        return
+      }
+
+      const withdrawRes = await withdraw({
+        nonce: nonceRes.nonce,
+        money: amount,
+        withdraw_id: channel.withdraw_id,
+        bank_card_id: defaultCard.id,
       })
-      .catch(() => {
-        // 用户取消
+
+      closeToast()
+
+      if (withdrawRes.success) {
+        // 显示成功提示（绿色对号），使用接口返回的 message
+        showToast({
+          type: 'success',
+          message: withdrawRes.message || 'Withdrawal successful!',
+          duration: 2000,
+        })
+
+        // 刷新余额
+        await refreshBalance()
+
+        // 清空输入
+        withdrawAmount.value = ''
+
+        // 可选：跳转到提现历史页面
+        setTimeout(() => {
+          router.push('/withdraw/history')
+        }, 2000)
+      } else {
+        showToast({
+          type: 'fail',
+          message: withdrawRes.message || 'Withdrawal failed',
+        })
+      }
+    } catch (error: any) {
+      closeToast()
+      console.error('Withdrawal error:', error)
+      showToast({
+        type: 'fail',
+        message: error.message || 'Withdrawal failed, please try again',
       })
+    }
+  } catch {
+    // 用户取消了确认对话框
   }
 }
 

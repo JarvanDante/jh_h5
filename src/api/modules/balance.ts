@@ -169,3 +169,43 @@ export interface GetBalanceLogResponse {
 export function getBalanceLog(params: GetBalanceLogParams) {
   return request.get<GetBalanceLogResponse>('/frontend/balance/balance-log', { params })
 }
+
+// 获取提现 nonce
+export interface WithdrawNonceResponse {
+  expires_in: number
+  nonce: string
+  timestamp: number
+}
+
+export function getWithdrawNonce() {
+  return request.get<WithdrawNonceResponse>('/frontend/balance/withdraw-nonce')
+}
+
+// 提现申请参数
+export interface WithdrawParams {
+  nonce: string
+  money: number
+  withdraw_id: number
+  bank_card_id: number
+}
+
+// 提现申请响应
+export interface WithdrawResponse {
+  success: boolean
+  message: string
+}
+
+export function withdraw(params: WithdrawParams) {
+  return request.post<WithdrawResponse>('/frontend/balance/withdraw', params)
+}
+
+// 一键回收游戏余额响应
+export interface RecallGameBalanceResponse {
+  success: boolean
+  message: string
+  recalled_amount: string
+}
+
+export function recallGameBalance() {
+  return request.post<RecallGameBalanceResponse>('/frontend/game/recall-balance')
+}
