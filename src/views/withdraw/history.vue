@@ -341,8 +341,10 @@ const getStatusText = (status: number) => {
     case 1:
       return 'Pending'
     case 2:
-      return 'Success'
+      return 'Processing'
     case 3:
+      return 'Success'
+    case 4:
       return 'Failed'
     default:
       return 'Unknown'
@@ -355,8 +357,10 @@ const getStatusClass = (status: number) => {
     case 1:
       return 'pending'
     case 2:
-      return 'success'
+      return 'processing'
     case 3:
+      return 'success'
+    case 4:
       return 'failed'
     default:
       return ''
@@ -854,6 +858,11 @@ const goBack = () => {
           &.pending {
             background: rgba(255, 151, 106, 0.2);
             color: $warning-color;
+          }
+
+          &.processing {
+            background: rgba(85, 37, 131, 0.2);
+            color: $primary-color;
           }
 
           &.success {
