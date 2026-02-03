@@ -137,6 +137,78 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/report',
+    name: 'Report',
+    component: () => import('@/views/report/index.vue'),
+    meta: {
+      title: 'Report',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/security',
+    name: 'Security',
+    component: () => import('@/views/security/index.vue'),
+    meta: {
+      title: 'Security Center',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/security/bind-phone',
+    name: 'SecurityBindPhone',
+    component: () => import('@/views/security/bind-phone.vue'),
+    meta: {
+      title: 'Bind Phone',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/security/bind-email',
+    name: 'SecurityBindEmail',
+    component: () => import('@/views/security/bind-email.vue'),
+    meta: {
+      title: 'Bind Email',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/security/bind-login-password',
+    name: 'SecurityBindLoginPassword',
+    component: () => import('@/views/security/bind-login-password.vue'),
+    meta: {
+      title: 'Bind Login Password',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/security/bind-pay-password',
+    name: 'SecurityBindPayPassword',
+    component: () => import('@/views/security/bind-pay-password.vue'),
+    meta: {
+      title: 'Bind Assets Password',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/security/change-login-password',
+    name: 'SecurityChangeLoginPassword',
+    component: () => import('@/views/security/change-login-password.vue'),
+    meta: {
+      title: 'Change Login Password',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/security/change-assets-password',
+    name: 'SecurityChangeAssetsPassword',
+    component: () => import('@/views/security/change-assets-password.vue'),
+    meta: {
+      title: 'Change Assets Password',
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/error/404.vue'),

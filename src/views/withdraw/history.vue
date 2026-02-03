@@ -174,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { getBalanceLog, type BalanceLogItem } from '@/api/modules/balance'
@@ -426,6 +426,18 @@ const copyOrderNo = async (orderNo: string) => {
 const goBack = () => {
   router.back()
 }
+
+// 监听 tab 切换
+watch(activeTab, (newTab) => {
+  if (newTab === 'withdrawals' && withdrawalRecords.value.length === 0) {
+    // 切换到提现记录 tab 且没有数据时，加载数据
+    currentPage.value = 1
+    finished.value = false
+    withdrawalRecords.value = []
+    loading.value = false
+    onLoad()
+  }
+})
 </script>
 
 <style lang="scss" scoped>

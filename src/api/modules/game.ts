@@ -65,6 +65,31 @@ export interface RedirectToGameResponse {
   url: string
 }
 
+// 投注记录项
+export interface BetHistoryItem {
+  game_name: string
+  valid_amount: number
+  bet_time: string
+  win_amount: number
+  status: number
+  order_no: string
+  net_amount: number
+}
+
+// 投注记录响应
+export interface BetHistoryResponse {
+  list: BetHistoryItem[]
+  total: number
+}
+
+// 投注记录请求参数
+export interface BetHistoryParams {
+  start_time?: string
+  end_time?: string
+  page?: number
+  size?: number
+}
+
 // 游戏 API
 export const gameApi = {
   // 获取游戏分类
@@ -92,5 +117,10 @@ export const gameApi = {
   // 进入游戏
   redirectToGame(params: RedirectToGameParams): Promise<RedirectToGameResponse> {
     return request.post('/frontend/game/redirect-to-game', params)
+  },
+
+  // 获取投注历史
+  getBetHistory(params: BetHistoryParams): Promise<BetHistoryResponse> {
+    return request.get('/frontend/game/bet-history', { params })
   },
 }

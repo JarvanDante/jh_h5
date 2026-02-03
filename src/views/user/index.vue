@@ -127,14 +127,6 @@
 
       <div class="menu-divider"></div>
 
-      <div class="menu-item" @click="goToLanguage">
-        <div class="menu-icon language-icon">🌐</div>
-        <span class="menu-title">Language</span>
-        <van-icon name="arrow" size="20" color="rgba(255,255,255,0.6)" />
-      </div>
-
-      <div class="menu-divider"></div>
-
       <div class="menu-item" @click="handleLogout">
         <div class="menu-icon logout-icon">🚪</div>
         <span class="menu-title">Logout</span>
@@ -404,7 +396,12 @@ const handleDeposit = () => {
 }
 
 const goToReport = () => {
-  showToast('Report')
+  if (!userStore.isLogin) {
+    showToast('Please login first')
+    router.push('/login')
+    return
+  }
+  router.push('/report')
 }
 
 const goToInvite = () => {
@@ -420,11 +417,7 @@ const goToSupport = () => {
 }
 
 const goToSecurity = () => {
-  showToast('Security Center')
-}
-
-const goToLanguage = () => {
-  showToast('Language')
+  router.push('/security')
 }
 
 const handleLogout = async () => {

@@ -281,3 +281,14 @@ body {
 .transition-slow {
   transition: all $transition-slow;
 }
+
+
+// Vant Toast (force readable)
+.van-toast {
+  --van-toast-text-color: #fff;
+  --van-toast-background-color: rgba(0, 0, 0, 0.75);
+}
+
+.van-toast__text {
+  color: #fff;
+}

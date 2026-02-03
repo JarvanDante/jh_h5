@@ -77,6 +77,48 @@ export interface NoticeListResponse {
   }
 }
 
+// 绑定手机参数
+export interface BindMobileParams {
+  mobile: string
+}
+
+// 绑定邮箱参数
+export interface BindEmailParams {
+  email: string
+}
+
+// 绑定响应
+export interface BindResponse {
+  message: string
+}
+
+// 修改登录密码参数
+export interface ChangeLoginPasswordParams {
+  old_password: string
+  new_password: string
+}
+
+// 绑定登录密码参数
+export interface BindLoginPasswordParams {
+  new_password: string
+}
+
+// 设置支付密码参数
+export interface SetPayPasswordParams {
+  pay_password: string
+}
+
+// 修改支付密码参数
+export interface ChangePayPasswordParams {
+  old_pay_password: string
+  new_pay_password: string
+}
+
+// 修改密码响应
+export interface ChangePasswordResponse {
+  message: string
+}
+
 // 用户 API
 export const userApi = {
   // 登录
@@ -118,5 +160,35 @@ export const userApi = {
   // 获取公告列表
   getNoticeList(): Promise<NoticeListResponse> {
     return request.get('/frontend/app/notice-list')
+  },
+
+  // 绑定手机
+  bindMobile(data: BindMobileParams): Promise<BindResponse> {
+    return request.post('/frontend/app/bind-mobile', data)
+  },
+
+  // 绑定邮箱
+  bindEmail(data: BindEmailParams): Promise<BindResponse> {
+    return request.post('/frontend/app/bind-email', data)
+  },
+
+  // 修改登录密码
+  changeLoginPassword(data: ChangeLoginPasswordParams): Promise<ChangePasswordResponse> {
+    return request.post('/frontend/app/change-login-password', data)
+  },
+
+  // 绑定登录密码
+  bindLoginPassword(data: BindLoginPasswordParams): Promise<ChangePasswordResponse> {
+    return request.post('/frontend/app/bind-login-password', data)
+  },
+
+  // 修改支付密码
+  changePayPassword(data: ChangePayPasswordParams): Promise<ChangePasswordResponse> {
+    return request.post('/frontend/app/change-pay-password', data)
+  },
+
+  // 设置支付密码
+  setPayPassword(data: SetPayPasswordParams): Promise<ChangePasswordResponse> {
+    return request.post('/frontend/app/set-pay-password', data)
   },
 }
