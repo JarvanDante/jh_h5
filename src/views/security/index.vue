@@ -47,40 +47,124 @@
       </div>
 
       <!-- Login Password -->
-      <div class="security-item clickable" @click="goToChangePassword('login')">
+      <div class="security-item clickable" @click="handleChangeLoginPassword">
         <div class="item-left">
           <van-icon name="lock" size="24" color="#552583" />
           <span class="item-label">Login Password</span>
         </div>
         <div class="item-right">
-          <span class="item-status">{{ Number(userInfo.isPassword) === 1 ? 'Already Set' : 'Unbound' }}</span>
+          <span class="item-status">{{
+            Number(userInfo.isPassword) === 1 ? 'Already Set' : 'Unbound'
+          }}</span>
           <van-icon name="arrow" size="16" color="#999" />
         </div>
       </div>
 
       <!-- Assets Password -->
-      <div class="security-item clickable" @click="goToChangePassword('assets')">
+      <div class="security-item clickable" @click="handleChangePayPassword">
         <div class="item-left">
           <van-icon name="shield-o" size="24" color="#552583" />
           <span class="item-label">Assets Password</span>
         </div>
         <div class="item-right">
-          <span class="item-status">{{ Number(userInfo.isPayPassword) === 1 ? 'Already Set' : 'Unbound' }}</span>
+          <span class="item-status">{{
+            Number(userInfo.isPayPassword) === 1 ? 'Already Set' : 'Unbound'
+          }}</span>
           <van-icon name="arrow" size="16" color="#999" />
         </div>
       </div>
     </div>
 
-    <!-- 本地提示 -->
-    <transition name="fade">
-      <div v-if="localToastVisible" class="local-toast">{{ localToastMessage }}</div>
-    </transition>
+    <!-- 绑定手机弹窗 -->
+    <van-dialog
+      v-model:show="showPhoneDialog"
+      title="Bind Phone"
+      show-cancel-button
+      :before-close="handlePhoneBeforeClose"
+      class-name="bind-dialog"
+    >
+      <div class="dialog-content">
+        <van-field
+          v-model="phoneInput"
+          type="tel"
+          placeholder="Enter phone number (8-15 digits)"
+          clearable
+          maxlength="15"
+        />
+      </div>
+    </van-dialog>
+
+    <!-- 绑定邮箱弹窗 -->
+    <van-dialog
+      v-model:show="showEmailDialog"
+      title="Bind Email"
+      show-cancel-button
+      :before-close="handleEmailBeforeClose"
+      class-name="bind-dialog"
+    >
+      <div class="dialog-content">
+        <van-field v-model="emailInput" type="email" placeholder="Enter email address" clearable />
+      </div>
+    </van-dialog>
+
+    <!-- 修改登录密码弹窗 -->
+    <van-dialog
+      v-model:show="showLoginPasswordDialog"
+      title="Change Login Password"
+      show-cancel-button
+      :before-close="handleLoginPasswordBeforeClose"
+      class-name="bind-dialog"
+    >
+      <div class="dialog-content">
+        <van-field
+          v-model="loginPasswordForm.oldPassword"
+          type="password"
+          placeholder="Enter old password"
+          clearable
+        />
+        <van-field
+          v-model="loginPasswordForm.newPassword"
+          type="password"
+          placeholder="Enter new password (6-20 characters)"
+          clearable
+          class="mt-12"
+        />
+      </div>
+    </van-dialog>
+
+    <!-- 修改支付密码弹窗 -->
+    <van-dialog
+      v-model:show="showPayPasswordDialog"
+      title="Change Assets Password"
+      show-cancel-button
+      :before-close="handlePayPasswordBeforeClose"
+      class-name="bind-dialog"
+    >
+      <div class="dialog-content">
+        <van-field
+          v-model="payPasswordForm.oldPassword"
+          type="password"
+          placeholder="Enter old password (6 digits)"
+          clearable
+          maxlength="6"
+        />
+        <van-field
+          v-model="payPasswordForm.newPassword"
+          type="password"
+          placeholder="Enter new password (6 digits)"
+          clearable
+          maxlength="6"
+          class="mt-12"
+        />
+      </div>
+    </van-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { showToast } from 'vant'
 import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
@@ -94,32 +178,184 @@ const userInfo = ref({
   isPayPassword: 0,
 })
 
+// 弹窗显示状态
+const showPhoneDialog = ref(false)
+const showEmailDialog = ref(false)
+const showLoginPasswordDialog = ref(false)
+const showPayPasswordDialog = ref(false)
+
+// 输入值
+const phoneInput = ref('')
+const emailInput = ref('')
+const loginPasswordForm = ref({
+  oldPassword: '',
+  newPassword: '',
+})
+const payPasswordForm = ref({
+  oldPassword: '',
+  newPassword: '',
+})
+
 const goBack = () => {
   router.back()
 }
 
-const goToChangePassword = (type: 'login' | 'assets') => {
-  if (type === 'login') {
-    if (Number(userInfo.value.isPassword) === 1) {
-      router.push('/security/change-login-password')
-    } else {
-      router.push('/security/bind-login-password')
+// 处理绑定手机
+const handleBindPhone = () => {
+  phoneInput.value = ''
+  showPhoneDialog.value = true
+}
+
+// 处理绑定邮箱
+const handleBindEmail = () => {
+  emailInput.value = ''
+  showEmailDialog.value = true
+}
+
+// 处理修改登录密码
+const handleChangeLoginPassword = () => {
+  loginPasswordForm.value = {
+    oldPassword: '',
+    newPassword: '',
+  }
+  showLoginPasswordDialog.value = true
+}
+
+// 处理修改支付密码
+const handleChangePayPassword = () => {
+  payPasswordForm.value = {
+    oldPassword: '',
+    newPassword: '',
+  }
+  showPayPasswordDialog.value = true
+}
+
+// 手机号弹窗关闭前处理
+const handlePhoneBeforeClose = async (action: string) => {
+  if (action === 'confirm') {
+    // 验证手机号
+    if (!phoneInput.value) {
+      showToast('Please enter phone number')
+      return false
     }
-  } else {
-    if (Number(userInfo.value.isPayPassword) === 1) {
-      router.push('/security/change-assets-password')
-    } else {
-      router.push('/security/bind-pay-password')
+    if (!/^\d{8,15}$/.test(phoneInput.value)) {
+      showToast('Phone number must be 8-15 digits')
+      return false
+    }
+
+    try {
+      await userApi.bindMobile({ mobile: phoneInput.value })
+      showToast('Phone bound successfully')
+      await fetchUserInfo()
+      return true
+    } catch (error: any) {
+      showToast(error.message || 'Failed to bind phone')
+      return false
     }
   }
+  return true
 }
 
-const handleBindPhone = () => {
-  router.push('/security/bind-phone')
+// 邮箱弹窗关闭前处理
+const handleEmailBeforeClose = async (action: string) => {
+  if (action === 'confirm') {
+    // 验证邮箱
+    if (!emailInput.value) {
+      showToast('Please enter email address')
+      return false
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value)) {
+      showToast('Please enter a valid email address')
+      return false
+    }
+
+    try {
+      await userApi.bindEmail({ email: emailInput.value })
+      showToast('Email bound successfully')
+      await fetchUserInfo()
+      return true
+    } catch (error: any) {
+      showToast(error.message || 'Failed to bind email')
+      return false
+    }
+  }
+  return true
 }
 
-const handleBindEmail = () => {
-  router.push('/security/bind-email')
+// 登录密码弹窗关闭前处理
+const handleLoginPasswordBeforeClose = async (action: string) => {
+  if (action === 'confirm') {
+    const { oldPassword, newPassword } = loginPasswordForm.value
+
+    // 验证输入
+    if (!oldPassword) {
+      showToast('Please enter old password')
+      return false
+    }
+    if (!newPassword) {
+      showToast('Please enter new password')
+      return false
+    }
+    if (newPassword.length < 6 || newPassword.length > 20) {
+      showToast('Password must be 6-20 characters')
+      return false
+    }
+    if (oldPassword === newPassword) {
+      showToast('New password cannot be the same as old password')
+      return false
+    }
+
+    try {
+      await userApi.changeLoginPassword({
+        old_password: oldPassword,
+        new_password: newPassword,
+      })
+      showToast('Login password changed successfully')
+      return true
+    } catch (error: any) {
+      showToast(error.message || 'Failed to change login password')
+      return false
+    }
+  }
+  return true
+}
+
+// 支付密码弹窗关闭前处理
+const handlePayPasswordBeforeClose = async (action: string) => {
+  if (action === 'confirm') {
+    const { oldPassword, newPassword } = payPasswordForm.value
+
+    // 验证输入
+    if (!oldPassword) {
+      showToast('Please enter old password')
+      return false
+    }
+    if (!newPassword) {
+      showToast('Please enter new password')
+      return false
+    }
+    if (!/^\d{6}$/.test(newPassword)) {
+      showToast('Password must be 6 digits')
+      return false
+    }
+    if (oldPassword === newPassword) {
+      showToast('New password cannot be the same as old password')
+      return false
+    }
+
+    try {
+      await userApi.changePayPassword({
+        old_pay_password: oldPassword,
+        new_pay_password: newPassword,
+      })
+      showToast('Assets password changed successfully')
+      return true
+    } catch (error: any) {
+      showToast(error.message || 'Failed to change assets password')
+      return false
+    }
+  }
+  return true
 }
 
 // 获取用户信息
@@ -142,7 +378,6 @@ onMounted(() => {
   fetchUserInfo()
 })
 </script>
-
 
 <style lang="scss" scoped>
 @use '@/styles/variables.scss' as *;
@@ -346,32 +581,4 @@ onMounted(() => {
 :deep(.security-toast .van-toast__text) {
   color: #fff;
 }
-
-
-.local-toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  z-index: 9999;
-  max-width: 80%;
-  text-align: center;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
 </style>

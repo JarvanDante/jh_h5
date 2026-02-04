@@ -8,8 +8,7 @@
     <div class="login-form">
       <div class="logo">
         <div class="logo-icon">🎰</div>
-        <h1>JILIEVO.CC</h1>
-        <p>Welcome Back!</p>
+        <p class="welcome-text">Welcome Back!</p>
       </div>
 
       <van-form @submit="onSubmit">
@@ -242,25 +241,29 @@ const goToRegister = () => {
 
     .logo {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 48px;
 
       .logo-icon {
-        font-size: 64px;
-        margin-bottom: 16px;
+        font-size: 80px;
+        margin-bottom: 24px;
+        animation: pulse 2s ease-in-out infinite;
       }
 
-      h1 {
-        font-size: 32px;
-        background: $gradient-purple-gold;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 8px;
+      .welcome-text {
+        color: #1f1f1f;
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0;
       }
+    }
 
-      p {
-        color: $text-color-secondary;
-        font-size: 14px;
+    @keyframes pulse {
+      0%,
+      100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
       }
     }
 
@@ -285,7 +288,7 @@ const goToRegister = () => {
       margin-top: 16px;
 
       .link {
-        color: $primary-color;
+        color: #552583;
         font-size: 14px;
         text-decoration: none;
 

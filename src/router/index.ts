@@ -71,6 +71,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/deposit/index.vue'),
     meta: {
       title: '存款',
+      requiresAuth: true,
     },
   },
   {
