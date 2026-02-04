@@ -138,6 +138,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/withdraw/audit-detail',
+    name: 'WithdrawAuditDetail',
+    component: () => import('@/views/withdraw/audit-detail.vue'),
+    meta: {
+      title: 'Audit details',
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/report',
     name: 'Report',
     component: () => import('@/views/report/index.vue'),

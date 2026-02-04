@@ -26,7 +26,13 @@
       <div class="info-card">
         <div class="card-header">
           <span class="card-title">Rollover requirement</span>
-          <van-icon name="replay" size="20" color="#3b82f6" @click="refreshRollover" />
+          <van-icon
+            name="replay"
+            size="20"
+            color="#3b82f6"
+            :class="{ rotating: isRolloverRefreshing }"
+            @click="refreshRollover"
+          />
         </div>
         <div class="card-amount">{{ formatAmount(rolloverRequirement) }}</div>
         <div class="view-details" @click="showRolloverDetails">
@@ -131,6 +137,7 @@ import {
   refreshBalance as refreshBalanceApi,
   getBankCardList,
   type BankCard,
+  getUserFlowRequirements,
   setDefaultBankCard,
   getWithdrawNonce,
   withdraw,
@@ -149,6 +156,7 @@ const rolloverRequirement = ref(0.0)
 
 // 是否正在刷新余额
 const isRefreshing = ref(false)
+const isRolloverRefreshing = ref(false)
 
 // 提现渠道列表
 const withdrawChannels = ref<WithdrawChannel[]>([])
@@ -269,10 +277,52 @@ const refreshBalance = async () => {
   }
 }
 
+// 加载流水要求（仅进行中）
+const loadRolloverRequirement = async () => {
+  if (isRolloverRefreshing.value) return
+  isRolloverRefreshing.value = true
+
+  try {
+    let page = 1
+    const size = 200
+    let totalRemaining = 0
+    let fetched = 0
+    let totalCount = 0
+    const maxPages = 50
+
+    while (page <= maxPages) {
+      const res = await getUserFlowRequirements({
+        status: 1,
+        page,
+        size,
+      })
+      const list = res.list || []
+      totalCount = res.count || totalCount
+      totalRemaining += list.reduce((sum, item) => sum + Number(item.remaining_flow || 0), 0)
+      fetched += list.length
+
+      if (list.length < size) {
+        break
+      }
+      if (totalCount > 0 && fetched >= totalCount) {
+        break
+      }
+      page += 1
+    }
+
+    rolloverRequirement.value = parseFloat(totalRemaining.toFixed(2))
+  } catch (error: any) {
+    showToast(error.message || 'Failed to load rollover requirement')
+  } finally {
+    setTimeout(() => {
+      isRolloverRefreshing.value = false
+    }, 1000)
+  }
+}
+
 // 刷新流水要求
 const refreshRollover = () => {
-  showToast('Refreshing rollover...')
-  // TODO: 调用 API 刷新流水要求
+  loadRolloverRequirement()
 }
 
 // 显示流水详情
@@ -460,6 +510,7 @@ const handleWithdraw = async () => {
 onMounted(() => {
   loadWithdrawChannels()
   loadBankCards()
+  loadRolloverRequirement()
 
   // 如果已登录，加载用户余额
   if (userStore.isLogin && userStore.userInfo) {

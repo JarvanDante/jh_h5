@@ -170,6 +170,43 @@ export function getBalanceLog(params: GetBalanceLogParams) {
   return request.get<GetBalanceLogResponse>('/frontend/balance/balance-log', { params })
 }
 
+// 用户流水要求
+export interface UserFlowRequirement {
+  id: number
+  source_type: number
+  trade_no: string
+  amount: number
+  bonus_amount: number
+  flow_multiple: number
+  required_flow: number
+  completed_flow: number
+  remaining_flow: number
+  status: number
+  progress: number
+  start_time: string
+  expire_time: string
+  complete_time: string
+  remark: string
+  created_at: string
+}
+
+export interface GetUserFlowRequirementsParams {
+  status?: number
+  page?: number
+  size?: number
+}
+
+export interface GetUserFlowRequirementsResponse {
+  list: UserFlowRequirement[]
+  count: number
+}
+
+export function getUserFlowRequirements(params: GetUserFlowRequirementsParams) {
+  return request.get<GetUserFlowRequirementsResponse>('/frontend/balance/my-flow-requirements', {
+    params,
+  })
+}
+
 // 获取提现 nonce
 export interface WithdrawNonceResponse {
   expires_in: number

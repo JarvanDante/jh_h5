@@ -146,29 +146,85 @@
       </div>
 
       <!-- 记录列表 -->
-      <div v-if="auditRecords.length === 0" class="empty-state">
-        <van-icon name="search" size="80" color="#4b5563" />
-        <div class="empty-text">No Record</div>
-      </div>
+      <van-list
+        v-model:loading="flowLoading"
+        :finished="flowFinished"
+        :immediate-check="false"
+        finished-text="No more records"
+        @load="onLoadFlow"
+      >
+        <div v-if="flowRequirements.length === 0 && !flowLoading" class="empty-state">
+          <van-icon name="search" size="80" color="#4b5563" />
+          <div class="empty-text">No Record</div>
+        </div>
 
-      <div v-else class="record-list">
-        <div v-for="record in auditRecords" :key="record.id" class="record-item">
-          <div class="record-header">
-            <span class="type-badge" :class="record.typeClass">{{ record.type }}</span>
-            <span class="time">{{ record.time }}</span>
-          </div>
-          <div class="record-body">
-            <div class="info-row">
-              <span class="label">Amount:</span>
-              <span class="value">₱{{ record.amount }}</span>
+        <div class="record-list">
+          <div
+            v-for="item in flowRequirements"
+            :key="item.id"
+            class="record-item flow-item"
+            @click="openFlowDetail(item)"
+          >
+            <div class="record-header">
+              <span class="type-badge">{{ getFlowTypeText(item.source_type) }}</span>
+              <span class="status" :class="getFlowStatusClass(item.status)">{{
+                getFlowStatusText(item.status)
+              }}</span>
             </div>
-            <div class="info-row">
-              <span class="label">Description:</span>
-              <span class="value">{{ record.description }}</span>
+            <div class="record-body">
+              <div class="info-row">
+                <span class="label">Required Flow:</span>
+                <span class="value">₱{{ formatAmount(item.required_flow) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Completed:</span>
+                <span class="value">₱{{ formatAmount(item.completed_flow) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Remaining:</span>
+                <span class="value">₱{{ formatAmount(item.remaining_flow) }}</span>
+              </div>
+              <div class="info-row small order-row">
+                <span class="label">Order No:</span>
+                <span class="value order-no">{{ item.trade_no }}</span>
+                <button class="copy-btn" @click.stop="copyOrderNo(item.trade_no)">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect
+                      x="8"
+                      y="8"
+                      width="12"
+                      height="12"
+                      rx="2"
+                      stroke="#552583"
+                      stroke-width="2"
+                    />
+                    <path
+                      d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
+                      stroke="#552583"
+                      stroke-width="2"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div class="progress-row">
+                <van-progress
+                  :percentage="formatProgress(item.progress)"
+                  stroke-width="6"
+                  color="#07c160"
+                  pivot-text=""
+                />
+                <span class="progress-text">{{ formatProgress(item.progress).toFixed(2) }}%</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </van-list>
     </div>
   </div>
 </template>
@@ -177,7 +233,12 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
-import { getBalanceLog, type BalanceLogItem } from '@/api/modules/balance'
+import {
+  getBalanceLog,
+  getUserFlowRequirements,
+  type BalanceLogItem,
+  type UserFlowRequirement,
+} from '@/api/modules/balance'
 
 const router = useRouter()
 const route = useRoute()
@@ -186,15 +247,15 @@ const route = useRoute()
 const activeTab = ref<'withdrawals' | 'audit'>('withdrawals')
 
 // 组件挂载时检查 URL 参数
-onMounted(() => {
-  const tab = route.query.tab
-  if (tab === 'audit') {
-    activeTab.value = 'audit'
-  } else {
-    // 默认加载提现记录
-    onLoad()
-  }
-})
+  onMounted(() => {
+    const tab = route.query.tab
+    if (tab === 'audit') {
+      activeTab.value = 'audit'
+    } else {
+      // 默认加载提现记录
+      onLoad()
+    }
+  })
 
 // 下拉选择器显示状态
 const showPeriodPicker = ref(false)
@@ -205,6 +266,7 @@ const selectedPeriod = ref(0)
 const accumulatedWithdraw = ref('0.00')
 const loading = ref(false)
 const finished = ref(false)
+const isLoadingRecords = ref(false)
 const currentPage = ref(1)
 const pageSize = 5
 
@@ -224,18 +286,24 @@ const periods = [
 
 const withdrawalRecords = ref<any[]>([])
 
-// 审计日志相关
+// 审计日志相关（改为流水要求）
 const auditAmount = ref('0.00')
-const selectedAuditType = ref('all')
+const selectedAuditType = ref(-1)
+const flowLoading = ref(false)
+const flowFinished = ref(false)
+const flowPage = ref(1)
+const flowPageSize = 10
+const isLoadingFlowRecords = ref(false)
 
 const auditTypeOptions = [
-  { text: 'All', value: 'all' },
-  { text: 'Member Deposit', value: 'deposit' },
-  { text: 'Event', value: 'event' },
-  { text: 'System audit', value: 'system' },
+  { text: 'All', value: -1 },
+  { text: 'In Progress', value: 1 },
+  { text: 'Completed', value: 2 },
+  { text: 'Expired', value: 3 },
+  { text: 'Closed', value: 4 },
 ]
 
-const auditRecords = ref<any[]>([])
+const flowRequirements = ref<UserFlowRequirement[]>([])
 
 // 获取日期范围
 const getDateRange = (days: number) => {
@@ -323,16 +391,20 @@ const loadWithdrawRecords = async (isLoadMore = false) => {
 
 // 瀑布流加载更多
 const onLoad = async () => {
-  if (finished.value) {
+  if (isLoadingRecords.value || finished.value) {
     console.log('已经没有更多数据了')
     return
   }
+
+  isLoadingRecords.value = true
+  loading.value = true
 
   // 加载当前页数据
   await loadWithdrawRecords(currentPage.value > 1)
 
   // 加载完成后，页码+1，准备下次加载
   currentPage.value++
+  isLoadingRecords.value = false
 }
 
 // 获取状态文本
@@ -374,7 +446,7 @@ const getPeriodText = (value: number) => {
 }
 
 // 获取审计类型文本
-const getAuditTypeText = (value: string) => {
+const getAuditTypeText = (value: number) => {
   const option = auditTypeOptions.find((o) => o.value === value)
   return option ? option.text : 'All'
 }
@@ -393,10 +465,13 @@ const selectPeriodOption = (value: number) => {
 }
 
 // 选择审计类型
-const selectAuditType = (value: string) => {
+const selectAuditType = (value: number) => {
   selectedAuditType.value = value
   showAuditPicker.value = false
-  // TODO: 调用 API 获取对应类型的记录
+  flowPage.value = 1
+  flowFinished.value = false
+  flowRequirements.value = []
+  loadFlowRequirements()
 }
 
 // 选择时间段（从快捷按钮）
@@ -437,7 +512,127 @@ watch(activeTab, (newTab) => {
     loading.value = false
     onLoad()
   }
+  if (newTab === 'audit') {
+    if (flowRequirements.value.length === 0) {
+      flowPage.value = 1
+      flowFinished.value = false
+      loadFlowRequirements()
+    }
+  }
 })
+
+const formatAmount = (value: number) => {
+  if (value === undefined || value === null) return '0.00'
+  return Number(value).toFixed(2)
+}
+
+const formatProgress = (value: number) => {
+  const num = Number(value || 0)
+  if (Number.isNaN(num)) return 0
+  return Math.max(0, Math.min(100, num))
+}
+
+const getFlowTypeText = (type: number) => {
+  switch (type) {
+    case 1:
+      return 'Deposit Flow'
+    case 2:
+      return 'Bonus Flow'
+    case 3:
+      return 'Rebate Flow'
+    case 4:
+      return 'Manual Add Flow'
+    case 5:
+      return 'Register Bonus'
+    case 6:
+      return 'Recharge Bonus'
+    case 7:
+      return 'Upgrade Bonus'
+    case 8:
+      return 'Daily Sign'
+    case 9:
+      return 'Lucky Spin'
+    default:
+      return 'Flow'
+  }
+}
+
+const getFlowStatusText = (status: number) => {
+  switch (status) {
+    case 1:
+      return 'In Progress'
+    case 2:
+      return 'Completed'
+    case 3:
+      return 'Expired'
+    case 4:
+      return 'Closed'
+    default:
+      return 'Unknown'
+  }
+}
+
+const getFlowStatusClass = (status: number) => {
+  switch (status) {
+    case 1:
+      return 'processing'
+    case 2:
+      return 'success'
+    case 3:
+      return 'failed'
+    case 4:
+      return 'pending'
+    default:
+      return ''
+  }
+}
+
+const loadFlowRequirements = async (isLoadMore = false) => {
+  try {
+    flowLoading.value = true
+    const res = await getUserFlowRequirements({
+      status: selectedAuditType.value,
+      page: flowPage.value,
+      size: flowPageSize,
+    })
+    const list = res.list || []
+    if (isLoadMore) {
+      flowRequirements.value = [...flowRequirements.value, ...list]
+    } else {
+      flowRequirements.value = list
+    }
+    const totalRemaining = flowRequirements.value.reduce(
+      (sum, item) => sum + Number(item.remaining_flow || 0),
+      0,
+    )
+    auditAmount.value = totalRemaining.toFixed(2)
+
+    if (list.length < flowPageSize) {
+      flowFinished.value = true
+    } else if (res.count && flowRequirements.value.length >= res.count) {
+      flowFinished.value = true
+    } else {
+      flowFinished.value = false
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Failed to load flow requirements')
+  } finally {
+    flowLoading.value = false
+  }
+}
+
+const onLoadFlow = async () => {
+  if (isLoadingFlowRecords.value || flowFinished.value) return
+  isLoadingFlowRecords.value = true
+  await loadFlowRequirements(flowPage.value > 1)
+  flowPage.value += 1
+  isLoadingFlowRecords.value = false
+}
+
+const openFlowDetail = (item: UserFlowRequirement) => {
+  sessionStorage.setItem('flow_requirement_detail', JSON.stringify(item))
+  router.push('/withdraw/audit-detail')
+}
 </script>
 
 <style lang="scss" scoped>
@@ -932,8 +1127,94 @@ watch(activeTab, (newTab) => {
             font-weight: 500;
           }
         }
+
+        .info-row.small {
+          font-size: 12px;
+
+          &.order-row {
+            align-items: center;
+            gap: 6px;
+          }
+
+          .order-no {
+            max-width: 230px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #666;
+            flex: 1;
+          }
+
+          .copy-btn {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            padding: 0;
+            cursor: pointer;
+
+            &:active {
+              background: rgba(85, 37, 131, 0.1);
+              transform: scale(0.95);
+            }
+          }
+        }
+
+        .progress-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          :deep(.van-progress) {
+            flex: 1;
+          }
+
+          .progress-text {
+            font-size: 12px;
+            color: #666;
+            width: 60px;
+            text-align: right;
+          }
+        }
+      }
+    }
+
+    .flow-item {
+      .record-header {
+        .status {
+          padding: 4px 10px;
+          border-radius: 10px;
+          font-size: 12px;
+          font-weight: 600;
+
+          &.processing {
+            background: rgba(255, 193, 7, 0.2);
+            color: #f59e0b;
+          }
+
+          &.success {
+            background: rgba(7, 193, 96, 0.2);
+            color: $success-color;
+          }
+
+          &.failed {
+            background: rgba(238, 10, 36, 0.2);
+            color: $danger-color;
+          }
+
+          &.pending {
+            background: rgba(148, 163, 184, 0.2);
+            color: #64748b;
+          }
+        }
       }
     }
   }
+
 }
 </style>
