@@ -50,7 +50,7 @@
         </div>
 
         <div class="extra-links">
-          <a href="#" class="link">Forgot Password?</a>
+          <a @click="handleForgotPassword" class="link">Forgot Password?</a>
           <a @click="goToRegister" class="link">Register</a>
         </div>
       </van-form>
@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { showToast } from 'vant'
+import { showToast, showDialog } from 'vant'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
@@ -223,6 +223,17 @@ const onSubmit = async () => {
 // 跳转到注册页
 const goToRegister = () => {
   router.push('/register')
+}
+
+// 处理忘记密码
+const handleForgotPassword = () => {
+  showDialog({
+    title: 'Forgot Password?',
+    message:
+      'Please contact our customer service to reset your password.\n\n📱 Telegram: @YourSupport\n💬 WhatsApp: +1234567890\n📧 Email: support@example.com',
+    confirmButtonText: 'OK',
+    confirmButtonColor: '#552583',
+  })
 }
 </script>
 

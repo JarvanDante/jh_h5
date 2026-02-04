@@ -24,7 +24,7 @@
           />
           <van-field
             v-model="formData.password"
-            type="password"
+            :type="showPassword ? 'text' : 'password'"
             name="password"
             label="Password"
             placeholder="Enter password (min 6 characters)"
@@ -32,10 +32,18 @@
               { required: true, message: 'Please enter password' },
               { min: 6, message: 'Password must be at least 6 characters' },
             ]"
-          />
+          >
+            <template #right-icon>
+              <van-icon
+                class="eye-icon"
+                :name="showPassword ? 'closed-eye' : 'eye-o'"
+                @click="showPassword = !showPassword"
+              />
+            </template>
+          </van-field>
           <van-field
             v-model="formData.confirmPassword"
-            type="password"
+            :type="showConfirmPassword ? 'text' : 'password'"
             name="confirmPassword"
             label="Confirm"
             placeholder="Confirm password"
@@ -43,7 +51,15 @@
               { required: true, message: 'Please confirm password' },
               { validator: validatePassword, message: 'Passwords do not match' },
             ]"
-          />
+          >
+            <template #right-icon>
+              <van-icon
+                class="eye-icon"
+                :name="showConfirmPassword ? 'closed-eye' : 'eye-o'"
+                @click="showConfirmPassword = !showConfirmPassword"
+              />
+            </template>
+          </van-field>
           <van-field
             v-model="formData.captchaCode"
             name="captchaCode"
@@ -119,6 +135,8 @@ const quickLoading = ref(false)
 const agreed = ref(false)
 const captchaImage = ref('')
 const captchaTime = ref('') // 改为字符串类型
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 const formData = reactive({
   username: '',
@@ -428,6 +446,13 @@ onMounted(() => {
         }
       }
     }
+  }
+
+  .eye-icon {
+    font-size: 18px;
+    color: #999;
+    padding: 0 4px;
+    cursor: pointer;
   }
 }
 
