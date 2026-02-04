@@ -4,6 +4,15 @@ class Request {
   private isRefreshing = false
   private refreshSubscribers: Array<(token: string) => void> = []
 
+  private normalizeMessage(message?: string): string | undefined {
+    if (!message) return message
+    const match = message.match(/desc\s*=\s*(.*)$/)
+    if (match && match[1]) {
+      return match[1].trim()
+    }
+    return message
+  }
+
   private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -146,6 +155,14 @@ class Request {
     }
 
     // 正常返回数据
+    if (result && typeof result === 'object') {
+      if (result.msg) {
+        result.msg = this.normalizeMessage(result.msg)
+      }
+      if (result.message) {
+        result.message = this.normalizeMessage(result.message)
+      }
+    }
     return result.data || result
   }
 

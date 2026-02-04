@@ -182,6 +182,15 @@ const onClickLeft = () => {
   router.back()
 }
 
+const extractRpcMessage = (rawMsg?: string) => {
+  if (!rawMsg) return ''
+  const match = rawMsg.match(/desc\\s*=\\s*(.*)$/)
+  if (match && match[1]) {
+    return match[1].trim()
+  }
+  return rawMsg
+}
+
 // 普通注册
 const onSubmit = async () => {
   if (!agreed.value) {
@@ -198,12 +207,24 @@ const onSubmit = async () => {
     loading.value = true
 
     // 调用注册接口
-    const res = await userApi.register({
+    const res: any = await userApi.register({
       username: formData.username,
       password: formData.password,
       time: captchaTime.value,
       code: formData.captchaCode,
     })
+
+    if (res?.code && res.code !== 0) {
+      showToast(extractRpcMessage(res.msg) || 'Registration failed')
+      refreshCaptcha()
+      return
+    }
+
+    if (!res?.token) {
+      showToast(extractRpcMessage(res?.message) || 'Registration failed')
+      refreshCaptcha()
+      return
+    }
 
     // 1. 先保存 token
     if (res.token) {

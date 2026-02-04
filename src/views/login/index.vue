@@ -24,12 +24,20 @@
           />
           <van-field
             v-model="formData.password"
-            type="password"
+            :type="showPassword ? 'text' : 'password'"
             name="password"
             label="Password"
             placeholder="Enter password"
             :rules="[{ required: true, message: 'Please enter password' }]"
-          />
+          >
+            <template #right-icon>
+              <van-icon
+                class="eye-icon"
+                :name="showPassword ? 'closed-eye' : 'eye-o'"
+                @click="showPassword = !showPassword"
+              />
+            </template>
+          </van-field>
           <van-field
             v-model="formData.captcha"
             name="captcha"
@@ -69,6 +77,7 @@ const route = useRoute()
 const userStore = useUserStore()
 
 const loading = ref(false)
+const showPassword = ref(false)
 const formData = reactive({
   username: '',
   password: '',
@@ -315,6 +324,13 @@ const handleForgotPassword = () => {
         }
       }
     }
+  }
+
+  .eye-icon {
+    font-size: 18px;
+    color: #999;
+    padding: 0 4px;
+    cursor: pointer;
   }
 }
 </style>
