@@ -292,3 +292,13 @@ body {
 .van-toast__text {
   color: #fff;
 }
+
+// Vant Checkbox 主题色覆盖
+:root {
+  --van-checkbox-checked-icon-color: #552583;
+}
+
+.van-checkbox__icon--checked {
+  background-color: #552583 !important;
+  border-color: #552583 !important;
+}

@@ -2,6 +2,8 @@
   <div class="login-page">
     <van-nav-bar
       title="Login"
+      left-arrow
+      @click-left="goBack"
       :style="{ background: 'linear-gradient(135deg, #552583 0%, #7B3FA8 100%)' }"
     />
 
@@ -31,7 +33,7 @@
           <van-field
             v-model="formData.captcha"
             name="captcha"
-            label="Captcha code"
+            label="Captcha"
             placeholder="Enter captcha code"
             :rules="[{ required: true, message: 'Please enter captcha code' }]"
           >
@@ -86,6 +88,11 @@ const captchaUrl = ref(`${apiBaseUrl}/frontend/app/captcha?time=${captchaTime.va
 const refreshCaptcha = () => {
   captchaTime.value = Date.now().toString()
   captchaUrl.value = `${apiBaseUrl}/frontend/app/captcha?time=${captchaTime.value}`
+}
+
+// 返回上一页
+const goBack = () => {
+  router.back()
 }
 
 const onSubmit = async () => {
