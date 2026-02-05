@@ -13,6 +13,7 @@ export interface RegisterParams {
   password: string
   time: string // 时间戳字符串
   code: string
+  invite_code?: string // 邀请码（可选）
 }
 
 // 快速注册参数
@@ -119,6 +120,34 @@ export interface ChangePasswordResponse {
   message: string
 }
 
+// 邀请信息响应
+export interface InviteInfoResponse {
+  invite_code: string
+  invite_url: string
+  total_invites: number
+  today_invites: number
+  total_reward: string
+  today_income: string
+  yesterday_income: string
+  registers: number
+  valid_referral: number
+}
+
+// 邀请列表响应
+export interface InviteListResponse {
+  list: Array<{
+    user_id: number
+    username: string
+    register_time: string
+    total_bet: string
+    total_recharge: string
+    status: number
+  }>
+  total: number
+  page: number
+  page_size: number
+}
+
 // 用户 API
 export const userApi = {
   // 登录
@@ -190,5 +219,15 @@ export const userApi = {
   // 设置支付密码
   setPayPassword(data: SetPayPasswordParams): Promise<ChangePasswordResponse> {
     return request.post('/frontend/app/set-pay-password', data)
+  },
+
+  // 获取邀请信息
+  getInviteInfo(): Promise<InviteInfoResponse> {
+    return request.get('/frontend/app/invite-info')
+  },
+
+  // 获取邀请列表
+  getInviteList(page = 1, pageSize = 20): Promise<InviteListResponse> {
+    return request.get('/frontend/app/invite-list', { params: { page, page_size: pageSize } })
   },
 }

@@ -189,20 +189,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
+import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
 
 // 统计数据
-const todayIncome = ref('---')
-const yesterdayIncome = ref('---')
-const registers = ref('---')
-const validReferral = ref('---')
+const todayIncome = ref('0.00')
+const yesterdayIncome = ref('0.00')
+const registers = ref('0')
+const validReferral = ref('0')
 
 // 邀请链接
-const inviteLink = ref('http://www.jilievok.com/?r=')
+const inviteLink = ref('')
 
 // 奖励领取记录（所有记录都滚动）
 const rewardsReceived = ref([
@@ -228,6 +229,31 @@ const goBack = () => {
   router.back()
 }
 
+const normalizeText = (value: unknown, fallback = '0') => {
+  if (value === null || value === undefined || value === '') return fallback
+  return String(value)
+}
+
+const buildInviteLink = (path: string) => {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  return `${window.location.origin}${path}`
+}
+
+const loadInviteInfo = async () => {
+  try {
+    const data = await userApi.getInviteInfo()
+    // 映射字段 - API 返回的字段名
+    todayIncome.value = normalizeText(data.today_income, '0.00')
+    yesterdayIncome.value = normalizeText(data.yesterday_income, '0.00')
+    registers.value = normalizeText(data.registers ?? data.total_invites, '0')
+    validReferral.value = normalizeText(data.valid_referral ?? data.today_invites, '0')
+    inviteLink.value = buildInviteLink(data.invite_url)
+  } catch (error: any) {
+    showToast(error?.message || 'Failed to load invite info')
+  }
+}
+
 const shareToSocial = (platform: string) => {
   showToast(`Share to ${platform}`)
 }
@@ -236,6 +262,10 @@ const copyLink = () => {
   navigator.clipboard.writeText(inviteLink.value)
   showToast('Link copied!')
 }
+
+onMounted(() => {
+  loadInviteInfo()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -377,26 +407,39 @@ const copyLink = () => {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 12px 16px;
+      padding: 10px 12px;
       background: rgba(255, 255, 255, 0.15);
       border: 1px solid rgba(253, 185, 39, 0.3);
       border-radius: 12px;
 
       .link-input {
         flex: 1;
+        min-width: 0;
         border: none;
         outline: none;
-        font-size: 13px;
+        font-size: 11px;
         color: #fff;
         background: transparent;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
       }
 
       :deep(.van-button) {
+        flex-shrink: 0;
         background: linear-gradient(135deg, #fdb927 0%, #ff9800 100%);
         border: none;
-        border-radius: 8px;
+        border-radius: 6px;
         font-weight: bold;
+        font-size: 12px;
         box-shadow: 0 2px 8px rgba(253, 185, 39, 0.4);
+        padding: 0 8px;
+        min-width: 40px;
+        height: 28px;
+      }
+
+      :deep(.van-icon) {
+        flex-shrink: 0;
       }
     }
   }

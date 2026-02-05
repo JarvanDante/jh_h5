@@ -71,6 +71,7 @@ import { ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showDialog } from 'vant'
 import { useUserStore } from '@/stores/user'
+import { userApi } from '@/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -143,36 +144,24 @@ const onSubmit = async () => {
         userStore.setRefreshToken(refresh_token)
       }
 
-      // 使用 token 获取用户详细信息
+      // 请求用户信息接口
       try {
-        const userInfoUrl = `${apiBaseUrl}/frontend/app/user-info`
-        const userInfoResponse = await fetch(userInfoUrl, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        const userInfoResult = await userInfoResponse.json()
-
-        if (userInfoResult.code === 0 && userInfoResult.data) {
-          // 保存用户详细信息 - 使用 user_id 作为 id
+        const userInfoRes = await userApi.getUserInfo()
+        if (userInfoRes) {
           userStore.setUserInfo({
-            id: userInfoResult.data.user_id || 0,
-            username: userInfoResult.data.username || formData.username,
-            nickname:
-              userInfoResult.data.nickname || userInfoResult.data.username || formData.username,
-            avatar: userInfoResult.data.avatar || '',
-            mobile: userInfoResult.data.mobile || '',
-            email: userInfoResult.data.email || '',
-            balance: userInfoResult.data.balance || '0.00',
-            realname: userInfoResult.data.realname || '',
-            grade_name: userInfoResult.data.grade_name || '',
+            id: userInfoRes.user_id || 0,
+            username: userInfoRes.username || formData.username,
+            nickname: userInfoRes.nickname || userInfoRes.username || formData.username,
+            avatar: userInfoRes.avatar || '',
+            mobile: userInfoRes.mobile || '',
+            email: userInfoRes.email || '',
+            balance: userInfoRes.balance || '0.00',
+            realname: userInfoRes.realname || '',
+            grade_name: userInfoRes.grade_name || '',
           })
         }
       } catch (error) {
         console.error('Failed to fetch user info:', error)
-        // 即使获取用户信息失败，也继续登录流程
       }
 
       // 调用刷新余额接口
@@ -201,7 +190,6 @@ const onSubmit = async () => {
         }
       } catch (error) {
         console.error('Failed to refresh balance:', error)
-        // 余额刷新失败不影响登录流程
       }
 
       showToast('Login successful')

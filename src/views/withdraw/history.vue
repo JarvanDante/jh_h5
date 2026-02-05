@@ -1,231 +1,232 @@
 <template>
   <div class="history-page">
-    <!-- 顶部导航栏 -->
-    <div class="top-bar">
-      <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <div class="tabs">
-        <div
-          class="tab"
-          :class="{ active: activeTab === 'withdrawals' }"
-          @click="activeTab = 'withdrawals'"
-        >
-          Record of withdrawals
-        </div>
-        <div class="tab" :class="{ active: activeTab === 'audit' }" @click="activeTab = 'audit'">
-          Audit logs
-        </div>
-      </div>
-    </div>
+    <!-- 顶部导航栏 + 标签页 -->
+    <van-tabs
+      v-model:active="activeTab"
+      class="history-tabs"
+      color="#FDB927"
+      title-active-color="#fff"
+      title-inactive-color="rgba(255, 255, 255, 0.6)"
+      swipeable
+    >
+      <template #nav-left>
+        <van-icon name="arrow-left" size="24" color="#fff" class="back-icon" @click="goBack" />
+      </template>
 
-    <!-- 提现记录 Tab -->
-    <div v-if="activeTab === 'withdrawals'" class="content">
-      <!-- 时间筛选和累计提现 -->
-      <div class="filter-section">
-        <div class="accumulated">
-          <span class="label">Total Withdraw:</span>
-          <span class="amount">{{ accumulatedWithdraw }}</span>
-        </div>
-        <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
-          <span class="select-value">{{ getPeriodText(selectedPeriod) }}</span>
-          <van-icon name="arrow-down" size="14" />
-          <div v-if="showPeriodPicker" class="select-dropdown">
-            <div
-              v-for="option in periodOptions"
-              :key="option.value"
-              class="select-option"
-              :class="{ active: selectedPeriod === option.value }"
-              @click.stop="selectPeriodOption(option.value)"
-            >
-              {{ option.text }}
+      <van-tab title="Withdrawals" name="withdrawals">
+        <div class="content">
+          <!-- 时间筛选和累计提现 -->
+          <div class="filter-section">
+            <div class="accumulated">
+              <span class="label">Total Withdraw:</span>
+              <span class="amount">{{ accumulatedWithdraw }}</span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 时间段快捷选择 -->
-      <div class="period-buttons">
-        <div
-          v-for="period in periods"
-          :key="period.value"
-          class="period-btn"
-          :class="{ active: selectedPeriod === period.value }"
-          @click="selectPeriod(period.value)"
-        >
-          {{ period.label }}
-        </div>
-      </div>
-
-      <!-- 记录列表 -->
-      <van-list
-        v-model:loading="loading"
-        :finished="finished"
-        :immediate-check="false"
-        finished-text="No more records"
-        @load="onLoad"
-      >
-        <div v-if="withdrawalRecords.length === 0 && !loading" class="empty-state">
-          <van-icon name="search" size="80" color="#4b5563" />
-          <div class="empty-text">No Record</div>
-        </div>
-
-        <div class="record-list">
-          <div v-for="record in withdrawalRecords" :key="record.id" class="record-item">
-            <!-- 金额 - Amount 和金额在一行 -->
-            <div class="amount-row">
-              <span class="amount-label">Amount:</span>
-              <span class="amount-value">₱{{ record.amount }}</span>
-            </div>
-
-            <!-- 时间 -->
-            <div class="time-row">
-              <span class="time-label">Time:</span>
-              <span class="time-value">{{ record.time }}</span>
-            </div>
-
-            <!-- 订单号 + 复制按钮 + 状态 -->
-            <div class="order-row">
-              <div class="order-info">
-                <span class="order-no">{{ record.orderNo }}</span>
-                <div class="copy-btn" @click="copyOrderNo(record.orderNo)">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <rect
-                      x="8"
-                      y="8"
-                      width="12"
-                      height="12"
-                      rx="2"
-                      stroke="#552583"
-                      stroke-width="2"
-                    />
-                    <path
-                      d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
-                      stroke="#552583"
-                      stroke-width="2"
-                    />
-                  </svg>
+            <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
+              <span class="select-value">{{ getPeriodText(selectedPeriod) }}</span>
+              <van-icon name="arrow-down" size="14" />
+              <div v-if="showPeriodPicker" class="select-dropdown">
+                <div
+                  v-for="option in periodOptions"
+                  :key="option.value"
+                  class="select-option"
+                  :class="{ active: selectedPeriod === option.value }"
+                  @click.stop="selectPeriodOption(option.value)"
+                >
+                  {{ option.text }}
                 </div>
               </div>
-              <span class="status" :class="record.statusClass">{{ record.statusText }}</span>
             </div>
           </div>
-        </div>
-      </van-list>
-    </div>
 
-    <!-- 审计日志 Tab -->
-    <div v-if="activeTab === 'audit'" class="content">
-      <!-- 待审计金额和筛选 -->
-      <div class="audit-header">
-        <div class="audit-info">
-          <div class="audit-amount-inline">
-            <span class="label">Amount to be audited:</span>
-            <span class="amount">{{ auditAmount }}</span>
-          </div>
-          <div class="custom-select" @click="showAuditPicker = !showAuditPicker">
-            <span class="select-value">{{ getAuditTypeText(selectedAuditType) }}</span>
-            <van-icon name="arrow-down" size="14" />
-            <div v-if="showAuditPicker" class="select-dropdown">
-              <div
-                v-for="option in auditTypeOptions"
-                :key="option.value"
-                class="select-option"
-                :class="{ active: selectedAuditType === option.value }"
-                @click.stop="selectAuditType(option.value)"
-              >
-                {{ option.text }}
-              </div>
+          <!-- 时间段快捷选择 -->
+          <div class="period-buttons">
+            <div
+              v-for="period in periods"
+              :key="period.value"
+              class="period-btn"
+              :class="{ active: selectedPeriod === period.value }"
+              @click="selectPeriod(period.value)"
+            >
+              {{ period.label }}
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- 记录列表 -->
-      <van-list
-        v-model:loading="flowLoading"
-        :finished="flowFinished"
-        :immediate-check="false"
-        finished-text="No more records"
-        @load="onLoadFlow"
-      >
-        <div v-if="flowRequirements.length === 0 && !flowLoading" class="empty-state">
-          <van-icon name="search" size="80" color="#4b5563" />
-          <div class="empty-text">No Record</div>
-        </div>
-
-        <div class="record-list">
-          <div
-            v-for="item in flowRequirements"
-            :key="item.id"
-            class="record-item flow-item"
-            @click="openFlowDetail(item)"
+          <!-- 记录列表 -->
+          <van-list
+            v-model:loading="loading"
+            :finished="finished"
+            :immediate-check="false"
+            finished-text="No more records"
+            @load="onLoad"
           >
-            <div class="record-header">
-              <span class="type-badge">{{ getFlowTypeText(item.source_type) }}</span>
-              <span class="status" :class="getFlowStatusClass(item.status)">{{
-                getFlowStatusText(item.status)
-              }}</span>
+            <div v-if="withdrawalRecords.length === 0 && !loading" class="empty-state">
+              <van-icon name="search" size="80" color="#4b5563" />
+              <div class="empty-text">No Record</div>
             </div>
-            <div class="record-body">
-              <div class="info-row">
-                <span class="label">Required Flow:</span>
-                <span class="value">₱{{ formatAmount(item.required_flow) }}</span>
+
+            <div class="record-list">
+              <div v-for="record in withdrawalRecords" :key="record.id" class="record-item">
+                <!-- 金额 - Amount 和金额在一行 -->
+                <div class="amount-row">
+                  <span class="amount-label">Amount:</span>
+                  <span class="amount-value">₱{{ record.amount }}</span>
+                </div>
+
+                <!-- 时间 -->
+                <div class="time-row">
+                  <span class="time-label">Time:</span>
+                  <span class="time-value">{{ record.time }}</span>
+                </div>
+
+                <!-- 订单号 + 复制按钮 + 状态 -->
+                <div class="order-row">
+                  <div class="order-info">
+                    <span class="order-no">{{ record.orderNo }}</span>
+                    <div class="copy-btn" @click="copyOrderNo(record.orderNo)">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <rect
+                          x="8"
+                          y="8"
+                          width="12"
+                          height="12"
+                          rx="2"
+                          stroke="#552583"
+                          stroke-width="2"
+                        />
+                        <path
+                          d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
+                          stroke="#552583"
+                          stroke-width="2"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="status" :class="record.statusClass">{{ record.statusText }}</span>
+                </div>
               </div>
-              <div class="info-row">
-                <span class="label">Completed:</span>
-                <span class="value">₱{{ formatAmount(item.completed_flow) }}</span>
+            </div>
+          </van-list>
+        </div>
+      </van-tab>
+
+      <van-tab title="Audit logs" name="audit">
+        <div class="content">
+          <!-- 待审计金额和筛选 -->
+          <div class="audit-header">
+            <div class="audit-info">
+              <div class="audit-amount-inline">
+                <span class="label">Amount to be audited:</span>
+                <span class="amount">{{ auditAmount }}</span>
               </div>
-              <div class="info-row">
-                <span class="label">Remaining:</span>
-                <span class="value">₱{{ formatAmount(item.remaining_flow) }}</span>
-              </div>
-              <div class="info-row small order-row">
-                <span class="label">Order No:</span>
-                <span class="value order-no">{{ item.trade_no }}</span>
-                <button class="copy-btn" @click.stop="copyOrderNo(item.trade_no)">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+              <div class="custom-select" @click="showAuditPicker = !showAuditPicker">
+                <span class="select-value">{{ getAuditTypeText(selectedAuditType) }}</span>
+                <van-icon name="arrow-down" size="14" />
+                <div v-if="showAuditPicker" class="select-dropdown">
+                  <div
+                    v-for="option in auditTypeOptions"
+                    :key="option.value"
+                    class="select-option"
+                    :class="{ active: selectedAuditType === option.value }"
+                    @click.stop="selectAuditType(option.value)"
                   >
-                    <rect
-                      x="8"
-                      y="8"
-                      width="12"
-                      height="12"
-                      rx="2"
-                      stroke="#552583"
-                      stroke-width="2"
-                    />
-                    <path
-                      d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
-                      stroke="#552583"
-                      stroke-width="2"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div class="progress-row">
-                <van-progress
-                  :percentage="formatProgress(item.progress)"
-                  stroke-width="6"
-                  color="#07c160"
-                  pivot-text=""
-                />
-                <span class="progress-text">{{ formatProgress(item.progress).toFixed(2) }}%</span>
+                    {{ option.text }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- 记录列表 -->
+          <van-list
+            v-model:loading="flowLoading"
+            :finished="flowFinished"
+            :immediate-check="false"
+            finished-text="No more records"
+            @load="onLoadFlow"
+          >
+            <div v-if="flowRequirements.length === 0 && !flowLoading" class="empty-state">
+              <van-icon name="search" size="80" color="#4b5563" />
+              <div class="empty-text">No Record</div>
+            </div>
+
+            <div class="record-list">
+              <div
+                v-for="item in flowRequirements"
+                :key="item.id"
+                class="record-item flow-item"
+                @click="openFlowDetail(item)"
+              >
+                <div class="record-header">
+                  <span class="type-badge">{{ getFlowTypeText(item.source_type) }}</span>
+                  <span class="status" :class="getFlowStatusClass(item.status)">{{
+                    getFlowStatusText(item.status)
+                  }}</span>
+                </div>
+                <div class="record-body">
+                  <div class="info-row">
+                    <span class="label">Required Flow:</span>
+                    <span class="value">₱{{ formatAmount(item.required_flow) }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Completed:</span>
+                    <span class="value">₱{{ formatAmount(item.completed_flow) }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Remaining:</span>
+                    <span class="value">₱{{ formatAmount(item.remaining_flow) }}</span>
+                  </div>
+                  <div class="info-row small order-row">
+                    <span class="label">Order No:</span>
+                    <span class="value order-no">{{ item.trade_no }}</span>
+                    <button class="copy-btn" @click.stop="copyOrderNo(item.trade_no)">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <rect
+                          x="8"
+                          y="8"
+                          width="12"
+                          height="12"
+                          rx="2"
+                          stroke="#552583"
+                          stroke-width="2"
+                        />
+                        <path
+                          d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
+                          stroke="#552583"
+                          stroke-width="2"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="progress-row">
+                    <van-progress
+                      :percentage="formatProgress(item.progress)"
+                      stroke-width="6"
+                      color="#07c160"
+                      pivot-text=""
+                    />
+                    <span class="progress-text"
+                      >{{ formatProgress(item.progress).toFixed(2) }}%</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </van-list>
         </div>
-      </van-list>
-    </div>
+      </van-tab>
+    </van-tabs>
   </div>
 </template>
 
@@ -247,15 +248,15 @@ const route = useRoute()
 const activeTab = ref<'withdrawals' | 'audit'>('withdrawals')
 
 // 组件挂载时检查 URL 参数
-  onMounted(() => {
-    const tab = route.query.tab
-    if (tab === 'audit') {
-      activeTab.value = 'audit'
-    } else {
-      // 默认加载提现记录
-      onLoad()
-    }
-  })
+onMounted(() => {
+  const tab = route.query.tab
+  if (tab === 'audit') {
+    activeTab.value = 'audit'
+  } else {
+    // 默认加载提现记录
+    onLoad()
+  }
+})
 
 // 下拉选择器显示状态
 const showPeriodPicker = ref(false)
@@ -643,46 +644,50 @@ const openFlowDetail = (item: UserFlowRequirement) => {
   background: #f5f5f5;
   padding-bottom: 50px;
 
-  .top-bar {
-    background: $gradient-purple;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    box-shadow: $shadow-md;
+  .history-tabs {
+    :deep(.van-tabs__wrap) {
+      background: $gradient-purple;
+      padding: 12px 0 0 0;
+      box-shadow: $shadow-md;
+    }
 
-    .tabs {
-      flex: 1;
-      display: flex;
-      gap: 24px;
+    :deep(.van-tabs__nav) {
+      background: transparent;
+      padding-left: 8px;
+    }
 
-      .tab {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 16px;
-        font-weight: 600;
-        padding-bottom: 8px;
-        border-bottom: 3px solid transparent;
-        cursor: pointer;
-        transition: all 0.3s;
-        white-space: nowrap;
-        touch-action: manipulation;
-        user-select: none;
-        -webkit-tap-highlight-color: transparent;
+    :deep(.van-tab) {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 8px 16px;
 
-        &.active {
-          color: #fff;
-          border-bottom-color: $secondary-color;
-        }
-
-        &:active {
-          opacity: 0.7;
-        }
+      &.van-tab--active {
+        color: #fff;
       }
+    }
+
+    :deep(.van-tabs__line) {
+      background: $secondary-color;
+      height: 3px;
+      border-radius: 2px;
+    }
+
+    :deep(.van-tabs__nav-left) {
+      display: flex;
+      align-items: center;
+      padding-left: 16px;
+    }
+
+    .back-icon {
+      cursor: pointer;
     }
   }
 
   .content {
     padding: 16px;
+    background: #f5f5f5;
+    min-height: calc(100vh - 100px);
   }
 
   // 筛选区域
@@ -1215,6 +1220,5 @@ const openFlowDetail = (item: UserFlowRequirement) => {
       }
     }
   }
-
 }
 </style>

@@ -13,6 +13,8 @@
       class="report-tabs"
       color="#FDB927"
       title-active-color="#FDB927"
+      scrollable
+      swipeable
     >
       <van-tab title="Deposit" name="deposit">
         <div class="content">
@@ -218,7 +220,211 @@
         </div>
       </van-tab>
 
-      <van-tab title="Bet Records" name="bet">
+      <van-tab title="Bonus" name="bonus">
+        <div class="content">
+          <!-- 时间筛选和累计奖金 -->
+          <div class="filter-section">
+            <div class="accumulated">
+              <span class="label">Total Bonus:</span>
+              <span class="amount">₱{{ totalBonusAmount.toFixed(2) }}</span>
+            </div>
+            <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
+              <span class="select-value">{{ getPeriodText(selectedPeriod) }}</span>
+              <van-icon name="arrow-down" size="14" />
+              <div v-if="showPeriodPicker" class="select-dropdown">
+                <div
+                  v-for="option in periodOptions"
+                  :key="option.value"
+                  class="select-option"
+                  :class="{ active: selectedPeriod === option.value }"
+                  @click.stop="selectPeriodOption(option.value)"
+                >
+                  {{ option.text }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 时间段快捷选择 -->
+          <div class="period-buttons">
+            <div
+              v-for="period in periods"
+              :key="period.value"
+              class="period-btn"
+              :class="{ active: selectedPeriod === period.value }"
+              @click="selectPeriod(period.value)"
+            >
+              {{ period.label }}
+            </div>
+          </div>
+
+          <!-- 奖金记录列表 -->
+          <van-list
+            v-model:loading="bonusLoading"
+            :finished="bonusFinished"
+            :immediate-check="false"
+            finished-text="No more records"
+            @load="onBonusLoad"
+          >
+            <div v-if="bonusList.length === 0 && !bonusLoading" class="empty-state">
+              <van-icon name="search" size="80" color="#4b5563" />
+              <div class="empty-text">No Record</div>
+            </div>
+
+            <div class="record-list">
+              <div v-for="record in bonusList" :key="record.id" class="record-item">
+                <!-- 金额 -->
+                <div class="amount-row">
+                  <span class="amount-label">Amount:</span>
+                  <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
+                </div>
+
+                <!-- 时间 -->
+                <div class="time-row">
+                  <span class="time-label">Time:</span>
+                  <span class="time-value">{{ record.date }}</span>
+                </div>
+
+                <!-- 订单号 + 复制按钮 + 状态 -->
+                <div class="order-row">
+                  <div class="order-info">
+                    <span class="order-no">{{ record.tradeNo }}</span>
+                    <div class="copy-btn" @click="copyOrderNo(record.tradeNo)">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <rect
+                          x="8"
+                          y="8"
+                          width="12"
+                          height="12"
+                          rx="2"
+                          stroke="#552583"
+                          stroke-width="2"
+                        />
+                        <path
+                          d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
+                          stroke="#552583"
+                          stroke-width="2"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="status" :class="record.statusClass">{{ record.statusText }}</span>
+                </div>
+              </div>
+            </div>
+          </van-list>
+        </div>
+      </van-tab>
+
+      <van-tab title="Rebate" name="rebate">
+        <div class="content">
+          <!-- 时间筛选和累计返水 -->
+          <div class="filter-section">
+            <div class="accumulated">
+              <span class="label">Total Rebate:</span>
+              <span class="amount">₱{{ totalRebateAmount.toFixed(2) }}</span>
+            </div>
+            <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
+              <span class="select-value">{{ getPeriodText(selectedPeriod) }}</span>
+              <van-icon name="arrow-down" size="14" />
+              <div v-if="showPeriodPicker" class="select-dropdown">
+                <div
+                  v-for="option in periodOptions"
+                  :key="option.value"
+                  class="select-option"
+                  :class="{ active: selectedPeriod === option.value }"
+                  @click.stop="selectPeriodOption(option.value)"
+                >
+                  {{ option.text }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 时间段快捷选择 -->
+          <div class="period-buttons">
+            <div
+              v-for="period in periods"
+              :key="period.value"
+              class="period-btn"
+              :class="{ active: selectedPeriod === period.value }"
+              @click="selectPeriod(period.value)"
+            >
+              {{ period.label }}
+            </div>
+          </div>
+
+          <!-- 返水记录列表 -->
+          <van-list
+            v-model:loading="rebateLoading"
+            :finished="rebateFinished"
+            :immediate-check="false"
+            finished-text="No more records"
+            @load="onRebateLoad"
+          >
+            <div v-if="rebateList.length === 0 && !rebateLoading" class="empty-state">
+              <van-icon name="search" size="80" color="#4b5563" />
+              <div class="empty-text">No Record</div>
+            </div>
+
+            <div class="record-list">
+              <div v-for="record in rebateList" :key="record.id" class="record-item">
+                <!-- 金额 -->
+                <div class="amount-row">
+                  <span class="amount-label">Amount:</span>
+                  <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
+                </div>
+
+                <!-- 时间 -->
+                <div class="time-row">
+                  <span class="time-label">Time:</span>
+                  <span class="time-value">{{ record.date }}</span>
+                </div>
+
+                <!-- 订单号 + 复制按钮 + 状态 -->
+                <div class="order-row">
+                  <div class="order-info">
+                    <span class="order-no">{{ record.tradeNo }}</span>
+                    <div class="copy-btn" @click="copyOrderNo(record.tradeNo)">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <rect
+                          x="8"
+                          y="8"
+                          width="12"
+                          height="12"
+                          rx="2"
+                          stroke="#552583"
+                          stroke-width="2"
+                        />
+                        <path
+                          d="M16 8V6C16 4.89543 15.1046 4 14 4H6C4.89543 4 4 4.89543 4 6V14C4 15.1046 4.89543 16 6 16H8"
+                          stroke="#552583"
+                          stroke-width="2"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="status" :class="record.statusClass">{{ record.statusText }}</span>
+                </div>
+              </div>
+            </div>
+          </van-list>
+        </div>
+      </van-tab>
+
+      <van-tab title="Bets" name="bet">
         <div class="content">
           <!-- 时间筛选 -->
           <div class="filter-section">
@@ -392,10 +598,24 @@ const betLoading = ref(false)
 const betFinished = ref(false)
 const betPage = ref(1)
 
+// 奖金记录
+const bonusList = ref<any[]>([])
+const bonusLoading = ref(false)
+const bonusFinished = ref(false)
+const bonusPage = ref(1)
+
+// 返水记录
+const rebateList = ref<any[]>([])
+const rebateLoading = ref(false)
+const rebateFinished = ref(false)
+const rebatePage = ref(1)
+
 // 统计数据
 const totalDeposit = ref(0)
 const totalWithdraw = ref(0)
 const totalBonus = ref(0)
+const totalBonusAmount = ref(0)
+const totalRebateAmount = ref(0)
 
 // 获取日期范围
 const getDateRange = (days: number) => {
@@ -682,6 +902,132 @@ const onBetLoad = async () => {
   betPage.value++
 }
 
+// 加载奖金记录
+const loadBonusRecords = async (isLoadMore = false) => {
+  bonusLoading.value = true
+  try {
+    const { start, end } = getDateRange(selectedPeriod.value)
+
+    const res = await getBalanceLog({
+      start,
+      end,
+      type: 3, // 奖金
+      page: bonusPage.value,
+      size: pageSize,
+    })
+
+    // 更新统计数据（只在第一页时更新）
+    if (bonusPage.value === 1) {
+      totalBonusAmount.value = res.total_bonus || 0
+    }
+
+    // 转换记录格式
+    const newRecords = (res.list || []).map((item: BalanceLogItem) => ({
+      id: item.trade_no,
+      tradeNo: item.trade_no,
+      amount: item.money,
+      date: item.time,
+      status: item.status,
+      statusText: getStatusText(item.status),
+      statusClass: getStatusClass(item.status),
+    }))
+
+    // 如果是加载更多，追加数据；否则替换数据
+    if (isLoadMore) {
+      bonusList.value = [...bonusList.value, ...newRecords]
+    } else {
+      bonusList.value = newRecords
+    }
+
+    // 判断是否还有更多数据
+    if (newRecords.length < pageSize || bonusList.value.length >= res.count) {
+      bonusFinished.value = true
+    } else {
+      bonusFinished.value = false
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Failed to load bonus records')
+  } finally {
+    bonusLoading.value = false
+  }
+}
+
+// 瀑布流加载更多 - 奖金
+const onBonusLoad = async () => {
+  if (bonusFinished.value) {
+    return
+  }
+
+  // 加载当前页数据
+  await loadBonusRecords(bonusPage.value > 1)
+
+  // 加载完成后，页码+1，准备下次加载
+  bonusPage.value++
+}
+
+// 加载返水记录
+const loadRebateRecords = async (isLoadMore = false) => {
+  rebateLoading.value = true
+  try {
+    const { start, end } = getDateRange(selectedPeriod.value)
+
+    const res = await getBalanceLog({
+      start,
+      end,
+      type: 4, // 返水
+      page: rebatePage.value,
+      size: pageSize,
+    })
+
+    // 更新统计数据（只在第一页时更新）
+    if (rebatePage.value === 1) {
+      totalRebateAmount.value = res.total_rebate || 0
+    }
+
+    // 转换记录格式
+    const newRecords = (res.list || []).map((item: BalanceLogItem) => ({
+      id: item.trade_no,
+      tradeNo: item.trade_no,
+      amount: item.money,
+      date: item.time,
+      status: item.status,
+      statusText: getStatusText(item.status),
+      statusClass: getStatusClass(item.status),
+    }))
+
+    // 如果是加载更多，追加数据；否则替换数据
+    if (isLoadMore) {
+      rebateList.value = [...rebateList.value, ...newRecords]
+    } else {
+      rebateList.value = newRecords
+    }
+
+    // 判断是否还有更多数据
+    if (newRecords.length < pageSize || rebateList.value.length >= res.count) {
+      rebateFinished.value = true
+    } else {
+      rebateFinished.value = false
+    }
+  } catch (error: any) {
+    showToast(error.message || 'Failed to load rebate records')
+  } finally {
+    rebateLoading.value = false
+  }
+}
+
+// 瀑布流加载更多 - 返水
+const onRebateLoad = async () => {
+  if (rebateFinished.value) {
+    return
+  }
+
+  // 加载当前页数据
+  await loadRebateRecords(rebatePage.value > 1)
+
+  // 加载完成后，页码+1，准备下次加载
+  rebatePage.value++
+}
+
 // 获取时间段文本
 const getPeriodText = (value: number) => {
   const option = periodOptions.find((o) => o.value === value)
@@ -705,6 +1051,18 @@ const selectPeriodOption = (value: number) => {
     withdrawList.value = []
     withdrawLoading.value = false
     onWithdrawLoad()
+  } else if (activeTab.value === 'bonus') {
+    bonusPage.value = 1
+    bonusFinished.value = false
+    bonusList.value = []
+    bonusLoading.value = false
+    onBonusLoad()
+  } else if (activeTab.value === 'rebate') {
+    rebatePage.value = 1
+    rebateFinished.value = false
+    rebateList.value = []
+    rebateLoading.value = false
+    onRebateLoad()
   } else if (activeTab.value === 'bet') {
     betPage.value = 1
     betFinished.value = false
@@ -730,6 +1088,18 @@ const selectPeriod = (value: number) => {
     withdrawList.value = []
     withdrawLoading.value = false
     onWithdrawLoad()
+  } else if (activeTab.value === 'bonus') {
+    bonusPage.value = 1
+    bonusFinished.value = false
+    bonusList.value = []
+    bonusLoading.value = false
+    onBonusLoad()
+  } else if (activeTab.value === 'rebate') {
+    rebatePage.value = 1
+    rebateFinished.value = false
+    rebateList.value = []
+    rebateLoading.value = false
+    onRebateLoad()
   } else if (activeTab.value === 'bet') {
     betPage.value = 1
     betFinished.value = false
@@ -756,6 +1126,10 @@ watch(activeTab, (newTab) => {
     onDepositLoad()
   } else if (newTab === 'withdraw' && withdrawList.value.length === 0) {
     onWithdrawLoad()
+  } else if (newTab === 'bonus' && bonusList.value.length === 0) {
+    onBonusLoad()
+  } else if (newTab === 'rebate' && rebateList.value.length === 0) {
+    onRebateLoad()
   } else if (newTab === 'bet' && betList.value.length === 0) {
     onBetLoad()
   }

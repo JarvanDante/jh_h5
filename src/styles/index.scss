@@ -286,11 +286,22 @@ body {
 // Vant Toast (force readable)
 .van-toast {
   --van-toast-text-color: #fff;
-  --van-toast-background-color: rgba(0, 0, 0, 0.75);
+  --van-toast-background-color: rgba(0, 0, 0, 0.78);
+  max-width: 84vw;
+  min-width: 160px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(6px);
 }
 
 .van-toast__text {
   color: #fff;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 // Vant Checkbox 主题色覆盖

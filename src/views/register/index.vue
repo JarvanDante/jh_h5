@@ -137,6 +137,7 @@ const captchaImage = ref('')
 const captchaTime = ref('') // 改为字符串类型
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const inviteCode = ref('') // 邀请码
 
 const formData = reactive({
   username: '',
@@ -212,6 +213,7 @@ const onSubmit = async () => {
       password: formData.password,
       time: captchaTime.value,
       code: formData.captchaCode,
+      invite_code: inviteCode.value, // 传递邀请码
     })
 
     if (res?.code && res.code !== 0) {
@@ -227,24 +229,39 @@ const onSubmit = async () => {
     }
 
     // 1. 先保存 token
-    if (res.token) {
-      userStore.setToken(res.token)
+    userStore.setToken(res.token)
 
-      // 2. 然后请求用户信息接口
-      try {
-        const userInfo = await userApi.getUserInfo(res.token)
-        userStore.setUserInfo(userInfo)
-      } catch (error) {
-        console.error('Failed to get user info:', error)
-      }
+    // 2. 保存 refresh_token（如果有）
+    if (res.refresh_token) {
+      userStore.setRefreshToken(res.refresh_token)
     }
 
-    showToast(res.message || 'Registration successful!')
+    // 3. 请求用户信息接口
+    try {
+      const userInfoRes = await userApi.getUserInfo()
+      if (userInfoRes) {
+        userStore.setUserInfo({
+          id: userInfoRes.user_id || 0,
+          username: userInfoRes.username || formData.username,
+          nickname: userInfoRes.nickname || userInfoRes.username || formData.username,
+          avatar: userInfoRes.avatar || '',
+          mobile: userInfoRes.mobile || '',
+          email: userInfoRes.email || '',
+          balance: userInfoRes.balance || '0.00',
+          realname: userInfoRes.realname || '',
+          grade_name: userInfoRes.grade_name || '',
+        })
+      }
+    } catch (error) {
+      console.error('Failed to get user info:', error)
+    }
+
+    showToast('Registration successful!')
 
     // 跳转到首页
     setTimeout(() => {
       router.replace('/home')
-    }, 1000)
+    }, 500)
   } catch (error: any) {
     console.error('Registration failed:', error)
     const errorMsg = error?.response?.data?.message || error?.message || 'Registration failed'
@@ -307,6 +324,12 @@ const goToLogin = () => {
 // 页面加载时获取验证码
 onMounted(() => {
   getCaptcha()
+  // 从 URL 获取邀请码（支持 i 和 invite_code 两种参数名）
+  const code = route.query.i || route.query.invite_code
+  if (code) {
+    inviteCode.value = String(code)
+    console.log('邀请码:', inviteCode.value)
+  }
 })
 </script>
 
