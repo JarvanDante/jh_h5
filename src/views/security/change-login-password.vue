@@ -150,7 +150,7 @@ const handleSubmit = async () => {
     showLocalToast(getResponseMessage(response, 'Password changed successfully'))
   } catch (error: any) {
     closeToast()
-    showLocalToast(error.message || 'Failed to change password')
+    showLocalToast(error?.message || 'Failed to change password')
   } finally {
     submitting.value = false
   }

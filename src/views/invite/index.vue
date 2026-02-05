@@ -30,84 +30,88 @@
     <!-- 分享区域 -->
     <div class="share-section">
       <h3 class="section-title">Share to your friends</h3>
-      <div class="share-label">Share to your friends</div>
-      <div class="social-icons">
+      <div class="share-row">
+        <div class="social-icons">
         <div class="social-icon facebook" @click="shareToSocial('facebook')">
-          <van-icon name="facebook" size="28" color="#fff" />
+          <img class="social-img" :src="socialIcons.facebook" alt="Facebook" />
         </div>
         <div class="social-icon twitter" @click="shareToSocial('twitter')">
-          <van-icon name="twitter" size="28" color="#fff" />
+          <img class="social-img" :src="socialIcons.twitter" alt="X" />
         </div>
         <div class="social-icon telegram" @click="shareToSocial('telegram')">
-          <van-icon name="chat-o" size="28" color="#fff" />
+          <img class="social-img" :src="socialIcons.telegram" alt="Telegram" />
         </div>
         <div class="social-icon whatsapp" @click="shareToSocial('whatsapp')">
-          <van-icon name="chat-o" size="28" color="#fff" />
+          <img class="social-img" :src="socialIcons.whatsapp" alt="WhatsApp" />
         </div>
         <div class="social-icon wechat" @click="shareToSocial('wechat')">
-          <van-icon name="chat-o" size="28" color="#fff" />
+          <img class="social-img" :src="socialIcons.wechat" alt="WeChat" />
         </div>
         <div class="social-icon line" @click="shareToSocial('line')">
-          <van-icon name="chat-o" size="28" color="#fff" />
+          <img class="social-img" :src="socialIcons.line" alt="LINE" />
         </div>
         <div class="social-icon share" @click="shareToSocial('more')">
-          <van-icon name="share-o" size="28" color="#fff" />
+          <img class="social-img" :src="socialIcons.share" alt="Share" />
+        </div>
         </div>
       </div>
       <div class="invite-link">
-        <van-icon name="link" size="20" color="#666" />
+        <div class="link-icon">
+          <img class="link-img" :src="linkIcon" alt="Link" />
+        </div>
         <input type="text" :value="inviteLink" readonly class="link-input" />
         <van-button size="small" color="#5b7cff" @click="copyLink">Copy</van-button>
       </div>
     </div>
 
-    <!-- 排行榜 -->
+    <!-- 排行榜 + 奖励领取记录（合并卡片） -->
     <div class="leaderboard-section">
-      <h2 class="section-title-large">Leaderboard</h2>
-      <div class="leaderboard-podium">
-        <div class="podium-item second">
-          <div class="rank-badge">2</div>
-          <div class="avatar">
-            <img src="https://via.placeholder.com/80/4ecdc4/ffffff?text=2" alt="Rank 2" />
+      <div class="leaderboard-card">
+        <h2 class="section-title-large">Leaderboard</h2>
+        <div class="leaderboard-podium">
+          <div class="podium-item second">
+            <div class="rank-badge">2</div>
+            <div class="avatar">
+              <span class="avatar-label">2ND</span>
+            </div>
+            <div class="username">aw*****7</div>
+            <div class="amount">₱ 916,093.27</div>
           </div>
-          <div class="username">aw*****7</div>
-          <div class="amount">₱ 916,093.27</div>
-        </div>
-        <div class="podium-item first">
-          <div class="rank-badge">1</div>
-          <div class="avatar">
-            <img src="https://via.placeholder.com/100/ffd700/ffffff?text=1" alt="Rank 1" />
+          <div class="podium-item first">
+            <div class="rank-badge">1</div>
+            <div class="avatar">
+              <span class="avatar-label">TOP</span>
+            </div>
+            <div class="username">ch*****0</div>
+            <div class="amount">₱ 4,515,890.01</div>
           </div>
-          <div class="username">ch*****0</div>
-          <div class="amount">₱ 4,515,890.01</div>
-        </div>
-        <div class="podium-item third">
-          <div class="rank-badge">3</div>
-          <div class="avatar">
-            <img src="https://via.placeholder.com/80/ff6b6b/ffffff?text=3" alt="Rank 3" />
+          <div class="podium-item third">
+            <div class="rank-badge">3</div>
+            <div class="avatar">
+              <span class="avatar-label">3RD</span>
+            </div>
+            <div class="username">iv*****s</div>
+            <div class="amount">₱ 849,602.96</div>
           </div>
-          <div class="username">iv*****s</div>
-          <div class="amount">₱ 849,602.96</div>
         </div>
-      </div>
-    </div>
 
-    <!-- 奖励领取记录 -->
-    <div class="rewards-received-section">
-      <h2 class="section-title-large">Who received the rewards</h2>
-      <div class="rewards-list">
-        <div class="rewards-scroll-container">
-          <!-- 第一组数据 -->
-          <div v-for="reward in rewardsReceived" :key="`first-${reward.id}`" class="reward-item">
-            <span class="reward-username">{{ reward.username }}</span>
-            <span class="reward-status">Received</span>
-            <span class="reward-prize">{{ reward.prize }}</span>
-          </div>
-          <!-- 第二组数据（用于无缝循环） -->
-          <div v-for="reward in rewardsReceived" :key="`second-${reward.id}`" class="reward-item">
-            <span class="reward-username">{{ reward.username }}</span>
-            <span class="reward-status">Received</span>
-            <span class="reward-prize">{{ reward.prize }}</span>
+        <div class="card-divider"></div>
+
+        <h3 class="section-title-sub">Who received the rewards</h3>
+        <div class="rewards-list">
+          <div class="rewards-scroll-container">
+            <!-- 第一组数据 -->
+            <div v-for="reward in rewardsReceived" :key="`first-${reward.id}`" class="reward-item">
+              <span class="reward-username">{{ reward.username }}</span>
+              <span class="reward-status">Received</span>
+              <span class="reward-prize">{{ reward.prize }}</span>
+            </div>
+            <!-- 第二组数据（用于无缝循环） -->
+            <div v-for="reward in rewardsReceived" :key="`second-${reward.id}`" class="reward-item">
+              <span class="reward-username">{{ reward.username }}</span>
+              <span class="reward-status">Received</span>
+              <span class="reward-prize">{{ reward.prize }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -152,39 +156,6 @@
       </div>
     </div>
 
-    <!-- 赚钱方式 -->
-    <div class="make-money-section">
-      <div class="make-money-card">
-        <div class="make-money-icon">🤑</div>
-        <div class="make-money-content">
-          <h3>Ways to make money</h3>
-          <div class="money-amount">₱ 888.00</div>
-          <div class="money-label">Betting Rebate Rewards</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 奖金支付时间 -->
-    <div class="bonus-payment-section">
-      <h2 class="section-title-large">Bonus payment time</h2>
-      <div class="social-platforms">
-        <div class="platform-icon facebook">
-          <van-icon name="facebook" size="32" color="#fff" />
-        </div>
-        <div class="platform-icon telegram">
-          <van-icon name="chat-o" size="32" color="#fff" />
-        </div>
-        <div class="platform-icon whatsapp">
-          <van-icon name="chat-o" size="32" color="#fff" />
-        </div>
-        <div class="platform-icon instagram">
-          <van-icon name="photo-o" size="32" color="#fff" />
-        </div>
-        <div class="platform-icon tiktok">
-          <van-icon name="video-o" size="32" color="#fff" />
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -204,6 +175,18 @@ const validReferral = ref('0')
 
 // 邀请链接
 const inviteLink = ref('')
+
+const socialIcons = {
+  facebook: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/facebook.svg',
+  twitter: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/x.svg',
+  telegram: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/telegram.svg',
+  whatsapp: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/whatsapp.svg',
+  wechat: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/wechat.svg',
+  line: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/line.svg',
+  share: 'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/share-nodes.svg',
+} as const
+
+const linkIcon = 'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/svgs/solid/link.svg'
 
 // 奖励领取记录（所有记录都滚动）
 const rewardsReceived = ref([
@@ -255,7 +238,46 @@ const loadInviteInfo = async () => {
 }
 
 const shareToSocial = (platform: string) => {
-  showToast(`Share to ${platform}`)
+  if (!inviteLink.value) {
+    showToast('Please wait, link is loading')
+    return
+  }
+
+  const link = encodeURIComponent(inviteLink.value)
+  const text = encodeURIComponent('Join me')
+
+  const openUrl = (url: string) => {
+    window.open(url, '_blank')
+  }
+
+  switch (platform) {
+    case 'facebook':
+      openUrl(`https://www.facebook.com/sharer/sharer.php?u=${link}`)
+      break
+    case 'twitter':
+      openUrl(`https://twitter.com/intent/tweet?url=${link}`)
+      break
+    case 'telegram':
+      openUrl(`https://t.me/share/url?url=${link}&text=${text}`)
+      break
+    case 'whatsapp':
+      openUrl(`https://wa.me/?text=${text}%20${link}`)
+      break
+    case 'line':
+      openUrl(`https://social-plugins.line.me/lineit/share?url=${link}`)
+      break
+    case 'wechat':
+      copyLink()
+      showToast('Link copied, open WeChat to share')
+      break
+    default:
+      if (navigator.share) {
+        navigator.share({ title: 'Invite', text: 'Join me', url: inviteLink.value })
+        return
+      }
+      copyLink()
+      break
+  }
 }
 
 const copyLink = () => {
@@ -331,46 +353,48 @@ onMounted(() => {
   // 分享区域
   .share-section {
     margin: 0 16px 24px;
-    padding: 24px;
-    background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+    padding: 16px;
+    background: #ffffff;
     border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
+    box-shadow: 0 8px 20px rgba(12, 18, 66, 0.08);
+    border: 1px solid #edf0ff;
 
     .section-title {
-      color: #fdb927;
-      font-size: 20px;
-      font-weight: bold;
+      color: #4b4b90;
+      font-size: 18px;
+      font-weight: 700;
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
-    .share-label {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 13px;
-      text-align: center;
-      margin-bottom: 20px;
+    .share-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
     }
 
     .social-icons {
       display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
+      gap: 10px;
       flex-wrap: wrap;
-      justify-content: center;
+      justify-content: flex-start;
 
       .social-icon {
-        width: 52px;
-        height: 52px;
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s ease;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
 
         &:active {
-          transform: scale(0.9);
+          transform: scale(0.94);
         }
 
         &.facebook {
@@ -382,7 +406,7 @@ onMounted(() => {
         }
 
         &.telegram {
-          background: #0088cc;
+          background: #229ed9;
         }
 
         &.whatsapp {
@@ -390,7 +414,7 @@ onMounted(() => {
         }
 
         &.wechat {
-          background: #07c160;
+          background: #09b83e;
         }
 
         &.line {
@@ -398,7 +422,13 @@ onMounted(() => {
         }
 
         &.share {
-          background: #fdb927;
+          background: #4f6cff;
+        }
+
+        .social-img {
+          width: 18px;
+          height: 18px;
+          filter: brightness(0) invert(1);
         }
       }
     }
@@ -407,9 +437,9 @@ onMounted(() => {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 12px;
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(253, 185, 39, 0.3);
+      padding: 8px 10px;
+      background: #f3f5ff;
+      border: 1px solid #e2e6ff;
       border-radius: 12px;
 
       .link-input {
@@ -417,8 +447,8 @@ onMounted(() => {
         min-width: 0;
         border: none;
         outline: none;
-        font-size: 11px;
-        color: #fff;
+        font-size: 12px;
+        color: #4b4b90;
         background: transparent;
         text-overflow: ellipsis;
         overflow: hidden;
@@ -427,44 +457,83 @@ onMounted(() => {
 
       :deep(.van-button) {
         flex-shrink: 0;
-        background: linear-gradient(135deg, #fdb927 0%, #ff9800 100%);
+        background: linear-gradient(135deg, #5b7cff 0%, #6a5cff 100%);
         border: none;
-        border-radius: 6px;
-        font-weight: bold;
+        border-radius: 10px;
+        font-weight: 600;
         font-size: 12px;
-        box-shadow: 0 2px 8px rgba(253, 185, 39, 0.4);
-        padding: 0 8px;
-        min-width: 40px;
+        box-shadow: 0 4px 10px rgba(91, 124, 255, 0.3);
+        padding: 0 10px;
+        min-width: 50px;
         height: 28px;
       }
 
       :deep(.van-icon) {
         flex-shrink: 0;
+        color: #6a6fb4;
       }
+    }
+
+    .link-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: #5b7cff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #4f6cff;
+    }
+
+    .link-img {
+      width: 14px;
+      height: 14px;
+      filter: brightness(0) invert(1);
     }
   }
 
-  // 排行榜
+  // 排行榜 + 奖励领取记录
   .leaderboard-section {
     margin: 0 16px 24px;
 
+    .leaderboard-card {
+      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+      border-radius: 16px;
+      padding: 20px 16px 16px;
+      box-shadow: 0 6px 16px rgba(85, 37, 131, 0.35);
+    }
+
     .section-title-large {
-      color: #333;
-      font-size: 22px;
+      color: #fff;
+      font-size: 20px;
       font-weight: bold;
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+    }
+
+    .section-title-sub {
+      color: #fdb927;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      margin: 8px 0 12px;
+    }
+
+    .card-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.18);
+      margin: 8px 0 12px;
     }
 
     .leaderboard-podium {
-      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+      background: transparent;
       border-radius: 16px;
-      padding: 32px 16px 24px;
+      padding: 10px 0 12px;
       display: flex;
       justify-content: center;
       align-items: flex-end;
       gap: 16px;
-      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
+      box-shadow: none;
 
       .podium-item {
         display: flex;
@@ -496,11 +565,20 @@ onMounted(() => {
           overflow: hidden;
           border: 3px solid #fdb927;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background:
+            radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.35), transparent 45%),
+            radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.2), transparent 50%),
+            rgba(255, 255, 255, 0.08);
 
-          img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+          .avatar-label {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
           }
         }
 
@@ -520,6 +598,11 @@ onMounted(() => {
           .avatar {
             width: 100px;
             height: 100px;
+
+            .avatar-label {
+              font-size: 20px;
+              color: #fdb927;
+            }
           }
 
           .rank-badge {
@@ -538,59 +621,48 @@ onMounted(() => {
         }
       }
     }
-  }
-
-  // 奖励领取记录
-  .rewards-received-section {
-    margin: 0 16px 24px;
-
-    .section-title-large {
-      color: #333;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 16px;
-    }
 
     .rewards-list {
-      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
-      border-radius: 16px;
-      padding: 16px;
-      height: 280px;
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 12px;
+      height: 240px;
       overflow: hidden;
       position: relative;
-      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 
       .rewards-scroll-container {
         animation: continuousScroll 20s linear infinite;
       }
 
       .reward-item {
-        background: rgba(255, 255, 255, 0.95);
+        background: #f0edff;
+        border: 1px solid rgba(91, 58, 164, 0.12);
         border-radius: 24px;
-        padding: 14px 20px;
+        padding: 12px 16px;
         margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(36, 24, 76, 0.08);
+        position: relative;
 
         .reward-username {
-          color: #333;
-          font-size: 14px;
-          font-weight: 500;
+          color: #2f2f60;
+          font-size: 13px;
+          font-weight: 600;
           flex: 1;
         }
 
         .reward-status {
-          color: #999;
-          font-size: 13px;
+          color: #9aa0c5;
+          font-size: 12px;
           margin: 0 12px;
         }
 
         .reward-prize {
-          color: #552583;
-          font-size: 14px;
+          color: #5b3aa4;
+          font-size: 13px;
           font-weight: bold;
         }
       }
@@ -672,114 +744,5 @@ onMounted(() => {
     }
   }
 
-  // 赚钱方式
-  .make-money-section {
-    margin: 0 16px 24px;
-
-    .make-money-card {
-      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
-      border-radius: 16px;
-      padding: 24px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
-
-      .make-money-icon {
-        width: 80px;
-        height: 80px;
-        font-size: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        background: rgba(253, 185, 39, 0.2);
-        border-radius: 50%;
-      }
-
-      .make-money-content {
-        flex: 1;
-        text-align: center;
-
-        h3 {
-          color: #fff;
-          font-size: 20px;
-          font-weight: bold;
-          margin-bottom: 12px;
-        }
-
-        .money-amount {
-          color: #fdb927;
-          font-size: 32px;
-          font-weight: bold;
-          margin-bottom: 8px;
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .money-label {
-          color: rgba(255, 255, 255, 0.9);
-          font-size: 14px;
-        }
-      }
-    }
-  }
-
-  // 奖金支付时间
-  .bonus-payment-section {
-    margin: 0 16px 24px;
-
-    .section-title-large {
-      color: #333;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 16px;
-    }
-
-    .social-platforms {
-      background: #fff;
-      border-radius: 16px;
-      padding: 24px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-      .platform-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        transition: all 0.3s ease;
-
-        &:active {
-          transform: scale(0.9);
-        }
-
-        &.facebook {
-          background: #1877f2;
-        }
-
-        &.telegram {
-          background: #0088cc;
-        }
-
-        &.whatsapp {
-          background: #25d366;
-        }
-
-        &.instagram {
-          background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-        }
-
-        &.tiktok {
-          background: #000;
-        }
-      }
-    }
-  }
 }
 </style>

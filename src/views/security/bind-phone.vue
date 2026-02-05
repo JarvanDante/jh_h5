@@ -12,12 +12,15 @@
         <van-field
           v-model="phoneInput"
           type="tel"
-          placeholder="Please enter your phone number"
+          placeholder="9XXXXXXXXX"
           maxlength="15"
           clearable
         >
           <template #left-icon>
-            <van-icon name="phone-o" color="#552583" />
+            <span class="phone-prefix">
+              <van-icon name="phone-o" color="#552583" />
+              <span class="prefix-text">+63</span>
+            </span>
           </template>
         </van-field>
 
@@ -115,7 +118,7 @@ const handleSubmit = async () => {
     showLocalToast(getResponseMessage(response, 'Phone bound successfully'))
   } catch (error: any) {
     closeToast()
-    showLocalToast(error.message || 'Failed to bind phone')
+    showLocalToast(error?.message || 'Failed to bind phone')
   } finally {
     submitting.value = false
   }
@@ -195,6 +198,18 @@ const handleSubmit = async () => {
     .van-field__clear {
       color: #999;
     }
+  }
+
+  .phone-prefix {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .prefix-text {
+    font-size: 14px;
+    color: #552583;
+    font-weight: 600;
   }
 
   .submit-btn {

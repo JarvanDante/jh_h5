@@ -124,7 +124,7 @@ const handleSubmit = async () => {
     showLocalToast(getResponseMessage(response, 'Password bound successfully'))
   } catch (error: any) {
     closeToast()
-    showLocalToast(error.message || 'Failed to bind password')
+    showLocalToast(error?.message || 'Failed to bind password')
   } finally {
     submitting.value = false
   }

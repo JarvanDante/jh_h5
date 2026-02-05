@@ -14,10 +14,15 @@
       color="#FDB927"
       title-active-color="#FDB927"
       scrollable
-      swipeable
     >
       <van-tab title="Deposit" name="deposit">
-        <div class="content">
+        <div
+          class="content"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+          @mousedown="handleMouseDown"
+          @mouseup="handleMouseUp"
+        >
           <!-- 时间筛选和累计充值 -->
           <div class="filter-section">
             <div class="accumulated">
@@ -119,7 +124,13 @@
       </van-tab>
 
       <van-tab title="Withdraw" name="withdraw">
-        <div class="content">
+        <div
+          class="content"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+          @mousedown="handleMouseDown"
+          @mouseup="handleMouseUp"
+        >
           <!-- 时间筛选和累计提现 -->
           <div class="filter-section">
             <div class="accumulated">
@@ -221,7 +232,13 @@
       </van-tab>
 
       <van-tab title="Bonus" name="bonus">
-        <div class="content">
+        <div
+          class="content"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+          @mousedown="handleMouseDown"
+          @mouseup="handleMouseUp"
+        >
           <!-- 时间筛选和累计奖金 -->
           <div class="filter-section">
             <div class="accumulated">
@@ -323,7 +340,13 @@
       </van-tab>
 
       <van-tab title="Rebate" name="rebate">
-        <div class="content">
+        <div
+          class="content"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+          @mousedown="handleMouseDown"
+          @mouseup="handleMouseUp"
+        >
           <!-- 时间筛选和累计返水 -->
           <div class="filter-section">
             <div class="accumulated">
@@ -425,7 +448,13 @@
       </van-tab>
 
       <van-tab title="Bets" name="bet">
-        <div class="content">
+        <div
+          class="content"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+          @mousedown="handleMouseDown"
+          @mouseup="handleMouseUp"
+        >
           <!-- 时间筛选 -->
           <div class="filter-section">
             <div class="accumulated">
@@ -561,6 +590,50 @@ const goBack = () => {
 }
 
 const activeTab = ref('deposit')
+
+// 触摸和鼠标滑动切换标签页
+const touchStartX = ref(0)
+const touchEndX = ref(0)
+const isMouseDown = ref(false)
+
+const handleTouchStart = (e: TouchEvent) => {
+  touchStartX.value = e.touches[0].clientX
+}
+
+const handleTouchEnd = (e: TouchEvent) => {
+  touchEndX.value = e.changedTouches[0].clientX
+  handleSwipe()
+}
+
+const handleMouseDown = (e: MouseEvent) => {
+  isMouseDown.value = true
+  touchStartX.value = e.clientX
+}
+
+const handleMouseUp = (e: MouseEvent) => {
+  if (!isMouseDown.value) return
+  isMouseDown.value = false
+  touchEndX.value = e.clientX
+  handleSwipe()
+}
+
+const handleSwipe = () => {
+  const diff = touchStartX.value - touchEndX.value
+  const threshold = 50 // 滑动阈值
+
+  if (Math.abs(diff) < threshold) return
+
+  const tabs = ['deposit', 'withdraw', 'bonus', 'rebate', 'bet']
+  const currentIndex = tabs.indexOf(activeTab.value)
+
+  if (diff > 0 && currentIndex < tabs.length - 1) {
+    // 向左滑动，切换到下一个标签
+    activeTab.value = tabs[currentIndex + 1]
+  } else if (diff < 0 && currentIndex > 0) {
+    // 向右滑动，切换到上一个标签
+    activeTab.value = tabs[currentIndex - 1]
+  }
+}
 
 const showPeriodPicker = ref(false)
 const selectedPeriod = ref(0)
@@ -1178,6 +1251,8 @@ onMounted(() => {
   }
 
   .report-tabs {
+    height: calc(100vh - 60px);
+
     :deep(.van-tabs__wrap) {
       background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -1185,12 +1260,25 @@ onMounted(() => {
 
     :deep(.van-tabs__nav) {
       background: transparent;
+      padding: 0 8px;
+    }
+
+    :deep(.van-tabs__scroll) {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
 
     :deep(.van-tab) {
       color: rgba(255, 255, 255, 0.6);
       font-size: 15px;
       font-weight: 500;
+      flex: none;
+      padding: 0 16px;
 
       &.van-tab--active {
         color: #fdb927;
@@ -1206,6 +1294,11 @@ onMounted(() => {
 
     :deep(.van-tab__panel) {
       background: transparent;
+    }
+
+    :deep(.van-tabs__content) {
+      height: calc(100vh - 110px);
+      overflow-y: auto;
     }
   }
 

@@ -145,9 +145,11 @@ const onSubmit = async () => {
       }
 
       // 请求用户信息接口
+      let latestBalance = '0.00'
       try {
         const userInfoRes = await userApi.getUserInfo()
         if (userInfoRes) {
+          latestBalance = userInfoRes.balance || '0.00'
           userStore.setUserInfo({
             id: userInfoRes.user_id || 0,
             username: userInfoRes.username || formData.username,
@@ -155,7 +157,7 @@ const onSubmit = async () => {
             avatar: userInfoRes.avatar || '',
             mobile: userInfoRes.mobile || '',
             email: userInfoRes.email || '',
-            balance: userInfoRes.balance || '0.00',
+            balance: latestBalance,
             realname: userInfoRes.realname || '',
             grade_name: userInfoRes.grade_name || '',
           })
@@ -163,6 +165,12 @@ const onSubmit = async () => {
       } catch (error) {
         console.error('Failed to fetch user info:', error)
       }
+
+      // 先同步一次余额，避免旧余额残留
+      localStorage.setItem(
+        'user_balance',
+        JSON.stringify({ balance: latestBalance, balance_frozen: '0.00', points: 0 }),
+      )
 
       // 调用刷新余额接口
       try {

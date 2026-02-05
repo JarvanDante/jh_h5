@@ -114,7 +114,7 @@ const handleSubmit = async () => {
     showLocalToast(getResponseMessage(response, 'Email bound successfully'))
   } catch (error: any) {
     closeToast()
-    showLocalToast(error.message || 'Failed to bind email')
+    showLocalToast(error?.message || 'Failed to bind email')
   } finally {
     submitting.value = false
   }

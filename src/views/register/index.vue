@@ -124,7 +124,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
-import { userApi } from '@/api'
+import { refreshBalance as refreshBalanceApi, userApi } from '@/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -237,9 +237,11 @@ const onSubmit = async () => {
     }
 
     // 3. 请求用户信息接口
+    let latestBalance = '0.00'
     try {
       const userInfoRes = await userApi.getUserInfo()
       if (userInfoRes) {
+        latestBalance = userInfoRes.balance || '0.00'
         userStore.setUserInfo({
           id: userInfoRes.user_id || 0,
           username: userInfoRes.username || formData.username,
@@ -247,13 +249,35 @@ const onSubmit = async () => {
           avatar: userInfoRes.avatar || '',
           mobile: userInfoRes.mobile || '',
           email: userInfoRes.email || '',
-          balance: userInfoRes.balance || '0.00',
+          balance: latestBalance,
           realname: userInfoRes.realname || '',
           grade_name: userInfoRes.grade_name || '',
         })
       }
     } catch (error) {
       console.error('Failed to get user info:', error)
+    }
+
+    // 先同步一次余额，避免旧余额残留
+    localStorage.setItem(
+      'user_balance',
+      JSON.stringify({ balance: latestBalance, balance_frozen: '0.00', points: 0 }),
+    )
+
+    // 再刷新余额（以服务端为准）
+    try {
+      const balanceRes = await refreshBalanceApi()
+      if (balanceRes) {
+        localStorage.setItem('user_balance', JSON.stringify(balanceRes))
+        if (userStore.userInfo) {
+          userStore.setUserInfo({
+            ...userStore.userInfo,
+            balance: balanceRes.balance || '0.00',
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh balance:', error)
     }
 
     showToast('Registration successful!')
@@ -294,11 +318,37 @@ const handleQuickRegister = async () => {
       userStore.setToken(res.token)
 
       // 2. 然后请求用户信息接口
+      let latestBalance = '0.00'
       try {
         const userInfo = await userApi.getUserInfo(res.token)
-        userStore.setUserInfo(userInfo)
+        if (userInfo) {
+          latestBalance = userInfo.balance || '0.00'
+          userStore.setUserInfo(userInfo)
+        }
       } catch (error) {
         console.error('Failed to get user info:', error)
+      }
+
+      // 先同步一次余额，避免旧余额残留
+      localStorage.setItem(
+        'user_balance',
+        JSON.stringify({ balance: latestBalance, balance_frozen: '0.00', points: 0 }),
+      )
+
+      // 再刷新余额（以服务端为准）
+      try {
+        const balanceRes = await refreshBalanceApi()
+        if (balanceRes) {
+          localStorage.setItem('user_balance', JSON.stringify(balanceRes))
+          if (userStore.userInfo) {
+            userStore.setUserInfo({
+              ...userStore.userInfo,
+              balance: balanceRes.balance || '0.00',
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh balance:', error)
       }
     }
 
