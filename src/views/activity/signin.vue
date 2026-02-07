@@ -11,27 +11,17 @@
       </div>
     </div>
 
-    <!-- 连续签到奖励条 -->
+    <!-- 签到天数进度 -->
     <div class="streak-bar">
       <div class="streak-label">
-        🔥 Consecutive Days: <em>{{ streakDays }}</em>
+        🔥 Signed Days: <em>{{ signedDays }}</em>
       </div>
       <div class="streak-progress">
         <div class="progress-track">
-          <div class="progress-fill" :style="{ width: (streakDays / 7) * 100 + '%' }"></div>
-        </div>
-        <div class="milestones">
           <div
-            v-for="m in milestones"
-            :key="m.day"
-            class="milestone"
-            :class="{ reached: streakDays >= m.day }"
-            :style="{ left: (m.day / 7) * 100 + '%' }"
-          >
-            <div class="ms-icon">{{ streakDays >= m.day ? '🎁' : '🔒' }}</div>
-            <div class="ms-day">{{ m.day }}d</div>
-            <div class="ms-reward">₱{{ m.reward }}</div>
-          </div>
+            class="progress-fill"
+            :style="{ width: Math.min((signedDays / totalDaysInMonth) * 100, 100) + '%' }"
+          ></div>
         </div>
       </div>
     </div>
@@ -95,8 +85,20 @@
 
     <!-- 签到按钮 -->
     <div class="sign-btn-area">
-      <div class="sign-btn" :class="{ disabled: todaySigned }" @click="handleSignToday">
-        {{ todaySigned ? '✅ Signed Today' : '🎁 Sign In Now — Earn ₱' + todayReward }}
+      <div
+        class="sign-btn"
+        :class="{ disabled: !active || todaySigned || isSubmitting }"
+        @click="handleSignToday"
+      >
+        {{
+          !active
+            ? 'Activity Not Available'
+            : isSubmitting
+              ? 'Processing...'
+              : todaySigned
+                ? '✅ Signed Today'
+                : '🎁 Sign In Now — Earn ₱' + todayReward
+        }}
       </div>
     </div>
 
@@ -115,11 +117,11 @@
     <div class="rules-section">
       <div class="rules-title">📋 Rules</div>
       <div class="rules-list">
-        <div class="rule-item">1. Sign in daily to receive bonus rewards</div>
-        <div class="rule-item">2. Consecutive sign-ins unlock milestone bonuses</div>
-        <div class="rule-item">3. Missing a day resets your streak counter</div>
+        <div class="rule-item">1. Daily bonus is based on current day amount configuration</div>
+        <div class="rule-item">2. No continuous sign-in required</div>
+        <div class="rule-item">3. Each user can claim once per day</div>
         <div class="rule-item">4. Rewards are credited instantly to your balance</div>
-        <div class="rule-item">5. Monthly sign-in resets on the 1st of each month</div>
+        <div class="rule-item">5. Monthly records reset every new month</div>
       </div>
     </div>
 
@@ -139,12 +141,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-
-const now = new Date()
-const year = now.getFullYear()
-const month = now.getMonth() // 0-indexed
-const today = now.getDate()
+import { computed, onMounted, ref } from 'vue'
+import { showToast } from 'vant'
+import { claimSigninReward, getSigninActivityInfo, type SigninDayInfo } from '@/api/modules/balance'
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const monthNames = [
@@ -161,84 +160,136 @@ const monthNames = [
   'November',
   'December',
 ]
-const monthName = monthNames[month]
 
-// 本月天数
-const totalDaysInMonth = new Date(year, month + 1, 0).getDate()
-// 本月第一天是星期几
-const firstDayOffset = new Date(year, month, 1).getDay()
-// 剩余天数
-const daysLeft = totalDaysInMonth - today
+const now = new Date()
+const year = ref(now.getFullYear())
+const month = ref(now.getMonth() + 1)
+const today = ref(now.getDate())
+const active = ref(false)
 
-// 签到数据（模拟）
 const signedDaysSet = ref(new Set<number>())
-// 模拟已签到的天（今天之前随机几天）
-for (let d = 1; d < today; d++) {
-  if (Math.random() > 0.2) signedDaysSet.value.add(d)
+const dayRewardMap = ref<Record<number, number>>({})
+
+const signedDays = ref(0)
+const totalEarned = ref('0.00')
+const showSignDialog = ref(false)
+const lastReward = ref('0.00')
+const isSubmitting = ref(false)
+
+const monthName = computed(() => monthNames[month.value - 1] || '')
+const totalDaysInMonth = computed(() => new Date(year.value, month.value, 0).getDate())
+const firstDayOffset = computed(() => new Date(year.value, month.value - 1, 1).getDay())
+const daysLeft = computed(() => Math.max(totalDaysInMonth.value - today.value, 0))
+const streakDays = computed(() => signedDays.value)
+
+const todaySigned = computed(() => signedDaysSet.value.has(today.value))
+const todayReward = computed(() => formatMoney(dayRewardMap.value[today.value] || 0))
+
+const rewardTiers = computed(() => {
+  const list = Object.entries(dayRewardMap.value)
+    .map(([day, amount]) => ({
+      day,
+      amount: formatMoney(amount),
+    }))
+    .sort((a, b) => Number(a.day) - Number(b.day))
+  return list
+})
+
+function formatMoney(value: number): string {
+  return Number(value || 0).toFixed(2)
 }
 
-const streakDays = ref(3)
-const totalEarned = ref('156.00')
-const showSignDialog = ref(false)
-const lastReward = ref('0')
+function applySigninData(dayList: SigninDayInfo[]) {
+  const rewardMap: Record<number, number> = {}
+  const signedSet = new Set<number>()
 
-const signedDays = computed(() => signedDaysSet.value.size)
-const todaySigned = computed(() => signedDaysSet.value.has(today))
-const todayReward = computed(() => getDayReward(today))
+  for (let day = 1; day <= totalDaysInMonth.value; day++) {
+    rewardMap[day] = 0
+  }
 
-// 连续签到里程碑
-const milestones = [
-  { day: 3, reward: '28' },
-  { day: 5, reward: '58' },
-  { day: 7, reward: '188' },
-]
+  for (const item of dayList || []) {
+    if (!item || item.day_no < 1 || item.day_no > 31) continue
+    rewardMap[item.day_no] = Number(item.reward_amount || 0)
+    if (item.signed) {
+      signedSet.add(item.day_no)
+    }
+  }
 
-// 每日奖励梯度
-const rewardTiers = [
-  { day: '1', amount: '5' },
-  { day: '2', amount: '8' },
-  { day: '3', amount: '12' },
-  { day: '4', amount: '15' },
-  { day: '5', amount: '20' },
-  { day: '6', amount: '28' },
-  { day: '7+', amount: '38' },
-]
+  dayRewardMap.value = rewardMap
+  signedDaysSet.value = signedSet
+}
+
+async function fetchSigninInfo(showErrorToast = true) {
+  try {
+    const res = await getSigninActivityInfo()
+    if (!res?.success) {
+      active.value = false
+      if (showErrorToast) showToast(res?.message || 'Failed to get sign-in info')
+      return
+    }
+
+    active.value = !!res.active
+    year.value = Number(res.year) || now.getFullYear()
+    month.value = Number(res.month) || now.getMonth() + 1
+    today.value = Number(res.today) || now.getDate()
+    signedDays.value = Number(res.signed_days) || 0
+    totalEarned.value = formatMoney(Number(res.signed_amount) || 0)
+    applySigninData(res.day_list || [])
+  } catch (e: any) {
+    active.value = false
+    if (showErrorToast) showToast(e?.message || 'Failed to get sign-in info')
+  }
+}
 
 function getDayReward(day: number): string {
-  const dayOfWeek = new Date(year, month, day).getDay()
-  // 周末奖励翻倍
-  const base = [5, 8, 12, 15, 20, 28, 38]
-  const idx = Math.min((day - 1) % 7, 6)
-  const amount = base[idx]
-  return dayOfWeek === 0 || dayOfWeek === 6 ? String(amount * 2) : String(amount)
+  return formatMoney(dayRewardMap.value[day] || 0)
 }
 
 function isSignedDay(day: number) {
   return signedDaysSet.value.has(day)
 }
 function isToday(day: number) {
-  return day === today
+  return day === today.value
 }
 function isFuture(day: number) {
-  return day > today
+  return day > today.value
 }
 function canSign(day: number) {
-  return day === today && !todaySigned.value
+  return active.value && day === today.value && !todaySigned.value
 }
 
 function handleSign(day: number) {
   if (canSign(day)) handleSignToday()
 }
 
-function handleSignToday() {
-  if (todaySigned.value) return
-  signedDaysSet.value.add(today)
-  streakDays.value++
-  lastReward.value = todayReward.value
-  const earned = parseFloat(totalEarned.value) + parseFloat(todayReward.value)
-  totalEarned.value = earned.toFixed(2)
-  showSignDialog.value = true
+async function handleSignToday() {
+  if (!active.value) {
+    showToast('Activity not available')
+    return
+  }
+  if (todaySigned.value || isSubmitting.value) return
+
+  isSubmitting.value = true
+  try {
+    const res = await claimSigninReward()
+    if (!res?.success) {
+      showToast(res?.message || 'Sign in failed')
+      return
+    }
+
+    lastReward.value = formatMoney(Number(res.reward_amount) || 0)
+    showSignDialog.value = true
+    await fetchSigninInfo(false)
+  } catch (e: any) {
+    showToast(e?.message || 'Sign in failed')
+  } finally {
+    isSubmitting.value = false
+  }
 }
+
+onMounted(() => {
+  fetchSigninInfo()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -303,7 +354,6 @@ function handleSignToday() {
 
   .streak-progress {
     position: relative;
-    padding-bottom: 36px;
   }
 
   .progress-track {
@@ -316,35 +366,6 @@ function handleSignToday() {
       background: linear-gradient(90deg, #552583, #fdb927);
       border-radius: 3px;
       transition: width 0.5s ease;
-    }
-  }
-
-  .milestones {
-    position: relative;
-    height: 36px;
-  }
-
-  .milestone {
-    position: absolute;
-    top: 6px;
-    transform: translateX(-50%);
-    text-align: center;
-    .ms-icon {
-      font-size: 18px;
-    }
-    .ms-day {
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.4);
-    }
-    .ms-reward {
-      font-size: 10px;
-      color: #fdb927;
-      font-weight: bold;
-    }
-    &.reached {
-      .ms-day {
-        color: #fdb927;
-      }
     }
   }
 }

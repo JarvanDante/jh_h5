@@ -81,14 +81,16 @@
       </div>
     </div>
 
-    <!-- 中奖记录滚动 -->
+    <!-- 中奖记录滚动（垂直从下往上） -->
     <div class="winner-marquee">
       <div class="marquee-label">🏆 Recent Winners</div>
-      <div class="marquee-track">
-        <div class="marquee-content">
-          <span v-for="(winner, i) in winners" :key="i" class="winner-item">
-            {{ winner.name }} won <em>₱{{ winner.amount }}</em>
-          </span>
+      <div class="marquee-viewport">
+        <div class="marquee-vertical">
+          <div v-for="(winner, i) in [...winners, ...winners]" :key="i" class="winner-row">
+            <span class="winner-name">{{ winner.name }}</span>
+            <span class="winner-text">won</span>
+            <span class="winner-amount">₱{{ winner.amount }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -154,16 +156,37 @@ const lightOn = ref(true)
 const jackpotDisplay = ref('1,288,563.00')
 
 // 中奖记录
-const winners = ref([
-  { name: 'Joh***', amount: '8,888.00' },
-  { name: 'Mar***', amount: '1,888.00' },
-  { name: 'Kin***', amount: '5,888.00' },
-  { name: 'Jas***', amount: '88,888.00' },
-  { name: 'Ale***', amount: '100.00' },
-  { name: 'Ric***', amount: '1,888.00' },
-  { name: 'Dan***', amount: '50.00' },
-  { name: 'Mic***', amount: '5,888.00' },
-])
+const winnerNames = [
+  'Johnson',
+  'Maria12',
+  'Kingg56',
+  'Jasone9',
+  'Alexxx4',
+  'Ricard7',
+  'Daniel1',
+  'Mickel5',
+]
+
+function maskName(name: string): string {
+  const stars = '*'.repeat(3 + Math.floor(Math.random() * 3)) // 3~5个星号
+  return name.slice(0, 3) + stars + name.slice(-3)
+}
+
+const winners = ref(
+  winnerNames.map((name, i) => ({
+    name: maskName(name),
+    amount: [
+      '8,888.00',
+      '1,888.00',
+      '5,888.00',
+      '88,888.00',
+      '100.00',
+      '1,888.00',
+      '50.00',
+      '5,888.00',
+    ][i],
+  })),
+)
 
 // 灯泡闪烁
 let lightTimer: ReturnType<typeof setInterval>
@@ -212,8 +235,18 @@ const spin = () => {
 
   // 随机中奖
   const prizeIndex = Math.floor(Math.random() * prizes.value.length)
-  const targetAngle = 360 - prizeIndex * segmentAngle - segmentAngle / 2
-  const totalRotation = wheelRotation.value + 360 * 6 + targetAngle
+
+  // 安全边距：距离扇区边界至少 6 度，避免指针落在分界线上
+  const safeMargin = 6
+  // 在扇区安全区域内随机偏移，让每次停的位置不完全一样
+  const safeRange = segmentAngle - safeMargin * 2
+  const randomOffset = Math.random() * safeRange - safeRange / 2
+
+  const targetAngle = 360 - prizeIndex * segmentAngle - segmentAngle / 2 + randomOffset
+
+  // 确保至少转 6 整圈 + 目标角度，且相对上次旋转是正向增量
+  const baseRotation = wheelRotation.value - (wheelRotation.value % 360) + 360 * 6
+  const totalRotation = baseRotation + targetAngle
 
   wheelRotation.value = totalRotation
 
@@ -594,51 +627,73 @@ const closePrizeDialog = () => {
   }
 }
 
-// 中奖滚动
+// 中奖滚动（垂直）
 .winner-marquee {
   margin: 20px 20px 0;
-  padding: 12px 16px;
+  padding: 12px 16px 16px;
   background: rgba(253, 185, 39, 0.08);
   border-radius: 12px;
   border: 1px solid rgba(253, 185, 39, 0.15);
   overflow: hidden;
 
   .marquee-label {
-    font-size: 12px;
+    font-size: 14px;
     color: #fdb927;
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 14px;
+    text-align: center;
+    letter-spacing: 2px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(253, 185, 39, 0.12);
   }
 
-  .marquee-track {
+  .marquee-viewport {
+    height: 120px;
     overflow: hidden;
+    position: relative;
   }
 
-  .marquee-content {
+  .marquee-vertical {
     display: flex;
-    gap: 24px;
-    animation: marquee 20s linear infinite;
-    white-space: nowrap;
+    flex-direction: column;
+    align-items: center;
+    animation: scrollUp 12s linear infinite;
 
-    .winner-item {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.6);
+    .winner-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 6px 0;
+      font-size: 13px;
+      white-space: nowrap;
+      width: 260px;
 
-      em {
+      .winner-name {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 600;
+        width: 100px;
+        text-align: left;
+      }
+      .winner-text {
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .winner-amount {
         color: #fdb927;
-        font-style: normal;
         font-weight: bold;
+        width: 100px;
+        text-align: right;
       }
     }
   }
 }
 
-@keyframes marquee {
-  from {
-    transform: translateX(0);
+@keyframes scrollUp {
+  0% {
+    transform: translateY(0);
   }
-  to {
-    transform: translateX(-50%);
+  100% {
+    transform: translateY(-50%);
   }
 }
 

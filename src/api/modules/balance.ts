@@ -282,6 +282,50 @@ export function getVipUpgradeProgress() {
   return request.get<VipUpgradeProgressResponse>('/frontend/balance/vip-upgrade-progress')
 }
 
+// 签到日信息
+export interface SigninDayInfo {
+  day_no: number
+  reward_amount: number
+  signed: boolean
+}
+
+// 签到活动信息响应
+export interface SigninActivityInfoResponse {
+  success: boolean
+  message: string
+  active: boolean
+  year: number
+  month: number
+  today: number
+  today_signed: boolean
+  signed_days: number
+  signed_amount: number
+  today_reward_amount: number
+  day_list: SigninDayInfo[]
+}
+
+// 获取签到活动信息
+export function getSigninActivityInfo() {
+  return request.get<SigninActivityInfoResponse>('/frontend/balance/signin-activity-info')
+}
+
+// 签到领取响应
+export interface SigninClaimResponse {
+  success: boolean
+  message: string
+  trade_no: string
+  day_no: number
+  reward_amount: number
+  sign_date: string
+  signed_days: number
+  signed_amount: number
+}
+
+// 签到领取
+export function claimSigninReward() {
+  return request.post<SigninClaimResponse>('/frontend/balance/signin-claim')
+}
+
 // 执行洗码返水
 export function washCodeRebate() {
   return request.post<WashCodeRebateResponse>('/frontend/balance/wash-code-rebate')
