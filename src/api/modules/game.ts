@@ -90,6 +90,15 @@ export interface BetHistoryParams {
   size?: number
 }
 
+// 洗码额度响应
+export interface WashCodeQuotaResponse {
+  success: boolean
+  message: string
+  valid_bet_amount: number
+  max_bet_id: number
+  last_rebate_time: string
+}
+
 // 游戏 API
 export const gameApi = {
   // 获取游戏分类
@@ -122,5 +131,10 @@ export const gameApi = {
   // 获取投注历史
   getBetHistory(params: BetHistoryParams): Promise<BetHistoryResponse> {
     return request.get('/frontend/game/bet-history', { params })
+  },
+
+  // 获取可洗码额度
+  getWashCodeQuota(params?: { last_bet_id?: number }): Promise<WashCodeQuotaResponse> {
+    return request.get('/frontend/game/wash-code-quota', { params })
   },
 }

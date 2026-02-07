@@ -246,3 +246,20 @@ export interface RecallGameBalanceResponse {
 export function recallGameBalance() {
   return request.post<RecallGameBalanceResponse>('/frontend/game/recall-balance')
 }
+
+// 洗码返水响应
+export interface WashCodeRebateResponse {
+  success: boolean
+  message: string
+  trade_no: string
+  valid_bet_amount: number
+  rebate_percent: number
+  rebate_amount: number
+  grade_name: string
+  max_bet_id: number
+}
+
+// 执行洗码返水
+export function washCodeRebate() {
+  return request.post<WashCodeRebateResponse>('/frontend/balance/wash-code-rebate')
+}

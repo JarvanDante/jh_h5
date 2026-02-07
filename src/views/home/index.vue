@@ -186,6 +186,9 @@
         <van-icon name="service-o" size="24" color="#fff" />
       </div>
     </div>
+
+    <!-- 广告弹窗 -->
+    <AdPopup v-model:show="showAdPopup" :ads="popupAds" />
   </div>
 </template>
 
@@ -199,6 +202,7 @@ import { gameApi } from '@/api/modules/game'
 import { refreshBalance as refreshBalanceApi } from '@/api'
 import type { AdItem, NoticeItem } from '@/api/modules/user'
 import type { GameCategory, GameItem } from '@/api/modules/game'
+import AdPopup from '@/components/AdPopup.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -260,6 +264,10 @@ const balance = computed(() => {
 // 轮播图
 const banners = ref<string[]>([])
 const adList = ref<AdItem[]>([])
+
+// 广告弹窗
+const showAdPopup = ref(false)
+const popupAds = ref<AdItem[]>([])
 
 // 公告列表
 const noticeList = ref<NoticeItem[]>([])
@@ -663,7 +671,24 @@ const fetchAdList = async () => {
     // 响应拦截器已经处理过，直接返回data部分
     if (res?.list && res.list.length > 0) {
       adList.value = res.list
-      banners.value = res.list.map((ad) => ad.image)
+
+      // position=1 的是 banner 轮播
+      const bannerAds = res.list.filter((ad: AdItem) => ad.position === 1)
+      if (bannerAds.length > 0) {
+        banners.value = bannerAds.map((ad: AdItem) => ad.image)
+      }
+
+      // position=2 的是弹窗广告
+      const popupAdList = res.list.filter((ad: AdItem) => ad.position === 2)
+      const adPopupShown = sessionStorage.getItem('ad_popup_shown')
+      if (!adPopupShown && popupAdList.length > 0) {
+        popupAds.value = popupAdList
+        setTimeout(() => {
+          showAdPopup.value = true
+          sessionStorage.setItem('ad_popup_shown', '1')
+        }, 500)
+      }
+
       console.log('Banner图片列表:', banners.value)
     } else {
       console.log('接口没有返回数据，使用默认图片')

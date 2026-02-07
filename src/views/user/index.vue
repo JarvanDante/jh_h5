@@ -102,9 +102,9 @@
 
       <div class="menu-divider"></div>
 
-      <div class="menu-item" @click="goToRedeem">
+      <div class="menu-item" @click="goToRebate">
         <div class="menu-icon redeem-icon">🎁</div>
-        <span class="menu-title">Redeem</span>
+        <span class="menu-title">Rebate</span>
         <van-icon name="arrow" size="20" color="rgba(255,255,255,0.6)" />
       </div>
 
@@ -408,8 +408,8 @@ const goToInvite = () => {
   router.push('/invite')
 }
 
-const goToRedeem = () => {
-  showToast('Redeem')
+const goToRebate = () => {
+  router.push('/rebate')
 }
 
 const goToSupport = () => {

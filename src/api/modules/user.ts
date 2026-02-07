@@ -148,6 +148,24 @@ export interface InviteListResponse {
   page_size: number
 }
 
+// VIP等级信息
+export interface GradeInfo {
+  id: number
+  name: string
+  rebate_percent_sports: string
+  rebate_percent_lottery: string
+  rebate_percent_live: string
+  rebate_percent_egame: string
+  rebate_percent_poker: string
+  payment_limit: string
+  bet_limit: string
+  money_limit: string
+}
+
+export interface GradeListResponse {
+  list: GradeInfo[]
+}
+
 // 用户 API
 export const userApi = {
   // 登录
@@ -229,5 +247,10 @@ export const userApi = {
   // 获取邀请列表
   getInviteList(page = 1, pageSize = 20): Promise<InviteListResponse> {
     return request.get('/frontend/app/invite-list', { params: { page, page_size: pageSize } })
+  },
+
+  // 获取会员等级列表
+  getGradeList(): Promise<GradeListResponse> {
+    return request.get('/frontend/app/grade-list')
   },
 }

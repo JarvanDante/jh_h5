@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AdPopup: typeof import('./src/components/AdPopup.vue')['default']
     FundPasswordDialog: typeof import('./src/components/FundPasswordDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

@@ -1,0 +1,29 @@
+.activity-page {
+  min-height: 100vh;
+  background: #1a1a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 60px;
+
+  .placeholder {
+    text-align: center;
+
+    .icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .desc {
+      font-size: 14px;
+      color: #999;
+    }
+  }
+}

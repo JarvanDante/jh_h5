@@ -58,6 +58,48 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/lucky_activity',
+    name: 'LuckyActivity',
+    component: () => import('@/views/activity/lucky.vue'),
+    meta: { title: '大转盘活动' },
+  },
+  {
+    path: '/signin_activity',
+    name: 'SigninActivity',
+    component: () => import('@/views/activity/signin.vue'),
+    meta: { title: '每日签到活动' },
+  },
+  {
+    path: '/deposit_activity',
+    name: 'DepositActivity',
+    component: () => import('@/views/activity/deposit.vue'),
+    meta: { title: '充值送活动' },
+  },
+  {
+    path: '/register_activity',
+    name: 'RegisterActivity',
+    component: () => import('@/views/activity/register.vue'),
+    meta: { title: '注册送活动' },
+  },
+  {
+    path: '/invite_activity',
+    name: 'InviteActivity',
+    component: () => import('@/views/activity/invite.vue'),
+    meta: { title: '邀请朋友活动' },
+  },
+  {
+    path: '/rebate',
+    name: 'RebateActivity',
+    component: () => import('@/views/activity/rebate.vue'),
+    meta: { title: '洗码活动' },
+  },
+  {
+    path: '/vip',
+    name: 'Vip',
+    component: () => import('@/views/vip/index.vue'),
+    meta: { title: 'VIP权益' },
+  },
+  {
     path: '/invite',
     name: 'Invite',
     component: () => import('@/views/invite/index.vue'),
