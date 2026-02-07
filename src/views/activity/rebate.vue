@@ -1,14 +1,10 @@
 <template>
   <div class="rebate-page">
-    <!-- 顶部 -->
-    <div class="header">
-      <div class="back-btn" @click="$router.back()">
-        <van-icon name="arrow-left" size="20" color="#fff" />
-      </div>
-      <div class="title-area">
-        <div class="title">🎰 REBATE CENTER</div>
-        <div class="subtitle">Wash code & earn cashback!</div>
-      </div>
+    <!-- 顶部导航栏 -->
+    <div class="top-bar">
+      <van-icon name="arrow-left" size="24" color="#fff" @click="$router.back()" />
+      <span class="title">Rebate Center</span>
+      <div class="placeholder"></div>
     </div>
 
     <!-- VIP + 洗码额度合并卡片 -->
@@ -294,50 +290,39 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/variables.scss' as *;
+
 .rebate-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #1a0a2e 0%, #0d0520 50%, #1a0a2e 100%);
+  background: $background-color-light;
   padding-bottom: 80px;
 }
 
-.header {
+// 顶部导航栏 - 和report页面一致的紫色渐变
+.top-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 16px;
-  .back-btn {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
+  background: $gradient-purple;
+  color: $text-color-light;
+
+  .title {
+    font-size: 18px;
+    font-weight: 600;
   }
-  .title-area {
-    flex: 1;
-    text-align: center;
-    margin-right: 36px;
-    .title {
-      font-size: 20px;
-      font-weight: 900;
-      color: #fdb927;
-      text-shadow: 0 0 20px rgba(253, 185, 39, 0.4);
-      letter-spacing: 1px;
-    }
-    .subtitle {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.5);
-      margin-top: 2px;
-    }
+
+  .placeholder {
+    width: 24px;
   }
 }
 
 // 合并卡片
 .combo-card {
-  margin: 0 16px 12px;
+  margin: 16px 16px 12px;
   border-radius: 16px;
   overflow: visible;
-  box-shadow: 0 8px 32px rgba(85, 37, 131, 0.4);
+  box-shadow: $shadow-md;
 
   .combo-vip {
     padding: 16px 20px 20px;
@@ -412,25 +397,24 @@ onBeforeUnmount(() => {
     position: relative;
     z-index: 1;
     padding: 20px;
-    background: rgba(20, 8, 40, 0.95);
+    background: $background-color;
     border-radius: 16px;
-    border: 1px solid rgba(253, 185, 39, 0.15);
+    border: 1px solid $border-color;
     text-align: center;
 
     .quota-label {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.5);
+      color: $text-color-secondary;
     }
     .quota-amount {
       font-size: 36px;
       font-weight: 900;
-      color: #fdb927;
-      text-shadow: 0 0 30px rgba(253, 185, 39, 0.4);
+      color: $primary-color;
       margin: 6px 0;
     }
     .quota-time {
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.3);
+      color: #999;
     }
   }
 }
@@ -456,8 +440,8 @@ onBeforeUnmount(() => {
       transform: scale(0.98);
     }
     &.disabled {
-      background: rgba(255, 255, 255, 0.08);
-      color: rgba(255, 255, 255, 0.3);
+      background: #d1d5db;
+      color: #9ca3af;
       box-shadow: none;
       cursor: default;
     }
@@ -471,7 +455,7 @@ onBeforeUnmount(() => {
   .section-title {
     font-size: 16px;
     font-weight: 900;
-    color: #fdb927;
+    color: $primary-color;
     margin-bottom: 12px;
   }
 
@@ -494,14 +478,14 @@ onBeforeUnmount(() => {
     flex-shrink: 0;
     padding: 14px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: $background-color;
+    border: 1px solid $border-color;
     transition: all 0.2s;
 
     &.current {
-      background: linear-gradient(135deg, rgba(85, 37, 131, 0.4), rgba(253, 185, 39, 0.08));
-      border-color: rgba(253, 185, 39, 0.3);
-      box-shadow: 0 0 20px rgba(253, 185, 39, 0.1);
+      background: $background-color;
+      border-color: $primary-color;
+      box-shadow: 0 0 12px rgba(85, 37, 131, 0.15);
     }
 
     .card-header {
@@ -520,9 +504,9 @@ onBeforeUnmount(() => {
 
       .current-tag {
         font-size: 10px;
-        color: #fdb927;
+        color: $primary-color;
         font-weight: 700;
-        background: rgba(253, 185, 39, 0.15);
+        background: rgba(85, 37, 131, 0.1);
         padding: 2px 8px;
         border-radius: 10px;
       }
@@ -535,14 +519,14 @@ onBeforeUnmount(() => {
         padding: 3px 0;
         .cr-label {
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.4);
+          color: #999;
         }
         .cr-val {
           font-size: 12px;
           font-weight: 800;
-          color: #fdb927;
+          color: $primary-color;
           &.bonus {
-            color: #4ade80;
+            color: #059669;
           }
         }
       }
@@ -554,18 +538,18 @@ onBeforeUnmount(() => {
 .rules-section {
   margin: 0 16px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
+  background: $background-color;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid $border-color;
   .rules-title {
     font-size: 14px;
     font-weight: bold;
-    color: #fdb927;
+    color: $primary-color;
     margin-bottom: 10px;
   }
   .rule-item {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.4);
+    color: $text-color-secondary;
     line-height: 2;
   }
 }
@@ -577,7 +561,7 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -588,10 +572,9 @@ onBeforeUnmount(() => {
   text-align: center;
   padding: 32px 24px 24px;
   width: 300px;
-  background: linear-gradient(180deg, #2a1050 0%, #1a0a2e 100%);
-  border: 2px solid rgba(253, 185, 39, 0.4);
+  background: $background-color;
   border-radius: 20px;
-  box-shadow: 0 0 60px rgba(253, 185, 39, 0.15);
+  box-shadow: $shadow-lg;
   animation: dialogPop 0.35s ease;
 
   .rd-icon {
@@ -601,12 +584,12 @@ onBeforeUnmount(() => {
   .rd-title {
     font-size: 18px;
     font-weight: 900;
-    color: #fdb927;
+    color: $primary-color;
     margin-bottom: 16px;
   }
 
   .rd-info {
-    background: rgba(255, 255, 255, 0.04);
+    background: $background-color-light;
     border-radius: 12px;
     padding: 12px;
     margin-bottom: 20px;
@@ -616,16 +599,16 @@ onBeforeUnmount(() => {
       padding: 6px 0;
       span {
         font-size: 13px;
-        color: rgba(255, 255, 255, 0.5);
+        color: $text-color-secondary;
       }
       em {
         font-size: 13px;
         font-style: normal;
         font-weight: 700;
-        color: #fff;
+        color: $text-color;
       }
       &.highlight em {
-        color: #fdb927;
+        color: $primary-color;
         font-size: 18px;
       }
     }

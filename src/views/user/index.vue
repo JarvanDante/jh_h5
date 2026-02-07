@@ -60,25 +60,56 @@
     </div>
 
     <!-- VIP 进度卡片 -->
-    <div class="vip-card">
-      <div class="vip-icon">
-        <van-icon name="crown" size="32" color="#FDB927" />
-        <span class="vip-level">V0</span>
-      </div>
-      <div class="vip-info">
-        <div class="vip-text">
-          <span>Remaining</span>
-          <span class="vip-highlight">VIP1</span>
-          <span>Remaining to Bet</span>
-          <span class="vip-amount">1,000.00</span>
+    <div class="vip-card" @click="router.push('/vip')">
+      <!-- 顶部：当前等级 + 下一等级目标 -->
+      <div class="vip-top-row">
+        <span class="vip-badge" :style="getVipBadgeStyle()"
+          >👑 {{ currentGrade?.name || 'VIP0' }}</span
+        >
+        <div class="vip-next-tag" v-if="nextGrade">
+          <van-icon name="arrow-up" size="10" color="#fdb927" />
+          <span>{{ nextGrade.name }}</span>
         </div>
-        <div class="progress-bar">
-          <div class="progress-label">Need to Bet</div>
-          <div class="progress-value">0.00/1,000.00</div>
-        </div>
-        <van-progress :percentage="0" stroke-width="8" color="#FDB927" />
+        <div class="vip-max-tag" v-else>🎉 MAX</div>
+        <van-icon name="arrow" size="16" color="rgba(255,255,255,0.4)" class="arrow-icon" />
       </div>
-      <van-icon name="arrow" size="20" color="#999" />
+
+      <!-- 中间：升级条件 + 各自进度条 -->
+      <div class="vip-req-row" v-if="nextGrade">
+        <div class="req-col">
+          <div class="req-item">
+            <div class="req-left">
+              <span class="req-icon">💰</span>
+              <span class="req-label">Deposit</span>
+            </div>
+            <span class="req-value">₱{{ depositCurrent }}</span>
+          </div>
+          <van-progress
+            :percentage="depositProgress"
+            stroke-width="3"
+            color="linear-gradient(90deg, #4ade80, #22c55e)"
+            track-color="rgba(0,0,0,0.25)"
+            :show-pivot="false"
+          />
+        </div>
+        <div class="req-divider"></div>
+        <div class="req-col">
+          <div class="req-item">
+            <div class="req-left">
+              <span class="req-icon">🎰</span>
+              <span class="req-label">Bet</span>
+            </div>
+            <span class="req-value">₱{{ betCurrent }}</span>
+          </div>
+          <van-progress
+            :percentage="betProgress"
+            stroke-width="3"
+            color="linear-gradient(90deg, #fdb927, #f4a020)"
+            track-color="rgba(0,0,0,0.25)"
+            :show-pivot="false"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- 菜单列表 -->
@@ -144,10 +175,92 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
+import { userApi } from '@/api/modules/user'
+import { getVipUpgradeProgress, type VipUpgradeProgressResponse } from '@/api/modules/balance'
+import type { GradeInfo } from '@/api/modules/user'
 import FundPasswordDialog from '@/components/FundPasswordDialog.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+// VIP等级数据
+const gradeList = ref<GradeInfo[]>([])
+const userGradeId = computed(() => userStore.userInfo?.grade_id || 1)
+const currentGrade = computed(() => gradeList.value.find((g) => g.id === userGradeId.value))
+const nextGrade = computed(() => {
+  const idx = gradeList.value.findIndex((g) => g.id === userGradeId.value)
+  if (idx >= 0 && idx < gradeList.value.length - 1) {
+    return gradeList.value[idx + 1]
+  }
+  return null
+})
+// VIP升级进度数据（来自API）
+const vipUpgradeProgress = ref<VipUpgradeProgressResponse | null>(null)
+
+const depositProgress = computed(() => vipUpgradeProgress.value?.deposit_progress ?? 0)
+const betProgress = computed(() => vipUpgradeProgress.value?.bet_progress ?? 0)
+
+const depositCurrent = computed(() => {
+  const val = vipUpgradeProgress.value?.deposit_amount ?? 0
+  return val.toFixed(2)
+})
+const depositTarget = computed(() => {
+  const val = vipUpgradeProgress.value?.next_payment_limit ?? 0
+  return val.toFixed(2)
+})
+const betCurrent = computed(() => {
+  const val = vipUpgradeProgress.value?.bet_amount ?? 0
+  return val.toFixed(2)
+})
+const betTarget = computed(() => {
+  const val = vipUpgradeProgress.value?.next_bet_limit ?? 0
+  return val.toFixed(2)
+})
+
+async function fetchVipProgress() {
+  try {
+    const res = await getVipUpgradeProgress()
+    if (res) {
+      vipUpgradeProgress.value = res
+    }
+  } catch (e) {
+    console.error('获取VIP升级进度失败:', e)
+  }
+}
+
+async function fetchGradeList() {
+  try {
+    const res = await userApi.getGradeList()
+    if (res?.list) {
+      gradeList.value = res.list
+    }
+  } catch (e) {
+    console.error('获取等级列表失败:', e)
+  }
+}
+
+const badgeGradients: string[] = [
+  'linear-gradient(135deg, #6b7280, #9ca3af)',
+  'linear-gradient(135deg, #552583, #7b3fa8)',
+  'linear-gradient(135deg, #2563eb, #3b82f6)',
+  'linear-gradient(135deg, #0891b2, #22d3ee)',
+  'linear-gradient(135deg, #059669, #34d399)',
+  'linear-gradient(135deg, #65a30d, #a3e635)',
+  'linear-gradient(135deg, #d97706, #fbbf24)',
+  'linear-gradient(135deg, #ea580c, #fb923c)',
+  'linear-gradient(135deg, #dc2626, #f87171)',
+  'linear-gradient(135deg, #4f46e5, #818cf8)',
+  'linear-gradient(135deg, #9333ea, #c084fc)',
+  'linear-gradient(135deg, #7c3aed, #a78bfa)',
+  'linear-gradient(135deg, #be185d, #f472b6)',
+  'linear-gradient(135deg, #b45309, #fcd34d)',
+  'linear-gradient(135deg, #dc2626, #fdb927)',
+]
+
+function getVipBadgeStyle() {
+  const idx = gradeList.value.findIndex((g) => g.id === userGradeId.value)
+  return { background: badgeGradients[idx >= 0 ? idx : 0] || badgeGradients[0] }
+}
 
 // 资金密码弹窗
 const showFundPasswordDialog = ref(false)
@@ -443,6 +556,12 @@ onMounted(async () => {
     router.push('/login')
     return
   }
+
+  // 获取VIP等级列表
+  fetchGradeList()
+
+  // 获取VIP升级进度
+  fetchVipProgress()
 
   // 初始化显示余额
   displayBalance.value = balance.value
@@ -816,89 +935,138 @@ onMounted(async () => {
 
   // VIP 进度卡片
   .vip-card {
-    background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+    background: linear-gradient(135deg, #552583 0%, #3a1a5c 50%, #6b2fa0 100%);
     border-radius: 12px;
-    padding: 16px;
+    padding: 8px 12px;
     margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
+    box-shadow: 0 4px 16px rgba(85, 37, 131, 0.4);
     cursor: pointer;
     transition: transform 0.2s;
+    position: relative;
+    overflow: hidden;
+
+    // 装饰光晕
+    &::after {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -15%;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(253, 185, 39, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
 
     &:active {
       transform: scale(0.98);
     }
 
-    .vip-icon {
+    .vip-top-row {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
+      gap: 8px;
+      margin-bottom: 4px;
 
-      .vip-level {
-        color: #fdb927;
+      .vip-badge {
+        display: inline-block;
         font-size: 12px;
-        font-weight: bold;
+        font-weight: 900;
+        color: #fff;
+        padding: 3px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
       }
-    }
 
-    .vip-info {
-      flex: 1;
-      min-width: 0;
-
-      .vip-text {
+      .vip-next-tag {
         display: flex;
         align-items: center;
-        gap: 6px;
-        margin-bottom: 8px;
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.8);
-        flex-wrap: wrap;
+        gap: 2px;
+        background: rgba(253, 185, 39, 0.15);
+        border: 1px solid rgba(253, 185, 39, 0.3);
+        border-radius: 10px;
+        padding: 1px 6px;
 
-        .vip-highlight {
+        span {
+          font-size: 10px;
+          font-weight: 700;
           color: #fdb927;
-          font-weight: bold;
-        }
-
-        .vip-amount {
-          color: #fff;
-          font-weight: bold;
         }
       }
 
-      .progress-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 4px;
-        font-size: 12px;
-
-        .progress-label {
-          color: rgba(255, 255, 255, 0.7);
-        }
-
-        .progress-value {
-          color: rgba(255, 255, 255, 0.9);
-        }
+      .vip-max-tag {
+        font-size: 10px;
+        font-weight: 800;
+        color: #fdb927;
       }
 
-      :deep(.van-progress) {
-        .van-progress__portion {
-          background: #fdb927;
-        }
-
-        .van-progress__pivot {
-          background: #fdb927;
-          color: #552583;
-        }
+      .arrow-icon {
+        margin-left: auto;
       }
     }
 
-    .van-icon {
-      color: rgba(255, 255, 255, 0.6);
+    .vip-req-row {
+      display: flex;
+      align-items: stretch;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 5px 8px;
+      margin-bottom: 0;
+
+      .req-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .req-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .req-left {
+          display: flex;
+          align-items: center;
+          gap: 3px;
+        }
+
+        .req-icon {
+          font-size: 12px;
+          flex-shrink: 0;
+        }
+
+        .req-label {
+          font-size: 9px;
+          color: rgba(255, 255, 255, 0.5);
+          font-weight: 500;
+        }
+
+        .req-value {
+          font-size: 11px;
+          font-weight: 800;
+          color: #fff;
+        }
+      }
+
+      .req-divider {
+        width: 1px;
+        background: rgba(255, 255, 255, 0.12);
+        margin: 0 6px;
+        flex-shrink: 0;
+      }
+    }
+
+    .vip-desc {
+      flex: 1;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.7);
+      em {
+        font-style: normal;
+        font-weight: 800;
+        color: #fdb927;
+      }
     }
   }
 

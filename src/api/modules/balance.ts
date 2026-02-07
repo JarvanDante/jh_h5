@@ -259,6 +259,29 @@ export interface WashCodeRebateResponse {
   max_bet_id: number
 }
 
+// VIP升级进度响应
+export interface VipUpgradeProgressResponse {
+  success: boolean
+  message: string
+  current_grade_id: number
+  current_grade_name: string
+  next_grade_id: number
+  next_grade_name: string
+  deposit_amount: number
+  bet_amount: number
+  next_payment_limit: number
+  next_bet_limit: number
+  deposit_progress: number
+  bet_progress: number
+  progress: number
+  is_max_grade: boolean
+}
+
+// 获取VIP升级进度
+export function getVipUpgradeProgress() {
+  return request.get<VipUpgradeProgressResponse>('/frontend/balance/vip-upgrade-progress')
+}
+
 // 执行洗码返水
 export function washCodeRebate() {
   return request.post<WashCodeRebateResponse>('/frontend/balance/wash-code-rebate')

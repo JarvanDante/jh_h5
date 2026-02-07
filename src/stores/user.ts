@@ -13,6 +13,7 @@ export interface UserInfo {
   grade_id?: number
   grade_name?: string
   is_pay_password?: number
+  total_bet?: string
 }
 
 export const useUserStore = defineStore(

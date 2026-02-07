@@ -14,6 +14,7 @@
       color="#FDB927"
       title-active-color="#FDB927"
       scrollable
+      swipeable
     >
       <van-tab title="Deposit" name="deposit">
         <div
@@ -1255,30 +1256,20 @@ onMounted(() => {
 
     :deep(.van-tabs__wrap) {
       background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0;
+      box-shadow: 0 4px 8px rgba(85, 37, 131, 0.15);
     }
 
     :deep(.van-tabs__nav) {
       background: transparent;
-      padding: 0 8px;
-    }
-
-    :deep(.van-tabs__scroll) {
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
+      padding-left: 8px;
     }
 
     :deep(.van-tab) {
       color: rgba(255, 255, 255, 0.6);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 500;
-      flex: none;
-      padding: 0 16px;
+      padding: 8px 12px;
 
       &.van-tab--active {
         color: #fdb927;
@@ -1409,19 +1400,19 @@ onMounted(() => {
 
   // 时间段按钮
   .period-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 24px;
 
     .period-btn {
       background: #fff;
       border: 2px solid #e5e7eb;
       border-radius: 12px;
-      padding: 12px;
+      padding: 10px 16px;
       text-align: center;
       color: $primary-color;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -1429,6 +1420,7 @@ onMounted(() => {
       touch-action: manipulation;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
 
       &.active {
         background: $gradient-purple;
