@@ -1,53 +1,54 @@
 <template>
   <div class="rebate-page">
-    <!-- 顶部导航栏 -->
-    <div class="top-bar">
-      <van-icon name="arrow-left" size="24" color="#fff" @click="$router.back()" />
-      <span class="title">Rebate Center</span>
-      <div class="placeholder"></div>
-    </div>
-
-    <!-- VIP + 洗码额度合并卡片 -->
-    <div class="combo-card">
-      <!-- 上半：VIP信息 -->
-      <div class="combo-vip">
-        <div class="vip-badge">👑 {{ currentGrade?.name || 'VIP0' }}</div>
-        <div class="vip-right">
-          <div class="vip-rate">
-            <span class="rate-label">🎰 E-Game</span>
-            <span class="rate-value">{{ currentGrade?.rebate_percent_egame || '0.00' }}%</span>
-          </div>
-          <div class="vip-money">
-            <span class="money-label">🎁 Bonus</span>
-            <span class="money-value">₱{{ currentGrade?.money_limit || '0' }}</span>
-          </div>
-        </div>
-        <div class="vip-glow"></div>
+    <!-- 紫色背景区域 -->
+    <div class="header-bg">
+      <div class="top-bar">
+        <van-icon name="arrow-left" size="24" color="#fff" @click="$router.back()" />
+        <span class="title">Rebate Center</span>
+        <div class="placeholder"></div>
       </div>
-      <!-- 下半：额度信息（叠上去） -->
-      <div class="combo-quota">
-        <div class="quota-label">Valid Bet Amount</div>
-        <div class="quota-amount">₱{{ formatMoney(quota.valid_bet_amount) }}</div>
-        <div class="quota-time" v-if="quota.last_rebate_time">
-          Last rebate: {{ quota.last_rebate_time }}
+      <!-- VIP信息 -->
+      <div class="vip-hero">
+        <div class="vip-left">
+          <div class="vip-badge">👑 {{ currentGrade?.name || 'VIP0' }}</div>
+          <div class="vip-sub">Your current rebate level</div>
+        </div>
+        <div class="vip-stats">
+          <div class="stat-item">
+            <span class="stat-val">{{ currentGrade?.rebate_percent_egame || '0.00' }}%</span>
+            <span class="stat-label">E-Game Rebate</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-val green">₱{{ currentGrade?.money_limit || '0' }}</span>
+            <span class="stat-label">Upgrade Bonus</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 洗码按钮 -->
-    <div class="wash-btn-area">
+    <!-- 额度卡片（浮在紫色背景下方） -->
+    <div class="quota-card">
+      <div class="quota-top">
+        <span class="quota-label">Valid Bet Amount</span>
+        <span class="quota-time" v-if="quota.last_rebate_time">{{ quota.last_rebate_time }}</span>
+      </div>
+      <div class="quota-amount">₱{{ formatMoney(quota.valid_bet_amount) }}</div>
       <div
         class="wash-btn"
         :class="{ disabled: isWashing || quota.valid_bet_amount <= 0 }"
         @click="handleWashCode"
       >
-        {{ isWashing ? 'Processing...' : '💰 Wash Code Now' }}
+        {{ isWashing ? 'Processing...' : '💰 Claim Rebate' }}
       </div>
     </div>
 
     <!-- VIP等级列表 -->
     <div class="vip-section">
-      <div class="section-title">👑 VIP Rebate Rates</div>
+      <div class="section-header">
+        <span class="section-title">VIP Rebate Rates</span>
+        <span class="section-hint">Swipe to view all →</span>
+      </div>
       <div class="vip-list" ref="vipListRef">
         <div
           v-for="(grade, index) in gradeList"
@@ -55,18 +56,18 @@
           class="vip-card"
           :class="{ current: grade.id === userGradeId }"
         >
-          <div class="card-header">
-            <span class="card-badge" :style="getBadgeStyle(index)">{{ grade.name }}</span>
-            <span v-if="grade.id === userGradeId" class="current-tag">Current</span>
+          <div class="card-top" :style="getBadgeStyle(index)">
+            <span class="card-name">{{ grade.name }}</span>
+            <span v-if="grade.id === userGradeId" class="current-tag">✓ You</span>
           </div>
-          <div class="card-rates">
-            <div class="cr-row">
-              <span class="cr-label">🎰 E-Game Rebate</span>
-              <span class="cr-val">{{ grade.rebate_percent_egame }}%</span>
+          <div class="card-body">
+            <div class="cb-row">
+              <span class="cb-label">Rebate</span>
+              <span class="cb-val">{{ grade.rebate_percent_egame }}%</span>
             </div>
-            <div class="cr-row">
-              <span class="cr-label">🎁 Upgrade Bonus</span>
-              <span class="cr-val bonus">₱{{ grade.money_limit }}</span>
+            <div class="cb-row">
+              <span class="cb-label">Bonus</span>
+              <span class="cb-val bonus">₱{{ grade.money_limit }}</span>
             </div>
           </div>
         </div>
@@ -75,12 +76,24 @@
 
     <!-- 规则 -->
     <div class="rules-section">
-      <div class="rules-title">📋 Rules</div>
+      <div class="rules-title">Rules</div>
       <div class="rules-list">
-        <div class="rule-item">1. Rebate is calculated based on your valid bet amount</div>
-        <div class="rule-item">2. Higher VIP level = higher rebate percentage</div>
-        <div class="rule-item">3. Rebate is credited instantly to your balance</div>
-        <div class="rule-item">4. Wash code resets after each claim</div>
+        <div class="rule-item">
+          <span class="rule-num">1</span>
+          <span class="rule-text">Rebate is calculated based on your valid bet amount</span>
+        </div>
+        <div class="rule-item">
+          <span class="rule-num">2</span>
+          <span class="rule-text">Higher VIP level = higher rebate percentage</span>
+        </div>
+        <div class="rule-item">
+          <span class="rule-num">3</span>
+          <span class="rule-text">Rebate is credited instantly to your balance</span>
+        </div>
+        <div class="rule-item">
+          <span class="rule-num">4</span>
+          <span class="rule-text">Wash code resets after each claim</span>
+        </div>
       </div>
     </div>
 
@@ -88,8 +101,10 @@
     <teleport to="body">
       <div v-if="showResultDialog" class="result-overlay" @click="closeResultDialog">
         <div class="result-dialog" @click.stop>
-          <div class="rd-icon">🎉</div>
-          <div class="rd-title">Rebate Successful!</div>
+          <div class="rd-check">✅</div>
+          <div class="rd-title">Rebate Claimed!</div>
+          <div class="rd-amount">₱{{ formatMoneyPrecise(washResult.rebate_amount) }}</div>
+          <div class="rd-sub">has been credited to your balance</div>
           <div class="rd-info">
             <div class="rd-row">
               <span>Valid Bet</span><em>₱{{ formatMoney(washResult.valid_bet_amount) }}</em>
@@ -97,11 +112,8 @@
             <div class="rd-row">
               <span>Rate</span><em>{{ washResult.rebate_percent }}%</em>
             </div>
-            <div class="rd-row highlight">
-              <span>Rebate Amount</span><em>₱{{ formatMoneyPrecise(washResult.rebate_amount) }}</em>
-            </div>
           </div>
-          <div class="rd-btn" @click="closeResultDialog">OK</div>
+          <div class="rd-btn" @click="closeResultDialog">Done</div>
         </div>
       </div>
     </teleport>
@@ -298,149 +310,128 @@ onBeforeUnmount(() => {
   padding-bottom: 80px;
 }
 
-// 顶部导航栏 - 和report页面一致的紫色渐变
+// ===== 紫色头部背景 =====
+.header-bg {
+  background: linear-gradient(180deg, #552583 0%, #6b2fa0 60%, #7b3fa8 100%);
+  padding-bottom: 50px;
+  border-radius: 0 0 24px 24px;
+}
+
 .top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  background: $gradient-purple;
-  color: $text-color-light;
-
+  color: #fff;
   .title {
     font-size: 18px;
     font-weight: 600;
   }
-
   .placeholder {
     width: 24px;
   }
 }
 
-// 合并卡片
-.combo-card {
-  margin: 16px 16px 12px;
-  border-radius: 16px;
-  overflow: visible;
-  box-shadow: $shadow-md;
-
-  .combo-vip {
-    padding: 16px 20px 20px;
-    background: linear-gradient(135deg, #552583 0%, #3a1a5c 50%, #6b2fa0 100%);
-    border-radius: 16px 16px 0 0;
-    position: relative;
-    overflow: hidden;
+.vip-hero {
+  padding: 0 20px;
+  .vip-left {
+    margin-bottom: 14px;
+  }
+  .vip-badge {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fdb927;
+    text-shadow: 0 2px 12px rgba(253, 185, 39, 0.4);
+  }
+  .vip-sub {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 2px;
+  }
+  .vip-stats {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-
-    .vip-badge {
-      font-size: 22px;
-      font-weight: 900;
-      color: #fdb927;
-      text-shadow: 0 0 20px rgba(253, 185, 39, 0.5);
-      letter-spacing: 1px;
-      flex-shrink: 0;
-      margin-left: 8px;
-    }
-
-    .vip-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-    }
-
-    .vip-rate {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      .rate-label {
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.6);
-      }
-      .rate-value {
-        font-size: 16px;
-        font-weight: 800;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    padding: 10px 0;
+    .stat-item {
+      flex: 1;
+      text-align: center;
+      .stat-val {
+        display: block;
+        font-size: 18px;
+        font-weight: 900;
         color: #fdb927;
+        &.green {
+          color: #4ade80;
+        }
+      }
+      .stat-label {
+        display: block;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.55);
+        margin-top: 2px;
       }
     }
-
-    .vip-money {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      .money-label {
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.6);
-      }
-      .money-value {
-        font-size: 14px;
-        font-weight: 800;
-        color: #4ade80;
-      }
-    }
-
-    .vip-glow {
-      position: absolute;
-      top: -50%;
-      right: -30%;
-      width: 200px;
-      height: 200px;
-      background: radial-gradient(circle, rgba(253, 185, 39, 0.1) 0%, transparent 70%);
-      border-radius: 50%;
-    }
-  }
-
-  .combo-quota {
-    margin-top: -14px;
-    position: relative;
-    z-index: 1;
-    padding: 20px;
-    background: $background-color;
-    border-radius: 16px;
-    border: 1px solid $border-color;
-    text-align: center;
-
-    .quota-label {
-      font-size: 12px;
-      color: $text-color-secondary;
-    }
-    .quota-amount {
-      font-size: 36px;
-      font-weight: 900;
-      color: $primary-color;
-      margin: 6px 0;
-    }
-    .quota-time {
-      font-size: 11px;
-      color: #999;
+    .stat-divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
     }
   }
 }
 
-// 洗码按钮
-.wash-btn-area {
-  margin: 0 16px 16px;
-
-  .wash-btn {
-    text-align: center;
-    padding: 14px;
-    border-radius: 14px;
-    font-size: 16px;
+// ===== 额度卡片（上浮层次感） =====
+.quota-card {
+  margin: -30px 16px 0;
+  position: relative;
+  z-index: 2;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(85, 37, 131, 0.12);
+  text-align: center;
+  .quota-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    .quota-label {
+      font-size: 12px;
+      color: $text-color-secondary;
+      font-weight: 500;
+    }
+    .quota-time {
+      font-size: 10px;
+      color: #bbb;
+    }
+  }
+  .quota-amount {
+    font-size: 34px;
     font-weight: 900;
+    color: $primary-color;
+    margin: 4px 0 16px;
+    letter-spacing: -0.5px;
+  }
+  .wash-btn {
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 800;
     cursor: pointer;
-    background: linear-gradient(135deg, #fdb927 0%, #f4a020 100%);
-    color: #1a0a2e;
-    letter-spacing: 0.5px;
-    box-shadow: 0 4px 20px rgba(253, 185, 39, 0.3);
+    background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+    color: #fff;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 16px rgba(85, 37, 131, 0.3);
     transition: all 0.2s;
-
     &:active:not(.disabled) {
       transform: scale(0.98);
+      box-shadow: 0 2px 8px rgba(85, 37, 131, 0.3);
     }
     &.disabled {
-      background: #d1d5db;
+      background: #e5e7eb;
       color: #9ca3af;
       box-shadow: none;
       cursor: default;
@@ -448,22 +439,29 @@ onBeforeUnmount(() => {
   }
 }
 
-// VIP等级列表
+// ===== VIP等级列表 =====
 .vip-section {
-  margin: 0 16px 16px;
-
-  .section-title {
-    font-size: 16px;
-    font-weight: 900;
-    color: $primary-color;
+  margin: 20px 16px 16px;
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 12px;
   }
-
+  .section-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: $text-color;
+  }
+  .section-hint {
+    font-size: 11px;
+    color: #bbb;
+  }
   .vip-list {
     display: flex;
     gap: 10px;
     overflow-x: auto;
-    padding-bottom: 8px;
+    padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     cursor: grab;
@@ -472,57 +470,52 @@ onBeforeUnmount(() => {
       display: none;
     }
   }
-
   .vip-card {
-    min-width: 160px;
+    min-width: 140px;
     flex-shrink: 0;
-    padding: 14px;
-    border-radius: 14px;
-    background: $background-color;
-    border: 1px solid $border-color;
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
     transition: all 0.2s;
-
     &.current {
-      background: $background-color;
       border-color: $primary-color;
-      box-shadow: 0 0 12px rgba(85, 37, 131, 0.15);
+      box-shadow: 0 2px 12px rgba(85, 37, 131, 0.18);
     }
-
-    .card-header {
+    .card-top {
+      padding: 8px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
-
-      .card-badge {
+      .card-name {
         font-size: 13px;
         font-weight: 900;
-        padding: 3px 10px;
-        border-radius: 20px;
         color: #fff;
+        letter-spacing: 0.5px;
       }
-
       .current-tag {
-        font-size: 10px;
-        color: $primary-color;
-        font-weight: 700;
-        background: rgba(85, 37, 131, 0.1);
-        padding: 2px 8px;
-        border-radius: 10px;
+        font-size: 9px;
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.2);
+        padding: 1px 6px;
+        border-radius: 8px;
+        font-weight: 600;
       }
     }
-
-    .card-rates {
-      .cr-row {
+    .card-body {
+      padding: 10px 12px;
+      .cb-row {
         display: flex;
         justify-content: space-between;
-        padding: 3px 0;
-        .cr-label {
+        align-items: center;
+        padding: 2px 0;
+        .cb-label {
           font-size: 11px;
           color: #999;
         }
-        .cr-val {
-          font-size: 12px;
+        .cb-val {
+          font-size: 13px;
           font-weight: 800;
           color: $primary-color;
           &.bonus {
@@ -534,27 +527,49 @@ onBeforeUnmount(() => {
   }
 }
 
-// 规则
+// ===== 规则 =====
 .rules-section {
-  margin: 0 16px;
+  margin: 0 16px 16px;
   padding: 16px;
-  background: $background-color;
+  background: #fff;
   border-radius: 14px;
-  border: 1px solid $border-color;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   .rules-title {
-    font-size: 14px;
-    font-weight: bold;
-    color: $primary-color;
-    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    color: $text-color;
+    margin-bottom: 12px;
   }
   .rule-item {
-    font-size: 12px;
-    color: $text-color-secondary;
-    line-height: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+    .rule-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #552583, #7b3fa8);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .rule-text {
+      font-size: 12px;
+      color: $text-color-secondary;
+      line-height: 1.6;
+    }
   }
 }
 
-// 洗码成功弹窗
+// ===== 成功弹窗 =====
 .result-overlay {
   position: fixed;
   top: 0;
@@ -567,59 +582,62 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
 }
-
 .result-dialog {
   text-align: center;
-  padding: 32px 24px 24px;
+  padding: 28px 24px 20px;
   width: 300px;
-  background: $background-color;
+  background: #fff;
   border-radius: 20px;
-  box-shadow: $shadow-lg;
-  animation: dialogPop 0.35s ease;
-
-  .rd-icon {
-    font-size: 48px;
-    margin-bottom: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+  animation: dialogPop 0.3s ease;
+  .rd-check {
+    font-size: 40px;
+    margin-bottom: 4px;
   }
   .rd-title {
     font-size: 18px;
     font-weight: 900;
+    color: $text-color;
+    margin-bottom: 4px;
+  }
+  .rd-amount {
+    font-size: 28px;
+    font-weight: 900;
     color: $primary-color;
+    margin: 4px 0;
+  }
+  .rd-sub {
+    font-size: 12px;
+    color: #999;
     margin-bottom: 16px;
   }
-
   .rd-info {
     background: $background-color-light;
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
     .rd-row {
       display: flex;
       justify-content: space-between;
-      padding: 6px 0;
+      padding: 4px 0;
       span {
-        font-size: 13px;
+        font-size: 12px;
         color: $text-color-secondary;
       }
       em {
-        font-size: 13px;
+        font-size: 12px;
         font-style: normal;
         font-weight: 700;
         color: $text-color;
       }
-      &.highlight em {
-        color: $primary-color;
-        font-size: 18px;
-      }
     }
   }
-
   .rd-btn {
-    background: linear-gradient(135deg, #fdb927, #f4a020);
-    color: #1a0a2e;
+    background: linear-gradient(135deg, #552583, #7b3fa8);
+    color: #fff;
     font-size: 15px;
-    font-weight: 900;
-    padding: 12px;
+    font-weight: 800;
+    padding: 11px;
     border-radius: 12px;
     cursor: pointer;
     &:active {
@@ -630,7 +648,7 @@ onBeforeUnmount(() => {
 
 @keyframes dialogPop {
   from {
-    transform: scale(0.7);
+    transform: scale(0.8);
     opacity: 0;
   }
   to {
