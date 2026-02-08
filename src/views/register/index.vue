@@ -65,6 +65,7 @@
             name="captchaCode"
             label="Captcha"
             placeholder="Enter captcha code"
+            maxlength="4"
             :rules="[{ required: true, message: 'Please enter captcha code' }]"
           >
             <template #button>

@@ -7,12 +7,8 @@
         <span class="logo-text">JILIEVO.CC</span>
       </div>
       <div class="top-actions">
-        <!-- 未登录状态 -->
-        <template v-if="!isLogin">
-          <van-button size="small" color="#FDB927" @click="goToLogin" class="login-btn">
-            Login
-          </van-button>
-        </template>
+        <!-- 未登录状态：不显示顶部Login按钮 -->
+        <template v-if="!isLogin"> </template>
 
         <!-- 已登录状态 -->
         <template v-else>
@@ -40,16 +36,24 @@
         </template>
 
         <div class="language">
-          <span class="flag-icon">🇵🇭</span>
+          <div class="flag-circle">
+            <img src="/flag.jpg" alt="PH" class="flag-img" />
+          </div>
         </div>
         <van-icon name="wap-nav" size="24" color="#fff" @click="showMenu" />
       </div>
     </div>
 
-    <!-- 存款/提款按钮 -->
+    <!-- 存款/提款 或 登录/注册 按钮 -->
     <div class="action-buttons">
-      <van-button class="deposit-btn" block @click="handleDeposit"> Deposit </van-button>
-      <van-button class="withdrawal-btn" block @click="handleWithdrawal"> Withdrawal </van-button>
+      <template v-if="isLogin">
+        <van-button class="deposit-btn" block @click="handleDeposit"> Deposit </van-button>
+        <van-button class="withdrawal-btn" block @click="handleWithdrawal"> Withdrawal </van-button>
+      </template>
+      <template v-else>
+        <van-button class="deposit-btn" block @click="goToLogin"> Login </van-button>
+        <van-button class="withdrawal-btn" block @click="goToRegister"> Register </van-button>
+      </template>
     </div>
 
     <!-- 轮播图 -->
@@ -423,6 +427,10 @@ const selectHall = (hallId: string) => {
 // 方法
 const goToLogin = () => {
   router.push('/login')
+}
+
+const goToRegister = () => {
+  router.push('/register')
 }
 
 const goToUser = () => {
@@ -975,8 +983,20 @@ onMounted(() => {
         }
       }
 
-      .flag-icon {
-        font-size: 24px;
+      .flag-circle {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .flag-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
       }
     }
   }

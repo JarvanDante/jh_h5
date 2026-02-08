@@ -13,7 +13,7 @@
           v-model="phoneInput"
           type="tel"
           placeholder="9XXXXXXXXX"
-          maxlength="15"
+          maxlength="10"
           clearable
         >
           <template #left-icon>
@@ -77,7 +77,7 @@ const validatePhone = (phone: string): boolean => {
     showLocalToast('Please enter your phone number')
     return false
   }
-  const phoneRegex = /^[0-9]{8,15}$/
+  const phoneRegex = /^[0-9]{10}$/
   if (!phoneRegex.test(phone)) {
     showLocalToast('Please enter a valid phone number')
     return false
