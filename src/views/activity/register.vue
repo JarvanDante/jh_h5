@@ -26,19 +26,6 @@
         <div class="amount-desc">Register now and claim your welcome gift!</div>
         <div class="amount-tag">FREE — No Deposit Required</div>
       </div>
-      <div class="confetti">
-        <span
-          v-for="i in 12"
-          :key="i"
-          class="confetti-piece"
-          :style="{
-            left: `${5 + i * 7.5}%`,
-            animationDelay: `${i * 0.25}s`,
-            color: confettiColors[i % confettiColors.length],
-          }"
-          >{{ confettiIcons[i % confettiIcons.length] }}</span
-        >
-      </div>
     </div>
 
     <!-- 3步领取 -->
