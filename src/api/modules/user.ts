@@ -258,4 +258,9 @@ export const userApi = {
   getSiteActivityList(): Promise<any> {
     return request.get('/frontend/app/site-activity-list')
   },
+
+  // 获取消息列表
+  getMessageList(): Promise<any> {
+    return request.get('/frontend/app/message-list')
+  },
 }

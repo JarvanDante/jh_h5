@@ -42,6 +42,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/messages',
+    name: 'Messages',
+    component: () => import('@/views/messages/index.vue'),
+    meta: {
+      title: '消息中心',
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/game',
     name: 'Game',
     component: () => import('@/views/game/index.vue'),

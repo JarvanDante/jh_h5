@@ -13,10 +13,6 @@
           <span class="label">ID:</span>
           <span class="value">{{ userId }}</span>
           <van-icon name="copy" size="16" color="#fff" @click="copyId" />
-          <div class="vip-badge">
-            <van-icon name="crown" size="12" color="#FDB927" />
-            <span>V0</span>
-          </div>
         </div>
         <div class="account-row">
           <span class="label">Account:</span>
@@ -36,10 +32,11 @@
       </div>
 
       <!-- 消息图标 -->
-      <div class="message-icon">
-        <van-badge :content="messageCount" max="99">
-          <van-icon name="envelop-o" size="32" color="#fff" @click="goToMessages" />
-        </van-badge>
+      <div class="message-icon" @click="goToMessages">
+        <van-icon name="envelop-o" size="26" color="#fdb927" />
+        <span v-if="messageCount > 0" class="msg-badge">{{
+          messageCount > 99 ? '99+' : messageCount
+        }}</span>
       </div>
     </div>
 
@@ -465,7 +462,7 @@ const refreshBalance = async () => {
 }
 
 const goToMessages = () => {
-  showToast('Messages')
+  router.push('/messages')
 }
 
 const handleWithdraw = () => {
@@ -868,6 +865,31 @@ onMounted(async () => {
       right: 20px;
       cursor: pointer;
       transition: transform 0.2s;
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+
+      :deep(.van-icon) {
+        background: none !important;
+        border: none !important;
+      }
+
+      .msg-badge {
+        position: absolute;
+        top: -6px;
+        right: -8px;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        border-radius: 8px;
+        background: #ff4757;
+        color: #fff;
+        font-size: 10px;
+        font-weight: bold;
+        line-height: 16px;
+        text-align: center;
+      }
 
       &:active {
         transform: scale(0.9);
