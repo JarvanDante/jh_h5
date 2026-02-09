@@ -88,61 +88,6 @@
           </div>
         </div>
       </van-tab>
-
-      <van-tab title="Redeem">
-        <div class="promotion-list">
-          <div class="redeem-section">
-            <div class="redeem-input-wrapper">
-              <van-field
-                v-model="redeemCode"
-                placeholder="Enter your redeem code"
-                clearable
-                class="redeem-input"
-              />
-              <van-button class="redeem-btn" color="#FDB927" @click="handleRedeem"
-                >Redeem</van-button
-              >
-            </div>
-          </div>
-        </div>
-      </van-tab>
-
-      <van-tab title="History">
-        <div class="promotion-list">
-          <div v-if="historyList.length === 0" class="empty-state">
-            <van-empty description="No promotion history" />
-          </div>
-          <div v-else class="history-list">
-            <div v-for="item in historyList" :key="item.id" class="history-item">
-              <div class="history-info">
-                <h4>{{ item.title }}</h4>
-                <p class="history-time">{{ item.time }}</p>
-              </div>
-              <div class="history-status" :class="item.status">{{ item.statusText }}</div>
-            </div>
-          </div>
-        </div>
-      </van-tab>
-
-      <van-tab title="Reward">
-        <div class="promotion-list">
-          <div v-if="rewardList.length === 0" class="empty-state">
-            <van-empty description="No rewards available" />
-          </div>
-          <div v-else class="reward-list">
-            <div v-for="reward in rewardList" :key="reward.id" class="reward-item">
-              <div class="reward-icon">🎁</div>
-              <div class="reward-info">
-                <h4>{{ reward.title }}</h4>
-                <p class="reward-amount">₱{{ reward.amount }}</p>
-              </div>
-              <van-button size="small" color="#FDB927" @click="handleClaimReward(reward)"
-                >Claim</van-button
-              >
-            </div>
-          </div>
-        </div>
-      </van-tab>
     </van-tabs>
   </div>
 </template>
@@ -154,7 +99,6 @@ import { showToast } from 'vant'
 
 const router = useRouter()
 const activeTab = ref(0)
-const redeemCode = ref('')
 
 // 活动促销数据
 const eventPromotions = ref([
@@ -210,57 +154,12 @@ const vipPromotions = ref([
   },
 ])
 
-// 历史记录
-const historyList = ref([
-  {
-    id: 1,
-    title: 'Welcome Bonus',
-    time: '2025-01-20 10:30:00',
-    status: 'completed',
-    statusText: 'Completed',
-  },
-  {
-    id: 2,
-    title: 'Daily Spin',
-    time: '2025-01-21 15:20:00',
-    status: 'pending',
-    statusText: 'Pending',
-  },
-])
-
-// 奖励列表
-const rewardList = ref([
-  {
-    id: 1,
-    title: 'Login Reward',
-    amount: '100.00',
-  },
-  {
-    id: 2,
-    title: 'Daily Task Reward',
-    amount: '50.00',
-  },
-])
-
 const goBack = () => {
   router.back()
 }
 
 const handlePromoClick = (promo: any) => {
   showToast(`View details: ${promo.title}`)
-}
-
-const handleRedeem = () => {
-  if (!redeemCode.value) {
-    showToast('Please enter redeem code')
-    return
-  }
-  showToast(`Redeeming: ${redeemCode.value}`)
-  redeemCode.value = ''
-}
-
-const handleClaimReward = (reward: any) => {
-  showToast(`Claiming reward: ${reward.title}`)
 }
 </script>
 
