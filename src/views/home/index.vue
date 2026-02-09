@@ -209,6 +209,42 @@
 
     <!-- 广告弹窗 -->
     <AdPopup v-model:show="showAdPopup" :ads="popupAds" @click="handleAdPopupClick" />
+
+    <!-- 右侧抽屉菜单 -->
+    <div v-if="menuVisible" class="drawer-overlay" @click="menuVisible = false"></div>
+    <transition name="drawer-slide">
+      <div v-if="menuVisible" class="drawer-panel" @click.stop>
+        <div class="drawer-header">
+          <div class="drawer-logo">
+            <div class="drawer-logo-img">🎰</div>
+            <span class="drawer-logo-text">JILIEVO.CC</span>
+          </div>
+          <van-icon name="cross" size="20" color="#999" @click="menuVisible = false" />
+        </div>
+        <div class="drawer-menu">
+          <div
+            v-for="item in menuItems"
+            :key="item.path"
+            class="drawer-menu-item"
+            @click="handleMenuClick(item.path)"
+          >
+            <van-icon :name="item.icon" size="22" color="#552583" />
+            <span>{{ item.label }}</span>
+            <van-icon name="arrow" size="14" color="#ccc" class="arrow" />
+          </div>
+        </div>
+        <div class="drawer-footer">
+          <div v-if="isLogin" class="logout-btn" @click="handleLogout">
+            <van-icon name="revoke" size="20" color="#ff4757" />
+            <span>Logout</span>
+          </div>
+          <div v-else class="logout-btn" @click="handleMenuClick('/login')">
+            <van-icon name="manager-o" size="20" color="#552583" />
+            <span>Login / Register</span>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -467,7 +503,32 @@ const goToUser = () => {
 }
 
 const showMenu = () => {
-  showToast('打开菜单')
+  menuVisible.value = true
+}
+
+const menuVisible = ref(false)
+
+const menuItems = [
+  { icon: 'home-o', label: 'Home', path: '/' },
+  { icon: 'gift-o', label: 'Promotion', path: '/promotion' },
+  { icon: 'friends-o', label: 'Invite', path: '/invite_activity' },
+  { icon: 'gold-coin-o', label: 'Deposit', path: '/deposit' },
+  { icon: 'card', label: 'Withdraw', path: '/withdraw' },
+  { icon: 'bar-chart-o', label: 'Report', path: '/report' },
+  { icon: 'shield-o', label: 'Security', path: '/security' },
+  { icon: 'manager-o', label: 'Profile', path: '/user' },
+]
+
+const handleMenuClick = (path: string) => {
+  menuVisible.value = false
+  router.push(path)
+}
+
+const handleLogout = () => {
+  menuVisible.value = false
+  userStore.logout()
+  showToast('Logged out')
+  router.push('/login')
 }
 
 const handleDeposit = () => {
@@ -1720,5 +1781,122 @@ onUnmounted(() => {
       }
     }
   }
+}
+
+// 抽屉菜单样式
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 220px;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 20px 20px;
+  background: linear-gradient(135deg, #552583, #7b3fa8);
+}
+
+.drawer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drawer-logo-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fdb927;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.drawer-logo-text {
+  color: #fdb927;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.drawer-menu {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+}
+
+.drawer-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:active {
+    background: #f5f0fa;
+  }
+
+  span {
+    flex: 1;
+    font-size: 15px;
+    color: #333;
+    font-weight: 500;
+  }
+
+  .arrow {
+    flex-shrink: 0;
+  }
+}
+
+.drawer-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  cursor: pointer;
+
+  span {
+    font-size: 15px;
+    color: #ff4757;
+    font-weight: 500;
+  }
+}
+
+.drawer-slide-enter-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-slide-leave-active {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-slide-enter-from,
+.drawer-slide-leave-to {
+  transform: translateX(100%);
 }
 </style>

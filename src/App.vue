@@ -93,6 +93,7 @@ const navigateTo = (path: string) => {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
+  transform: translateZ(0);
 }
 
 // 移动设备适配：小于 414px 时占满屏幕
