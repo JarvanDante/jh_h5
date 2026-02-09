@@ -23,10 +23,13 @@
         </div>
         <div
           class="tabbar-item"
-          :class="{ active: currentRoute === '/invite' }"
-          @click="navigateTo('/invite')"
+          :class="{ active: currentRoute === '/invite_activity' }"
+          @click="navigateTo('/invite_activity')"
         >
-          <van-icon :name="currentRoute === '/invite' ? 'friends' : 'friends-o'" size="20" />
+          <van-icon
+            :name="currentRoute === '/invite_activity' ? 'friends' : 'friends-o'"
+            size="20"
+          />
           <span>Invite</span>
         </div>
         <div

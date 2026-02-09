@@ -518,7 +518,7 @@ const goToReport = () => {
 }
 
 const goToInvite = () => {
-  router.push('/invite')
+  router.push('/invite_activity')
 }
 
 const goToRebate = () => {

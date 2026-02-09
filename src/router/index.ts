@@ -82,12 +82,6 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '注册送活动' },
   },
   {
-    path: '/invite_activity',
-    name: 'InviteActivity',
-    component: () => import('@/views/activity/invite.vue'),
-    meta: { title: '邀请朋友活动' },
-  },
-  {
     path: '/rebate',
     name: 'RebateActivity',
     component: () => import('@/views/activity/rebate.vue'),
@@ -100,8 +94,8 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'VIP权益' },
   },
   {
-    path: '/invite',
-    name: 'Invite',
+    path: '/invite_activity',
+    name: 'InviteActivity',
     component: () => import('@/views/invite/index.vue'),
     meta: {
       title: '邀请好友',

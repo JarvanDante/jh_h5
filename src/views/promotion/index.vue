@@ -16,75 +16,63 @@
     >
       <van-tab title="Events">
         <div class="promotion-list">
-          <div
-            v-for="promo in eventPromotions"
-            :key="promo.id"
-            class="promo-card"
-            @click="handlePromoClick(promo)"
+          <van-loading v-if="eventsLoading" type="spinner" size="24px" class="loading-center"
+            >Loading...</van-loading
           >
-            <div class="card-header">
-              <span class="site-badge">PH988.PH</span>
-            </div>
-            <div class="card-content">
-              <div class="promo-info">
-                <h3 class="promo-title">{{ promo.title }}</h3>
-                <p class="promo-desc">{{ promo.description }}</p>
-                <van-button class="claim-btn" size="small" color="#FDB927">Claim Now</van-button>
+          <template v-else-if="eventPromotions.length > 0">
+            <div
+              v-for="promo in eventPromotions"
+              :key="promo.id"
+              class="event-card"
+              @click="handlePromoClick(promo)"
+            >
+              <div class="event-icon">{{ getActivityIcon(promo.code) }}</div>
+              <div class="event-body">
+                <h3 class="event-title">{{ promo.name }}</h3>
+                <p v-if="promo.description" class="event-desc">{{ promo.description }}</p>
+                <div class="event-status">
+                  <span v-if="promo.status === 1" class="status-tag active">Active</span>
+                  <span v-else class="status-tag inactive">Inactive</span>
+                </div>
               </div>
-              <div class="promo-image">
-                <img :src="promo.image" :alt="promo.title" />
-              </div>
+              <van-icon name="arrow" size="20" color="#fdb927" />
             </div>
-          </div>
+          </template>
+          <van-empty v-else description="No events available" />
         </div>
       </van-tab>
 
       <van-tab title="Rebate">
         <div class="promotion-list">
-          <div
-            v-for="promo in rebatePromotions"
-            :key="promo.id"
-            class="promo-card"
-            @click="handlePromoClick(promo)"
-          >
-            <div class="card-header">
-              <span class="site-badge">PH988.PH</span>
-            </div>
-            <div class="card-content">
-              <div class="promo-info">
-                <h3 class="promo-title">{{ promo.title }}</h3>
-                <p class="promo-desc">{{ promo.description }}</p>
-                <van-button class="claim-btn" size="small" color="#FDB927">Claim Now</van-button>
-              </div>
-              <div class="promo-image">
-                <img :src="promo.image" :alt="promo.title" />
+          <div class="rebate-card" @click="router.push('/rebate')">
+            <div class="rebate-icon">💰</div>
+            <div class="rebate-body">
+              <h3 class="rebate-title">Daily Rebate</h3>
+              <p class="rebate-desc">Bet more, earn more. Get rebate on every bet you place.</p>
+              <div class="rebate-highlights">
+                <span class="highlight-tag">Up to 1.2%</span>
+                <span class="highlight-tag">Auto Claim</span>
+                <span class="highlight-tag">Daily</span>
               </div>
             </div>
+            <van-icon name="arrow" size="20" color="#fdb927" />
           </div>
         </div>
       </van-tab>
 
       <van-tab title="VIP">
         <div class="promotion-list">
-          <div
-            v-for="promo in vipPromotions"
-            :key="promo.id"
-            class="promo-card"
-            @click="handlePromoClick(promo)"
-          >
-            <div class="card-header">
-              <span class="site-badge">PH988.PH</span>
-            </div>
-            <div class="card-content">
-              <div class="promo-info">
-                <h3 class="promo-title">{{ promo.title }}</h3>
-                <p class="promo-desc">{{ promo.description }}</p>
-                <van-button class="claim-btn" size="small" color="#FDB927">Claim Now</van-button>
-              </div>
-              <div class="promo-image">
-                <img :src="promo.image" :alt="promo.title" />
+          <div class="vip-card" @click="router.push('/vip')">
+            <div class="vip-crown">👑</div>
+            <div class="vip-body">
+              <h3 class="vip-title">VIP Club</h3>
+              <p class="vip-desc">Level up and unlock exclusive rewards, bonuses and privileges.</p>
+              <div class="vip-highlights">
+                <span class="highlight-tag">Upgrade Bonus</span>
+                <span class="highlight-tag">Exclusive</span>
               </div>
             </div>
+            <van-icon name="arrow" size="20" color="#fdb927" />
           </div>
         </div>
       </van-tab>
@@ -93,73 +81,61 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
+import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
 const activeTab = ref(0)
 
-// 活动促销数据
-const eventPromotions = ref([
-  {
-    id: 1,
-    title: 'Welcome Bonus',
-    description: 'Get 100% bonus up to ₱10,000 on your first deposit!',
-    image: 'https://via.placeholder.com/120x120/FDB927/552583?text=Welcome',
-  },
-  {
-    id: 2,
-    title: 'Daily Spin',
-    description: 'Spin the wheel daily and win amazing prizes!',
-    image: 'https://via.placeholder.com/120x120/552583/FDB927?text=Spin',
-  },
-  {
-    id: 3,
-    title: 'Weekend Bonus',
-    description: "Extra 50% bonus every weekend. Don't miss out!",
-    image: 'https://via.placeholder.com/120x120/FDB927/552583?text=Weekend',
-  },
-])
+// Events 活动数据（从接口获取）
+const eventPromotions = ref<any[]>([])
+const eventsLoading = ref(false)
 
-// 返水促销数据
-const rebatePromotions = ref([
-  {
-    id: 4,
-    title: 'Daily Rebate',
-    description: 'Get up to 1.2% daily rebate on all your bets!',
-    image: 'https://via.placeholder.com/120x120/552583/FDB927?text=Rebate',
-  },
-  {
-    id: 5,
-    title: 'Weekly Cashback',
-    description: 'Receive 5% cashback on your weekly losses!',
-    image: 'https://via.placeholder.com/120x120/FDB927/552583?text=Cashback',
-  },
-])
+// 获取活动列表
+const fetchSiteActivities = async () => {
+  try {
+    eventsLoading.value = true
+    const res = await userApi.getSiteActivityList()
+    console.log('活动列表响应:', res)
+    if (res?.list && res.list.length > 0) {
+      eventPromotions.value = res.list
+    } else if (Array.isArray(res)) {
+      eventPromotions.value = res
+    }
+  } catch (error) {
+    console.error('获取活动列表失败:', error)
+  } finally {
+    eventsLoading.value = false
+  }
+}
 
-// VIP促销数据
-const vipPromotions = ref([
-  {
-    id: 6,
-    title: 'VIP Exclusive',
-    description: 'Join VIP club and enjoy exclusive benefits!',
-    image: 'https://via.placeholder.com/120x120/FDB927/552583?text=VIP',
-  },
-  {
-    id: 7,
-    title: 'VIP Birthday Bonus',
-    description: 'Special birthday bonus for all VIP members!',
-    image: 'https://via.placeholder.com/120x120/552583/FDB927?text=Birthday',
-  },
-])
+onMounted(() => {
+  fetchSiteActivities()
+})
 
 const goBack = () => {
   router.back()
 }
 
 const handlePromoClick = (promo: any) => {
-  showToast(`View details: ${promo.title}`)
+  if (promo.uri) {
+    router.push(promo.uri)
+  }
+}
+
+// 根据活动 code 返回对应图标
+const getActivityIcon = (code: string) => {
+  const iconMap: Record<string, string> = {
+    LUCKY: '🎡',
+    DEPOSIT: '💰',
+    REGISTER: '🎁',
+    INVITE: '👥',
+    SIGNIN: '📅',
+    REBATE: '💵',
+  }
+  return iconMap[code] || '🎯'
 }
 </script>
 
@@ -223,6 +199,208 @@ const handlePromoClick = (promo: any) => {
   .promotion-list {
     padding: 16px;
     min-height: calc(100vh - 150px);
+
+    .loading-center {
+      display: flex;
+      justify-content: center;
+      padding: 40px 0;
+    }
+  }
+
+  .event-card {
+    background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    .event-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: rgba(253, 185, 39, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .event-body {
+      flex: 1;
+      min-width: 0;
+
+      .event-title {
+        color: #fff;
+        font-size: 15px;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .event-desc {
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 12px;
+        line-height: 1.4;
+        margin-bottom: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .event-status {
+        .status-tag {
+          font-size: 11px;
+          font-weight: 600;
+          padding: 2px 8px;
+          border-radius: 10px;
+
+          &.active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+          }
+
+          &.inactive {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+          }
+        }
+      }
+    }
+  }
+
+  .vip-card {
+    background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    .vip-crown {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(253, 185, 39, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .vip-body {
+      flex: 1;
+      min-width: 0;
+
+      .vip-title {
+        color: #fff;
+        font-size: 17px;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .vip-desc {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+        line-height: 1.4;
+        margin-bottom: 10px;
+      }
+
+      .vip-highlights {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+
+        .highlight-tag {
+          background: rgba(253, 185, 39, 0.2);
+          border: 1px solid rgba(253, 185, 39, 0.4);
+          color: #fdb927;
+          padding: 2px 8px;
+          border-radius: 10px;
+          font-size: 11px;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  .rebate-card {
+    background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    .rebate-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(253, 185, 39, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .rebate-body {
+      flex: 1;
+      min-width: 0;
+
+      .rebate-title {
+        color: #fff;
+        font-size: 17px;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .rebate-desc {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+        line-height: 1.4;
+        margin-bottom: 10px;
+      }
+
+      .rebate-highlights {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+
+        .highlight-tag {
+          background: rgba(253, 185, 39, 0.2);
+          border: 1px solid rgba(253, 185, 39, 0.4);
+          color: #fdb927;
+          padding: 2px 8px;
+          border-radius: 10px;
+          font-size: 11px;
+          font-weight: 600;
+        }
+      }
+    }
   }
 
   .promo-card {
@@ -308,137 +486,6 @@ const handlePromoClick = (promo: any) => {
           height: 100%;
           object-fit: contain;
           border-radius: 8px;
-        }
-      }
-    }
-  }
-
-  .redeem-section {
-    .redeem-input-wrapper {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-
-      .redeem-input {
-        flex: 1;
-
-        :deep(.van-field__control) {
-          color: #fff;
-        }
-
-        :deep(.van-cell) {
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(253, 185, 39, 0.3);
-          border-radius: 8px;
-          color: #fff;
-        }
-      }
-
-      .redeem-btn {
-        font-weight: bold;
-        border-radius: 8px;
-        padding: 12px 24px;
-      }
-    }
-  }
-
-  .empty-state {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 300px;
-  }
-
-  .history-list {
-    .history-item {
-      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
-      border: none;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 12px;
-      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      .history-info {
-        flex: 1;
-
-        h4 {
-          color: #fff;
-          font-size: 15px;
-          font-weight: bold;
-          margin-bottom: 4px;
-        }
-
-        .history-time {
-          color: #999;
-          font-size: 12px;
-        }
-      }
-
-      .history-status {
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: bold;
-
-        &.completed {
-          background: rgba(34, 197, 94, 0.2);
-          color: #22c55e;
-        }
-
-        &.pending {
-          background: rgba(251, 191, 36, 0.2);
-          color: #fbbf24;
-        }
-      }
-    }
-  }
-
-  .reward-list {
-    .reward-item {
-      background: linear-gradient(135deg, #552583 0%, #7b3fa8 100%);
-      border: none;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 12px;
-      box-shadow: 0 4px 12px rgba(85, 37, 131, 0.4);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .reward-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #fdb927, #ff9800);
-        border-radius: 50%;
-      }
-
-      .reward-info {
-        flex: 1;
-
-        h4 {
-          color: #fff;
-          font-size: 15px;
-          font-weight: bold;
-          margin-bottom: 4px;
-        }
-
-        .reward-amount {
-          color: #fdb927;
-          font-size: 16px;
-          font-weight: bold;
         }
       }
     }

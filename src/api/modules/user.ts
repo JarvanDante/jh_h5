@@ -253,4 +253,9 @@ export const userApi = {
   getGradeList(): Promise<GradeListResponse> {
     return request.get('/frontend/app/grade-list')
   },
+
+  // 获取站点活动列表
+  getSiteActivityList(): Promise<any> {
+    return request.get('/frontend/app/site-activity-list')
+  },
 }
