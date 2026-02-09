@@ -98,8 +98,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { getRegisterBonusRecentWinners } from '@/api/modules/balance'
 
 const router = useRouter()
 
@@ -125,7 +126,13 @@ function maskName(name: string): string {
   return name.slice(0, 3) + stars + name.slice(-3)
 }
 
-const regWinners = ref([
+interface RegisterWinnerDisplay {
+  name: string
+  amount: string
+  time: string
+}
+
+const regWinners = ref<RegisterWinnerDisplay[]>([
   { name: maskName('Paulxx8'), amount: '188', time: '2min ago' },
   { name: maskName('Jamesz3'), amount: '188', time: '5min ago' },
   { name: maskName('Angelx1'), amount: '188', time: '8min ago' },
@@ -141,6 +148,57 @@ const claimedCount = ref(28463)
 function goRegister() {
   router.push('/register')
 }
+
+function formatAmount(value: number): string {
+  const amount = Number(value || 0)
+  if (Number.isInteger(amount)) {
+    return amount.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  }
+  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function resolveWinnerName(maskNameValue: string, userId: number): string {
+  const trimmed = (maskNameValue || '').trim()
+  if (trimmed) {
+    return trimmed
+  }
+  return `U***${String(userId || 0).slice(-3)}`
+}
+
+function formatRelativeTime(value: string): string {
+  if (!value) return 'just now'
+  const date = new Date(value.replace(/-/g, '/'))
+  if (Number.isNaN(date.getTime())) return 'just now'
+  const diffMs = Date.now() - date.getTime()
+  if (diffMs <= 0) return 'just now'
+  const minutes = Math.floor(diffMs / 60000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}min ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
+async function fetchRegisterBonusWinners() {
+  try {
+    const res = await getRegisterBonusRecentWinners({ limit: 20 })
+    if (!res?.success || !Array.isArray(res.list) || res.list.length === 0) {
+      return
+    }
+    regWinners.value = res.list.map((item) => ({
+      name: resolveWinnerName(item.mask_name, item.user_id),
+      amount: formatAmount(Number(item.bonus_amount || 0)),
+      time: formatRelativeTime(item.created_at),
+    }))
+  } catch {
+    // keep fallback list
+  }
+}
+
+onMounted(() => {
+  fetchRegisterBonusWinners()
+})
 </script>
 
 <style lang="scss" scoped>

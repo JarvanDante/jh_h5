@@ -331,6 +331,37 @@ export interface LuckySpinRecentWinnersResponse {
   list: LuckySpinRecentWinnerItem[]
 }
 
+// 充值送最近中奖榜项
+export interface DepositBonusRecentWinnerItem {
+  user_id: number
+  mask_name: string
+  deposit_amount: number
+  bonus_amount: number
+  created_at: string
+}
+
+// 充值送最近中奖榜响应
+export interface DepositBonusRecentWinnersResponse {
+  success: boolean
+  message: string
+  list: DepositBonusRecentWinnerItem[]
+}
+
+// 注册送最近中奖榜项
+export interface RegisterBonusRecentWinnerItem {
+  user_id: number
+  mask_name: string
+  bonus_amount: number
+  created_at: string
+}
+
+// 注册送最近中奖榜响应
+export interface RegisterBonusRecentWinnersResponse {
+  success: boolean
+  message: string
+  list: RegisterBonusRecentWinnerItem[]
+}
+
 // VIP升级进度响应
 export interface VipUpgradeProgressResponse {
   success: boolean
@@ -422,6 +453,22 @@ export function getLuckySpinRecords(params?: { page?: number; size?: number }) {
 export function getLuckySpinRecentWinners(params?: { limit?: number }) {
   return request.get<LuckySpinRecentWinnersResponse>(
     '/frontend/balance/lucky-spin-recent-winners',
+    { params },
+  )
+}
+
+// 获取充值送最近中奖榜
+export function getDepositBonusRecentWinners(params?: { limit?: number }) {
+  return request.get<DepositBonusRecentWinnersResponse>(
+    '/frontend/balance/deposit-bonus-recent-winners',
+    { params },
+  )
+}
+
+// 获取注册送最近中奖榜
+export function getRegisterBonusRecentWinners(params?: { limit?: number }) {
+  return request.get<RegisterBonusRecentWinnersResponse>(
+    '/frontend/balance/register-bonus-recent-winners',
     { params },
   )
 }

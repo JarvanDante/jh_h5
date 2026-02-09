@@ -450,7 +450,7 @@ const spin = async () => {
   const safeMargin = 6
   const safeRange = Math.max(segmentAngle.value - safeMargin * 2, 0)
   const randomOffset = safeRange > 0 ? Math.random() * safeRange - safeRange / 2 : 0
-  const targetAngle = 360 - prizeIndex * segmentAngle.value - segmentAngle.value / 2 + randomOffset
+  const targetAngle = 360 - prizeIndex * segmentAngle.value + randomOffset
 
   // 确保至少转 6 整圈 + 目标角度，且相对上次旋转是正向增量
   const baseRotation = wheelRotation.value - (wheelRotation.value % 360) + 360 * 6

@@ -178,21 +178,37 @@
       </div>
     </div>
 
+    <!-- 浮动活动入口 -->
+    <div v-if="showFloatActivity" class="float-activity" @click="router.push('/lucky_activity')">
+      <div class="float-activity-close" @click.stop="showFloatActivity = false">✕</div>
+      <div class="float-activity-icon">
+        <img src="/luck-wheel.png" alt="Lucky Wheel" class="wheel-img" />
+      </div>
+    </div>
+
     <!-- 右侧悬浮按钮 -->
     <div class="float-buttons">
       <div class="float-btn telegram" @click="handleTelegram">
-        <van-icon name="chat-o" size="24" color="#fff" />
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#fff">
+          <path
+            d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"
+          />
+        </svg>
       </div>
       <div class="float-btn whatsapp" @click="handleWhatsapp">
-        <van-icon name="chat-o" size="24" color="#fff" />
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#fff">
+          <path
+            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+          />
+        </svg>
       </div>
       <div class="float-btn service" @click="handleService">
-        <van-icon name="service-o" size="24" color="#fff" />
+        <van-icon name="service-o" size="18" color="#fff" />
       </div>
     </div>
 
     <!-- 广告弹窗 -->
-    <AdPopup v-model:show="showAdPopup" :ads="popupAds" />
+    <AdPopup v-model:show="showAdPopup" :ads="popupAds" @click="handleAdPopupClick" />
   </div>
 </template>
 
@@ -272,6 +288,9 @@ const adList = ref<AdItem[]>([])
 // 广告弹窗
 const showAdPopup = ref(false)
 const popupAds = ref<AdItem[]>([])
+
+// 浮动活动入口
+const showFloatActivity = ref(true)
 
 // 公告列表
 const noticeList = ref<NoticeItem[]>([])
@@ -515,11 +534,19 @@ const isGameFavorite = (gameId: number) => {
 }
 
 const handleTelegram = () => {
-  showToast('打开 Telegram')
+  const siteUrl = window.location.origin
+  window.open(
+    `https://t.me/share/url?url=${encodeURIComponent(siteUrl)}&text=${encodeURIComponent('Join now and win big prizes!')}`,
+    '_blank',
+  )
 }
 
 const handleWhatsapp = () => {
-  showToast('打开 WhatsApp')
+  const siteUrl = window.location.origin
+  window.open(
+    `https://wa.me/?text=${encodeURIComponent('Join now and win big prizes! ' + siteUrl)}`,
+    '_blank',
+  )
 }
 
 const handleService = () => {
@@ -689,11 +716,15 @@ const fetchAdList = async () => {
       // position=2 的是弹窗广告
       const popupAdList = res.list.filter((ad: AdItem) => ad.position === 2)
       const adPopupShown = sessionStorage.getItem('ad_popup_shown')
-      if (!adPopupShown && popupAdList.length > 0) {
+      const adPopupResume = localStorage.getItem('ad_popup_resume') === '1'
+      if ((adPopupResume || !adPopupShown) && popupAdList.length > 0) {
         popupAds.value = popupAdList
         setTimeout(() => {
           showAdPopup.value = true
           sessionStorage.setItem('ad_popup_shown', '1')
+          if (adPopupResume) {
+            localStorage.removeItem('ad_popup_resume')
+          }
         }, 500)
       }
 
@@ -729,6 +760,13 @@ const fetchNoticeList = async () => {
     }
   } catch (error) {
     console.error('获取公告列表失败:', error)
+  }
+}
+
+const handleAdPopupClick = () => {
+  // 如果未登录点击了弹窗，记录需要回到首页后再次弹出
+  if (!userStore.isLogin) {
+    localStorage.setItem('ad_popup_resume', '1')
   }
 }
 
@@ -861,6 +899,7 @@ onMounted(() => {
 .home-page {
   position: relative;
   min-height: 100vh;
+  overflow-x: hidden;
   background: linear-gradient(
     135deg,
     #ffffff 0%,
@@ -1264,6 +1303,7 @@ onMounted(() => {
     flex-direction: column;
     gap: 12px;
     min-width: 0;
+    overflow: hidden;
   }
 
   // 搜索栏
@@ -1296,9 +1336,10 @@ onMounted(() => {
   // 游戏网格（一行3个）
   .game-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     min-height: 200px;
+    overflow: hidden;
 
     .game-card {
       position: relative;
@@ -1505,18 +1546,91 @@ onMounted(() => {
   }
 
   // 右侧悬浮按钮
+  // 浮动活动入口
+  .float-activity {
+    position: fixed;
+    right: calc(50% - 207px + 2px);
+    top: 400px;
+    z-index: 998;
+
+    @media (max-width: 414px) {
+      right: 2px;
+    }
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    animation: floatBounce 3s ease-in-out infinite;
+
+    .float-activity-close {
+      position: absolute;
+      top: -8px;
+      left: -8px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .float-activity-icon {
+      line-height: 1;
+
+      .wheel-img {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+    }
+
+    .float-activity-label {
+      font-size: 8px;
+      color: #fdb927;
+      font-weight: 900;
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  @keyframes floatBounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
   .float-buttons {
     position: fixed;
-    right: calc(50% - 207px + 16px); // 414px / 2 = 207px，然后加上右边距
+    right: calc(50% - 207px + 8px);
     bottom: 120px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
     z-index: 999;
 
+    @media (max-width: 414px) {
+      right: 8px;
+    }
+
     .float-btn {
-      width: 48px;
-      height: 48px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -1530,21 +1644,19 @@ onMounted(() => {
       }
 
       &.telegram {
-        background: #0088cc;
+        background: linear-gradient(135deg, #2aabee, #0088cc);
+        border: 2px solid rgba(255, 215, 0, 0.5);
       }
 
       &.whatsapp {
-        background: #25d366;
+        background: linear-gradient(135deg, #25d366, #128c7e);
+        border: 2px solid rgba(255, 215, 0, 0.5);
       }
 
       &.service {
         background: #552583;
+        border: 2px solid rgba(255, 215, 0, 0.5);
       }
-    }
-
-    // 移动设备适配
-    @media (max-width: 414px) {
-      right: 16px;
     }
   }
 }

@@ -93,6 +93,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getDepositBonusRecentWinners } from '@/api/modules/balance'
 
 const router = useRouter()
 
@@ -160,7 +161,13 @@ function maskName(name: string): string {
   return name.slice(0, 3) + stars + name.slice(-3)
 }
 
-const depositWinners = ref([
+interface DepositWinnerDisplay {
+  name: string
+  deposit: string
+  bonus: string
+}
+
+const depositWinners = ref<DepositWinnerDisplay[]>([
   { name: maskName('Johnson'), deposit: '1,000', bonus: '800' },
   { name: maskName('Maria12'), deposit: '5,000', bonus: '5,000' },
   { name: maskName('Kingg56'), deposit: '3,000', bonus: '3,000' },
@@ -193,6 +200,42 @@ function startCountdown() {
 
 onMounted(() => startCountdown())
 onUnmounted(() => clearInterval(countdownTimer))
+
+function formatAmount(value: number): string {
+  const amount = Number(value || 0)
+  if (Number.isInteger(amount)) {
+    return amount.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  }
+  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function resolveWinnerName(maskNameValue: string, userId: number): string {
+  const trimmed = (maskNameValue || '').trim()
+  if (trimmed) {
+    return trimmed
+  }
+  return `U***${String(userId || 0).slice(-3)}`
+}
+
+async function fetchDepositBonusWinners() {
+  try {
+    const res = await getDepositBonusRecentWinners({ limit: 20 })
+    if (!res?.success || !Array.isArray(res.list) || res.list.length === 0) {
+      return
+    }
+    depositWinners.value = res.list.map((item) => ({
+      name: resolveWinnerName(item.mask_name, item.user_id),
+      deposit: formatAmount(Number(item.deposit_amount || 0)),
+      bonus: formatAmount(Number(item.bonus_amount || 0)),
+    }))
+  } catch {
+    // 保持默认展示
+  }
+}
+
+onMounted(() => {
+  fetchDepositBonusWinners()
+})
 
 function goDeposit() {
   router.push('/deposit')
