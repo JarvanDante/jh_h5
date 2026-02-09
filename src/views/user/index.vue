@@ -283,7 +283,7 @@ const balance = computed(() => {
   // 如果没有余额数据，从用户信息中获取
   return userStore.userInfo?.balance || '0.00'
 })
-const messageCount = ref(7)
+const messageCount = ref(0)
 const supportCount = ref(7)
 
 // 余额动画相关
@@ -461,6 +461,23 @@ const refreshBalance = async () => {
   }
 }
 
+const fetchUnreadCount = async () => {
+  if (!userStore.isLogin) {
+    messageCount.value = 0
+    return
+  }
+  try {
+    const res = await userApi.getUnreadCount()
+    if (res && typeof res.count === 'number') {
+      messageCount.value = res.count
+    } else {
+      messageCount.value = 0
+    }
+  } catch (error) {
+    console.error('获取未读消息数量失败:', error)
+  }
+}
+
 const goToMessages = () => {
   router.push('/messages')
 }
@@ -562,6 +579,9 @@ onMounted(async () => {
 
   // 初始化显示余额
   displayBalance.value = balance.value
+
+  // 获取未读消息数量
+  fetchUnreadCount()
 
   // 请求用户信息接口
   try {

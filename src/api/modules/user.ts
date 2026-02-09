@@ -261,6 +261,16 @@ export const userApi = {
 
   // 获取消息列表
   getMessageList(): Promise<any> {
-    return request.get('/frontend/app/message-list')
+    return request.get('/frontend/app/app-user-messages')
+  },
+
+  // 获取未读消息数量
+  getUnreadCount(): Promise<any> {
+    return request.get('/frontend/app/app-unread-count')
+  },
+
+  // 标记消息已读
+  readMessage(messageId: number): Promise<any> {
+    return request.post('/frontend/app/app-read-message', { message_id: messageId })
   },
 }

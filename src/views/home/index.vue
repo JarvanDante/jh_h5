@@ -12,9 +12,9 @@
 
         <!-- 已登录状态 -->
         <template v-else>
-          <div class="notification">
+          <div class="notification" @click="goToMessages">
             <van-badge :content="notificationCount" max="99">
-              <van-icon name="bell" size="24" color="#fff" />
+              <van-icon name="envelop-o" size="24" color="#fff" />
             </van-badge>
           </div>
           <div class="user-info" @click="goToUser">
@@ -265,7 +265,7 @@ const userStore = useUserStore()
 // 状态
 const activeTab = ref(0)
 const searchValue = ref('')
-const notificationCount = ref(3)
+const notificationCount = ref(0)
 const jackpotValue = ref(2476515210800)
 const activeHall = ref('hot')
 
@@ -415,11 +415,36 @@ const isRefreshing = ref(false)
 // 余额显示（用于动画）
 const displayBalance = ref('0.00')
 
+const fetchUnreadCount = async () => {
+  if (!isLogin.value) {
+    notificationCount.value = 0
+    return
+  }
+  try {
+    const res = await userApi.getUnreadCount()
+    if (res && typeof res.count === 'number') {
+      notificationCount.value = res.count
+    } else {
+      notificationCount.value = 0
+    }
+  } catch (error) {
+    console.error('获取未读消息数量失败:', error)
+  }
+}
+
 // 监听 balance 变化，同步更新 displayBalance（非刷新按钮触发的情况）
 watch(balance, (newVal) => {
   // 只在非刷新状态下同步更新（避免干扰动画）
   if (!isRefreshing.value) {
     displayBalance.value = newVal
+  }
+})
+
+watch(isLogin, (val) => {
+  if (val) {
+    fetchUnreadCount()
+  } else {
+    notificationCount.value = 0
   }
 })
 
@@ -499,6 +524,15 @@ const goToUser = () => {
     return
   }
   router.push('/user')
+}
+
+const goToMessages = () => {
+  if (!isLogin.value) {
+    showToast('Please login first')
+    router.push('/login')
+    return
+  }
+  router.push('/messages')
 }
 
 const showMenu = () => {
@@ -909,6 +943,7 @@ onMounted(() => {
 
   // 如果已登录，尝试从 localStorage 刷新余额显示
   if (isLogin.value) {
+    fetchUnreadCount()
     try {
       const userBalance = localStorage.getItem('user_balance')
       if (userBalance) {
