@@ -1,14 +1,5 @@
 <template>
   <div class="lucky-page">
-    <!-- 顶部背景装饰 -->
-    <div class="top-decoration">
-      <div class="coins coin-1">💰</div>
-      <div class="coins coin-2">🪙</div>
-      <div class="coins coin-3">💎</div>
-      <div class="coins coin-4">💰</div>
-      <div class="coins coin-5">🪙</div>
-    </div>
-
     <!-- 标题区域 -->
     <div class="header">
       <div class="back-btn" @click="goBack">
@@ -49,7 +40,7 @@
             class="wheel-segment"
             :style="getSegmentStyle(index)"
           >
-            <div class="segment-content" :style="getContentStyle(index)">
+            <div class="segment-content" :style="getContentStyle()">
               <span class="prize-icon">{{ prize.icon }}</span>
               <span class="prize-text">{{ prize.label }}</span>
             </div>
@@ -57,9 +48,15 @@
         </div>
 
         <!-- 中心按钮 -->
-        <div class="wheel-center" :class="{ disabled: isSpinning }" @click="spin">
+        <div
+          class="wheel-center"
+          :class="{ disabled: isSpinning || !activityActive || freeSpins <= 0 }"
+          @click="spin"
+        >
           <div class="center-inner">
-            <span class="spin-text">{{ isSpinning ? '...' : 'SPIN' }}</span>
+            <span class="spin-text">{{
+              isSpinning ? '...' : freeSpins <= 0 ? 'NO SPIN' : 'SPIN'
+            }}</span>
           </div>
         </div>
 
@@ -78,6 +75,20 @@
       <div class="spin-count">
         <span class="label">Total Won</span>
         <span class="value gold">₱{{ totalWon }}</span>
+      </div>
+    </div>
+    <div class="spin-meta">Today Spins: {{ todaySpinCount }}</div>
+
+    <!-- 我的记录 -->
+    <div class="my-records">
+      <div class="records-title">🧾 My Recent Spins</div>
+      <div v-if="recordList.length === 0" class="records-empty">No spin records yet</div>
+      <div v-else class="records-list">
+        <div v-for="item in recordList.slice(0, 5)" :key="item.trade_no" class="record-row">
+          <span class="record-time">{{ item.created_at || '-' }}</span>
+          <span class="record-prize">{{ item.prize_name || 'Segment #' + item.segment_no }}</span>
+          <span class="record-amount">₱{{ formatMoney(item.reward_amount || 0) }}</span>
+        </div>
       </div>
     </div>
 
@@ -99,10 +110,13 @@
     <div class="rules-section">
       <div class="rules-title">📋 Activity Rules</div>
       <div class="rules-list">
-        <div class="rule-item">1. Each deposit of ₱100+ earns 1 free spin</div>
-        <div class="rule-item">2. Prizes are credited instantly to your account</div>
-        <div class="rule-item">3. Maximum win per spin: ₱88,888</div>
-        <div class="rule-item">4. No wagering requirement on prizes under ₱500</div>
+        <div class="rule-item">1. Register successfully to get 1 free spin</div>
+        <div class="rule-item">2. Each successful deposit earns 1 free spin</div>
+        <div class="rule-item">3. Each VIP level upgrade earns 1 free spin</div>
+        <div class="rule-item">
+          4. Spins = 1(Register) + Deposit Count + VIP Upgrade Count - Used Spins
+        </div>
+        <div class="rule-item">5. Prizes are credited instantly to your account</div>
       </div>
     </div>
 
@@ -122,71 +136,225 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { showToast } from 'vant'
 import { useRouter } from 'vue-router'
+import {
+  getLuckySpinInfo,
+  getLuckySpinRecentWinners,
+  getLuckySpinRecords,
+  luckySpin,
+  type LuckySpinPrizeItem,
+  type LuckySpinRecordItem,
+  type LuckySpinResponse,
+} from '@/api/modules/balance'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
+
+interface WheelDisplayPrize {
+  segmentNo: number
+  icon: string
+  label: string
+  prizeName: string
+  rewardAmount: number
+  weight: number
+  userDailyWinLimit: number
+  minVipLevel: number
+}
+
+interface WinnerDisplayItem {
+  name: string
+  amount: string
+}
 
 const goBack = () => {
   router.back()
 }
 
-// 奖品配置
-const prizes = ref([
-  { icon: '💰', label: '₱88,888', value: 88888 },
-  { icon: '🎁', label: '₱50', value: 50 },
-  { icon: '💎', label: '₱8,888', value: 8888 },
-  { icon: '🪙', label: '₱20', value: 20 },
-  { icon: '🏆', label: '₱1,888', value: 1888 },
-  { icon: '🎁', label: '₱100', value: 100 },
-  { icon: '💰', label: '₱5,888', value: 5888 },
-  { icon: '🪙', label: '₱10', value: 10 },
-])
+const luckyWheelSegmentCount = 8
+const segmentFallbackIcons = ['💰', '💵', '🎁', '💎', '💰', '🏆', '👑', '🚀']
 
-// 状态
-const isSpinning = ref(false)
-const wheelRotation = ref(0)
-const freeSpins = ref(3)
-const totalWon = ref('0.00')
-const showPrizeDialog = ref(false)
-const wonPrize = ref<{ icon: string; label: string; value: number } | null>(null)
-const lightOn = ref(true)
-
-// 奖池显示
-const jackpotDisplay = ref('1,288,563.00')
-
-// 中奖记录
-const winnerNames = [
-  'Johnson',
-  'Maria12',
-  'Kingg56',
-  'Jasone9',
-  'Alexxx4',
-  'Ricard7',
-  'Daniel1',
-  'Mickel5',
-]
-
-function maskName(name: string): string {
-  const stars = '*'.repeat(3 + Math.floor(Math.random() * 3)) // 3~5个星号
-  return name.slice(0, 3) + stars + name.slice(-3)
+function formatMoney(value: number): string {
+  return Number(value || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
 }
 
-const winners = ref(
-  winnerNames.map((name, i) => ({
-    name: maskName(name),
-    amount: [
-      '8,888.00',
-      '1,888.00',
-      '5,888.00',
-      '88,888.00',
-      '100.00',
-      '1,888.00',
-      '50.00',
-      '5,888.00',
-    ][i],
-  })),
-)
+function formatPrizeAmount(value: number): string {
+  const amount = Number(value || 0)
+  if (Number.isInteger(amount)) {
+    return amount.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  }
+  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function buildDefaultPrizes(): WheelDisplayPrize[] {
+  return Array.from({ length: luckyWheelSegmentCount }, (_, idx) => ({
+    segmentNo: idx + 1,
+    icon: segmentFallbackIcons[idx] || '🎁',
+    label: 'Coming Soon',
+    prizeName: '',
+    rewardAmount: 0,
+    weight: 0,
+    userDailyWinLimit: 0,
+    minVipLevel: 0,
+  }))
+}
+
+function normalizePrizeItem(raw?: LuckySpinPrizeItem): WheelDisplayPrize {
+  const segmentNo = Number(raw?.segment_no || 0)
+  const rewardAmount = Number(raw?.reward_amount || 0)
+  const prizeName = (raw?.prize_name || '').trim()
+  const icon = (raw?.icon || '').trim() || (rewardAmount > 0 ? '💰' : '🙈')
+  const label = prizeName || (rewardAmount > 0 ? `₱${formatPrizeAmount(rewardAmount)}` : 'Thanks')
+
+  return {
+    segmentNo,
+    icon,
+    label,
+    prizeName,
+    rewardAmount,
+    weight: Number(raw?.weight || 0),
+    userDailyWinLimit: Number(raw?.user_daily_win_limit || 0),
+    minVipLevel: Number(raw?.min_vip_level || 0),
+  }
+}
+
+function applyPrizeList(rawList: LuckySpinPrizeItem[]) {
+  const bySegment = new Map<number, LuckySpinPrizeItem>()
+  for (const item of rawList || []) {
+    const segment = Number(item?.segment_no || 0)
+    if (segment >= 1 && segment <= luckyWheelSegmentCount) {
+      bySegment.set(segment, item)
+    }
+  }
+
+  const merged: WheelDisplayPrize[] = []
+  for (let segment = 1; segment <= luckyWheelSegmentCount; segment++) {
+    const item = bySegment.get(segment) || {
+      segment_no: segment,
+      prize_name: '',
+      reward_amount: 0,
+      weight: 0,
+      user_daily_win_limit: 0,
+      min_vip_level: 0,
+      icon: segmentFallbackIcons[segment - 1] || '🎁',
+    }
+    merged.push(normalizePrizeItem(item))
+  }
+  prizes.value = merged
+}
+
+// 状态
+const activityActive = ref(false)
+const isSpinning = ref(false)
+const wheelRotation = ref(0)
+const freeSpins = ref(0)
+const freeSpinsPerDay = ref(0)
+const todaySpinCount = ref(0)
+const totalWonAmount = ref(0)
+const showPrizeDialog = ref(false)
+const wonPrize = ref<WheelDisplayPrize | null>(null)
+const lightOn = ref(true)
+const prizes = ref<WheelDisplayPrize[]>(buildDefaultPrizes())
+const recordList = ref<LuckySpinRecordItem[]>([])
+const totalWon = computed(() => formatMoney(totalWonAmount.value))
+
+// 奖池显示
+const jackpotAmount = ref(0)
+const jackpotDisplay = computed(() => formatMoney(jackpotAmount.value))
+
+// 中奖记录
+const winners = ref<WinnerDisplayItem[]>([
+  { name: 'U***123', amount: '88.00' },
+  { name: 'U***456', amount: '20.00' },
+  { name: 'U***789', amount: '10.00' },
+])
+
+function parseWinnerName(name: string, userId: number): string {
+  const trimmed = (name || '').trim()
+  if (trimmed) {
+    return trimmed
+  }
+  return `U***${String(userId || 0).slice(-3)}`
+}
+
+function resolveMessage(payload: any, fallback: string): string {
+  return payload?.message || payload?.msg || fallback
+}
+
+async function fetchLuckyInfo(showErrorToast = false) {
+  try {
+    const res = await getLuckySpinInfo()
+    if (!res?.success) {
+      activityActive.value = false
+      freeSpins.value = 0
+      freeSpinsPerDay.value = 0
+      todaySpinCount.value = 0
+      if (showErrorToast) {
+        showToast(resolveMessage(res, 'Failed to load lucky spin info'))
+      }
+      return
+    }
+
+    activityActive.value = !!res.active
+    freeSpinsPerDay.value = Number(res.free_spins_per_day || 0)
+    freeSpins.value = Number(res.free_spins_left || 0)
+    todaySpinCount.value = Number(res.today_spin_count || 0)
+    jackpotAmount.value = Number(res.jackpot_amount || 0)
+    totalWonAmount.value = Number(res.total_won || 0)
+    applyPrizeList(res.prize_list || [])
+  } catch (e: any) {
+    if (showErrorToast) {
+      showToast(e?.message || 'Failed to load lucky spin info')
+    }
+  }
+}
+
+async function fetchRecentWinners(showErrorToast = false) {
+  try {
+    const res = await getLuckySpinRecentWinners({ limit: 20 })
+    if (!res?.success) {
+      if (showErrorToast) {
+        showToast(resolveMessage(res, 'Failed to load winner list'))
+      }
+      return
+    }
+
+    const list = (res.list || []).map((item) => ({
+      name: parseWinnerName(item.mask_name, item.user_id),
+      amount: formatMoney(Number(item.reward_amount || 0)),
+    }))
+
+    if (list.length > 0) {
+      winners.value = list
+    }
+  } catch (e: any) {
+    if (showErrorToast) {
+      showToast(e?.message || 'Failed to load winner list')
+    }
+  }
+}
+
+async function fetchSpinRecords(showErrorToast = false) {
+  try {
+    const res = await getLuckySpinRecords({ page: 1, size: 20 })
+    if (!res?.success) {
+      if (showErrorToast) {
+        showToast(resolveMessage(res, 'Failed to load spin records'))
+      }
+      return
+    }
+    recordList.value = res.list || []
+  } catch (e: any) {
+    if (showErrorToast) {
+      showToast(e?.message || 'Failed to load spin records')
+    }
+  }
+}
 
 // 灯泡闪烁
 let lightTimer: ReturnType<typeof setInterval>
@@ -194,13 +362,19 @@ onMounted(() => {
   lightTimer = setInterval(() => {
     lightOn.value = !lightOn.value
   }, 500)
+
+  fetchLuckyInfo()
+  fetchRecentWinners()
+  fetchSpinRecords()
 })
 onUnmounted(() => {
   clearInterval(lightTimer)
 })
 
 // 转盘样式
-const segmentAngle = 360 / prizes.value.length
+const segmentAngle = computed(() =>
+  prizes.value.length > 0 ? 360 / prizes.value.length : 360 / luckyWheelSegmentCount,
+)
 const colors = [
   '#552583',
   '#3a1a5c',
@@ -213,49 +387,96 @@ const colors = [
 ]
 
 const getSegmentStyle = (index: number) => {
-  const angle = segmentAngle * index
+  const angle = segmentAngle.value * index
   return {
     transform: `rotate(${angle}deg)`,
     borderColor: `${colors[index % colors.length]} transparent`,
   }
 }
 
-const getContentStyle = (index: number) => {
+const getContentStyle = () => {
   return {
-    transform: `rotate(${segmentAngle / 2}deg)`,
+    transform: `rotate(${segmentAngle.value / 2}deg)`,
   }
 }
 
+function findPrizeIndex(segmentNo: number): number {
+  const index = prizes.value.findIndex((item) => item.segmentNo === segmentNo)
+  return index >= 0 ? index : 0
+}
+
 // 抽奖
-const spin = () => {
-  if (isSpinning.value || freeSpins.value <= 0) return
+const spin = async () => {
+  if (isSpinning.value) return
+  if (!userStore.isLogin) {
+    showToast('Please login first')
+    return
+  }
+  if (!activityActive.value) {
+    showToast('Activity is not available')
+    return
+  }
+  if (freeSpins.value <= 0) {
+    showToast('No free spins left today')
+    return
+  }
 
   isSpinning.value = true
-  freeSpins.value--
 
-  // 随机中奖
-  const prizeIndex = Math.floor(Math.random() * prizes.value.length)
+  let result: LuckySpinResponse | null = null
+  try {
+    const res = await luckySpin()
+    if (!res?.success) {
+      isSpinning.value = false
+      showToast(resolveMessage(res, 'Spin failed'))
+      await fetchLuckyInfo(false)
+      return
+    }
+    result = res
+  } catch (e: any) {
+    isSpinning.value = false
+    showToast(e?.message || 'Spin failed')
+    return
+  }
+  if (!result) {
+    isSpinning.value = false
+    showToast('Spin failed')
+    return
+  }
+
+  const prizeIndex = findPrizeIndex(Number(result.segment_no || 0))
 
   // 安全边距：距离扇区边界至少 6 度，避免指针落在分界线上
   const safeMargin = 6
-  // 在扇区安全区域内随机偏移，让每次停的位置不完全一样
-  const safeRange = segmentAngle - safeMargin * 2
-  const randomOffset = Math.random() * safeRange - safeRange / 2
-
-  const targetAngle = 360 - prizeIndex * segmentAngle - segmentAngle / 2 + randomOffset
+  const safeRange = Math.max(segmentAngle.value - safeMargin * 2, 0)
+  const randomOffset = safeRange > 0 ? Math.random() * safeRange - safeRange / 2 : 0
+  const targetAngle = 360 - prizeIndex * segmentAngle.value - segmentAngle.value / 2 + randomOffset
 
   // 确保至少转 6 整圈 + 目标角度，且相对上次旋转是正向增量
   const baseRotation = wheelRotation.value - (wheelRotation.value % 360) + 360 * 6
-  const totalRotation = baseRotation + targetAngle
+  wheelRotation.value = baseRotation + targetAngle
 
-  wheelRotation.value = totalRotation
-
-  setTimeout(() => {
+  setTimeout(async () => {
     isSpinning.value = false
-    wonPrize.value = prizes.value[prizeIndex]
+    freeSpins.value = Number(result.free_spins_left || 0)
+    todaySpinCount.value = Number(result.today_spin_count || 0)
+    totalWonAmount.value = Number(result.total_won || 0)
+
+    const hitPrize = prizes.value[prizeIndex]
+    wonPrize.value =
+      hitPrize ||
+      normalizePrizeItem({
+        segment_no: result.segment_no,
+        prize_name: result.prize_name,
+        reward_amount: result.reward_amount,
+        weight: 0,
+        user_daily_win_limit: 0,
+        min_vip_level: 0,
+        icon: '',
+      })
     showPrizeDialog.value = true
-    const won = parseFloat(totalWon.value) + prizes.value[prizeIndex].value
-    totalWon.value = won.toFixed(2)
+
+    await Promise.all([fetchRecentWinners(false), fetchSpinRecords(false)])
   }, 4500)
 }
 
@@ -489,6 +710,8 @@ const closePrizeDialog = () => {
   overflow: hidden;
   transition: transform 4.5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
   background: #552583;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 
   .wheel-segment {
     position: absolute;
@@ -497,16 +720,19 @@ const closePrizeDialog = () => {
     top: 50%;
     left: 50%;
     border-style: solid;
-    border-width: 139px 60px 0;
-    margin-left: -60px;
+    // 8扇区时，每个扇区45deg，半角22.5deg。
+    // base = height * tan(22.5deg) ≈ 139 * 0.4142 ≈ 57.6，取58可显著减少拼接缝。
+    border-width: 139px 58px 0;
+    margin-left: -58px;
     margin-top: -139px;
-    transform-origin: 60px 139px;
+    transform-origin: 58px 139px;
+    backface-visibility: hidden;
 
     .segment-content {
       position: absolute;
       top: -130px;
-      left: -30px;
-      width: 60px;
+      left: -29px;
+      width: 58px;
       text-align: center;
       display: flex;
       flex-direction: column;
@@ -552,8 +778,23 @@ const closePrizeDialog = () => {
   }
 
   &.disabled {
-    opacity: 0.7;
+    opacity: 0.85;
     cursor: not-allowed;
+    background: linear-gradient(135deg, #888 0%, #666 100%);
+    box-shadow:
+      0 4px 15px rgba(0, 0, 0, 0.3),
+      0 0 10px rgba(100, 100, 100, 0.2);
+
+    .center-inner {
+      background: linear-gradient(135deg, #3a3a3a 0%, #555 100%);
+      border-color: rgba(255, 255, 255, 0.15);
+
+      .spin-text {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 11px;
+        letter-spacing: 0.5px;
+      }
+    }
   }
 
   .center-inner {
@@ -623,6 +864,74 @@ const closePrizeDialog = () => {
       &.gold {
         color: #fdb927;
       }
+    }
+  }
+}
+
+.spin-meta {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+// 我的记录
+.my-records {
+  margin: 14px 20px 0;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  .records-title {
+    font-size: 13px;
+    color: #fdb927;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .records-empty {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  .records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .record-row {
+    display: flex;
+    align-items: center;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.65);
+    gap: 8px;
+
+    .record-time {
+      flex: 1;
+      min-width: 120px;
+      color: rgba(255, 255, 255, 0.4);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .record-prize {
+      flex: 1;
+      color: rgba(255, 255, 255, 0.8);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .record-amount {
+      color: #fdb927;
+      font-weight: 700;
+      min-width: 70px;
+      text-align: right;
     }
   }
 }

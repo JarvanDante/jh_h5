@@ -259,6 +259,78 @@ export interface WashCodeRebateResponse {
   max_bet_id: number
 }
 
+// 大转盘奖项配置项
+export interface LuckySpinPrizeItem {
+  segment_no: number
+  prize_name: string
+  reward_amount: number
+  weight: number
+  user_daily_win_limit: number
+  min_vip_level: number
+  icon: string
+}
+
+// 大转盘活动信息响应
+export interface LuckySpinInfoResponse {
+  success: boolean
+  message: string
+  active: boolean
+  free_spins_per_day: number
+  free_spins_left: number
+  today_spin_count: number
+  jackpot_amount: number
+  total_won: number
+  prize_list: LuckySpinPrizeItem[]
+}
+
+// 大转盘抽奖响应
+export interface LuckySpinResponse {
+  success: boolean
+  message: string
+  trade_no: string
+  segment_no: number
+  prize_name: string
+  reward_amount: number
+  free_spins_left: number
+  today_spin_count: number
+  total_won: number
+}
+
+// 大转盘我的记录项
+export interface LuckySpinRecordItem {
+  trade_no: string
+  segment_no: number
+  prize_name: string
+  reward_amount: number
+  created_at: string
+}
+
+// 大转盘我的记录响应
+export interface LuckySpinRecordsResponse {
+  success: boolean
+  message: string
+  list: LuckySpinRecordItem[]
+  count: number
+  page: number
+  size: number
+}
+
+// 大转盘最近中奖榜项
+export interface LuckySpinRecentWinnerItem {
+  user_id: number
+  mask_name: string
+  prize_name: string
+  reward_amount: number
+  created_at: string
+}
+
+// 大转盘最近中奖榜响应
+export interface LuckySpinRecentWinnersResponse {
+  success: boolean
+  message: string
+  list: LuckySpinRecentWinnerItem[]
+}
+
 // VIP升级进度响应
 export interface VipUpgradeProgressResponse {
   success: boolean
@@ -329,4 +401,27 @@ export function claimSigninReward() {
 // 执行洗码返水
 export function washCodeRebate() {
   return request.post<WashCodeRebateResponse>('/frontend/balance/wash-code-rebate')
+}
+
+// 获取大转盘活动信息
+export function getLuckySpinInfo() {
+  return request.get<LuckySpinInfoResponse>('/frontend/balance/lucky-spin-info')
+}
+
+// 执行大转盘抽奖
+export function luckySpin() {
+  return request.post<LuckySpinResponse>('/frontend/balance/lucky-spin')
+}
+
+// 获取我的大转盘中奖记录
+export function getLuckySpinRecords(params?: { page?: number; size?: number }) {
+  return request.get<LuckySpinRecordsResponse>('/frontend/balance/lucky-spin-records', { params })
+}
+
+// 获取大转盘最近中奖榜
+export function getLuckySpinRecentWinners(params?: { limit?: number }) {
+  return request.get<LuckySpinRecentWinnersResponse>(
+    '/frontend/balance/lucky-spin-recent-winners',
+    { params },
+  )
 }
