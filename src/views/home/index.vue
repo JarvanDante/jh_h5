@@ -101,9 +101,9 @@
     </div>
 
     <!-- 搜索栏和游戏区域 -->
-    <div class="main-content">
+    <div ref="mainContentRef" class="main-content" :class="{ 'sidebar-is-fixed': sidebarFixed }">
       <!-- 左侧游戏厅类型 -->
-      <div class="game-hall-sidebar">
+      <div ref="sidebarRef" class="game-hall-sidebar" :class="{ 'sidebar-fixed': sidebarFixed }">
         <div
           v-for="hall in gameHalls"
           :key="hall.id"
@@ -213,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
@@ -291,6 +291,11 @@ const popupAds = ref<AdItem[]>([])
 
 // 浮动活动入口
 const showFloatActivity = ref(true)
+
+// 左侧边栏固定
+const sidebarRef = ref<HTMLElement | null>(null)
+const mainContentRef = ref<HTMLElement | null>(null)
+const sidebarFixed = ref(false)
 
 // 公告列表
 const noticeList = ref<NoticeItem[]>([])
@@ -881,6 +886,26 @@ onMounted(() => {
     previousJackpotValue.value = jackpotValue.value
     jackpotValue.value += Math.floor(Math.random() * 100)
   }, 2000)
+
+  // 监听滚动，固定左侧边栏
+  const scrollContainer = document.querySelector('.app-container')
+  if (scrollContainer) {
+    scrollContainer.addEventListener('scroll', handleScroll)
+  }
+})
+
+const handleScroll = () => {
+  if (!mainContentRef.value) return
+  const rect = mainContentRef.value.getBoundingClientRect()
+  // 当 main-content 的顶部滚动到导航栏下方时，固定侧边栏
+  sidebarFixed.value = rect.top <= 72
+}
+
+onUnmounted(() => {
+  const scrollContainer = document.querySelector('.app-container')
+  if (scrollContainer) {
+    scrollContainer.removeEventListener('scroll', handleScroll)
+  }
 })
 </script>
 
@@ -900,6 +925,7 @@ onMounted(() => {
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
+  padding-top: 64px;
   background: linear-gradient(
     135deg,
     #ffffff 0%,
@@ -935,12 +961,25 @@ onMounted(() => {
 
   // 顶部导航栏
   .top-bar {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 414px;
+    z-index: 100;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
     background: $gradient-purple;
     box-shadow: $shadow-md;
+
+    @media (max-width: 414px) {
+      left: 0;
+      transform: none;
+      max-width: 100%;
+    }
 
     .logo {
       display: flex;
@@ -1249,6 +1288,10 @@ onMounted(() => {
     gap: 8px;
     padding: 0 8px 16px;
     min-height: 400px;
+
+    &.sidebar-is-fixed {
+      padding-left: 96px;
+    }
   }
 
   // 左侧游戏厅类型边栏
@@ -1258,6 +1301,24 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     gap: 8px;
+
+    &.sidebar-fixed {
+      position: fixed;
+      top: 72px;
+      left: calc(50% - 207px + 8px);
+      width: 80px;
+      max-height: calc(100vh - 64px - 60px);
+      overflow-y: auto;
+      z-index: 99;
+      scrollbar-width: none;
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      @media (max-width: 414px) {
+        left: 8px;
+      }
+    }
 
     .hall-item {
       display: flex;
