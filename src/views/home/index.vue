@@ -219,7 +219,7 @@
             <div class="drawer-logo-img">🎰</div>
             <span class="drawer-logo-text">JILIEVO.CC</span>
           </div>
-          <van-icon name="cross" size="20" color="#999" @click="menuVisible = false" />
+          <van-icon name="cross" size="20" color="#fdb927" @click="menuVisible = false" />
         </div>
         <div class="drawer-menu">
           <div
@@ -228,18 +228,17 @@
             class="drawer-menu-item"
             @click="handleMenuClick(item.path)"
           >
-            <van-icon :name="item.icon" size="22" color="#552583" />
+            <van-icon :name="item.icon" size="22" color="#fdb927" />
             <span>{{ item.label }}</span>
-            <van-icon name="arrow" size="14" color="#ccc" class="arrow" />
           </div>
         </div>
         <div class="drawer-footer">
           <div v-if="isLogin" class="logout-btn" @click="handleLogout">
-            <van-icon name="revoke" size="20" color="#ff4757" />
+            <van-icon name="revoke" size="20" color="#fdb927" />
             <span>Logout</span>
           </div>
           <div v-else class="logout-btn" @click="handleMenuClick('/login')">
-            <van-icon name="manager-o" size="20" color="#552583" />
+            <van-icon name="manager-o" size="20" color="#fdb927" />
             <span>Login / Register</span>
           </div>
         </div>
@@ -509,7 +508,6 @@ const showMenu = () => {
 const menuVisible = ref(false)
 
 const menuItems = [
-  { icon: 'home-o', label: 'Home', path: '/' },
   { icon: 'gift-o', label: 'Promotion', path: '/promotion' },
   { icon: 'friends-o', label: 'Invite', path: '/invite_activity' },
   { icon: 'gold-coin-o', label: 'Deposit', path: '/deposit' },
@@ -1787,32 +1785,45 @@ onUnmounted(() => {
 .drawer-overlay {
   position: fixed;
   top: 0;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
+  max-width: 414px;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
   z-index: 9998;
+
+  @media (max-width: 414px) {
+    left: 0;
+    transform: none;
+    max-width: 100%;
+  }
 }
 
 .drawer-panel {
   position: fixed;
   top: 0;
-  right: 0;
-  width: 220px;
+  right: calc(50% - 207px);
+  width: 200px;
   height: 100%;
-  background: #fff;
+  background: linear-gradient(180deg, #552583 0%, #3a1a5e 100%);
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.4);
   z-index: 9999;
+  overflow: hidden;
+
+  @media (max-width: 414px) {
+    right: 0;
+  }
 }
 
 .drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 20px 20px;
-  background: linear-gradient(135deg, #552583, #7b3fa8);
+  padding: 24px 16px 16px;
+  border-bottom: 1px solid rgba(253, 185, 39, 0.15);
 }
 
 .drawer-logo {
@@ -1841,62 +1852,69 @@ onUnmounted(() => {
 .drawer-menu {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 0;
+  padding: 20px 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .drawer-menu-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 20px;
+  gap: 12px;
+  padding: 14px 0;
+  width: 120px;
   cursor: pointer;
   transition: background 0.2s;
 
   &:active {
-    background: #f5f0fa;
+    background: rgba(253, 185, 39, 0.1);
+  }
+
+  :deep(.van-icon) {
+    color: #fdb927 !important;
   }
 
   span {
-    flex: 1;
-    font-size: 15px;
-    color: #333;
+    font-size: 14px;
+    color: #fdb927;
     font-weight: 500;
-  }
-
-  .arrow {
-    flex-shrink: 0;
   }
 }
 
 .drawer-footer {
-  padding: 16px 20px;
-  border-top: 1px solid #eee;
+  padding: 16px;
+  border-top: 1px solid rgba(253, 185, 39, 0.15);
 }
 
 .logout-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 0;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0;
   cursor: pointer;
 
   span {
-    font-size: 15px;
-    color: #ff4757;
+    font-size: 14px;
+    color: #fdb927;
     font-weight: 500;
   }
 }
 
 .drawer-slide-enter-active {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .drawer-slide-leave-active {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.drawer-slide-enter-from,
+.drawer-slide-enter-from {
+  width: 0 !important;
+}
+
 .drawer-slide-leave-to {
-  transform: translateX(100%);
+  width: 0 !important;
 }
 </style>
