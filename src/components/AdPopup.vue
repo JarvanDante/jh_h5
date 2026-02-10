@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import type { AdItem } from '@/api/modules/user'
 
 interface Props {
@@ -62,6 +63,8 @@ const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
   (e: 'click', ad: AdItem): void
 }>()
+
+const router = useRouter()
 
 const visible = ref(props.show)
 const currentIndex = ref(0)
@@ -92,7 +95,15 @@ const handleClose = () => {
 
 const handleAdClick = (ad: AdItem) => {
   emit('click', ad)
-  if (ad.url) window.open(ad.url, '_blank')
+  handleClose()
+  if (ad.url) {
+    // 如果是站内路径（以/开头），用router跳转；否则当前窗口打开外链
+    if (ad.url.startsWith('/')) {
+      router.push(ad.url)
+    } else {
+      window.location.href = ad.url
+    }
+  }
 }
 </script>
 

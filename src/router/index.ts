@@ -70,31 +70,31 @@ const routes: RouteRecordRaw[] = [
     path: '/lucky_activity',
     name: 'LuckyActivity',
     component: () => import('@/views/activity/lucky.vue'),
-    meta: { title: '大转盘活动' },
+    meta: { title: '大转盘活动', requiresAuth: true },
   },
   {
     path: '/signin_activity',
     name: 'SigninActivity',
     component: () => import('@/views/activity/signin.vue'),
-    meta: { title: '每日签到活动' },
+    meta: { title: '每日签到活动', requiresAuth: true },
   },
   {
     path: '/deposit_activity',
     name: 'DepositActivity',
     component: () => import('@/views/activity/deposit.vue'),
-    meta: { title: '充值送活动' },
+    meta: { title: '充值送活动', requiresAuth: true },
   },
   {
     path: '/register_activity',
     name: 'RegisterActivity',
     component: () => import('@/views/activity/register.vue'),
-    meta: { title: '注册送活动' },
+    meta: { title: '注册送活动', requiresAuth: true },
   },
   {
     path: '/rebate',
     name: 'RebateActivity',
     component: () => import('@/views/activity/rebate.vue'),
-    meta: { title: '洗码活动' },
+    meta: { title: '洗码活动', requiresAuth: true },
   },
   {
     path: '/vip',
@@ -108,6 +108,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/invite/index.vue'),
     meta: {
       title: '邀请好友',
+      requiresAuth: true,
     },
   },
   {
