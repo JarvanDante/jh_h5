@@ -1,5 +1,11 @@
 <template>
   <div class="register-page">
+    <!-- 背景层 -->
+    <div class="bg-image"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+    <div class="bg-glow-3"></div>
+
     <van-nav-bar
       title="Register"
       left-arrow
@@ -387,8 +393,59 @@ onMounted(() => {
 <style lang="scss" scoped>
 .register-page {
   min-height: 100vh;
-  background: #ffffff;
+  background: #0d0618;
+  position: relative;
+  overflow: hidden;
   --van-checkbox-checked-icon-color: #552583;
+
+  .bg-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('/coin.webp') center center / cover no-repeat;
+    filter: grayscale(100%) brightness(0.3);
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-glow-1 {
+    position: absolute;
+    top: -10%;
+    right: -15%;
+    width: 50%;
+    height: 45%;
+    background: radial-gradient(circle, rgba(85, 37, 131, 0.4) 0%, transparent 70%);
+    filter: blur(50px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-glow-2 {
+    position: absolute;
+    bottom: 5%;
+    left: -10%;
+    width: 45%;
+    height: 40%;
+    background: radial-gradient(circle, rgba(253, 185, 39, 0.1) 0%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-glow-3 {
+    position: absolute;
+    top: 30%;
+    left: -5%;
+    width: 35%;
+    height: 30%;
+    background: radial-gradient(circle, rgba(123, 63, 168, 0.2) 0%, transparent 70%);
+    filter: blur(40px);
+    pointer-events: none;
+    z-index: 0;
+  }
 
   :deep(.van-nav-bar) {
     .van-nav-bar__title {
@@ -398,10 +455,16 @@ onMounted(() => {
     .van-icon {
       color: #fff;
     }
+
+    &::after {
+      display: none;
+    }
   }
 
   .register-form {
     padding: 20px 16px;
+    position: relative;
+    z-index: 1;
 
     .logo {
       text-align: center;
@@ -414,7 +477,7 @@ onMounted(() => {
       }
 
       .welcome-text {
-        color: #1f1f1f;
+        color: rgba(255, 255, 255, 0.9);
         font-size: 20px;
         font-weight: 600;
         margin: 0;
@@ -436,12 +499,33 @@ onMounted(() => {
       width: 110px;
       border-radius: 4px;
       cursor: pointer;
-      border: 1px solid #ebedf0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
       object-fit: cover;
     }
 
     :deep(.van-cell-group) {
       margin-bottom: 12px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+    }
+
+    :deep(.van-cell) {
+      background: transparent;
+      &::after {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    :deep(.van-field__label) {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    :deep(.van-field__control) {
+      color: #fff;
+    }
+    :deep(.van-field__control::placeholder) {
+      color: rgba(255, 255, 255, 0.3);
     }
 
     :deep(.van-cell) {
@@ -474,7 +558,7 @@ onMounted(() => {
       }
 
       .agreement-text {
-        color: #666;
+        color: rgba(255, 255, 255, 0.6);
         font-size: 12px;
         line-height: 1.5;
       }
@@ -487,6 +571,9 @@ onMounted(() => {
       :deep(.van-button) {
         height: 44px;
         font-size: 16px;
+        background: linear-gradient(135deg, #552583, #7b3fa8) !important;
+        border: none !important;
+        box-shadow: 0 4px 16px rgba(85, 37, 131, 0.5);
       }
     }
 
@@ -526,11 +613,11 @@ onMounted(() => {
       text-align: center;
       padding: 12px 16px 20px;
       margin-top: 12px;
-      color: #666;
+      color: rgba(255, 255, 255, 0.5);
       font-size: 13px;
 
       a {
-        color: #552583;
+        color: #fdb927;
         margin-left: 8px;
         text-decoration: none;
         font-weight: 500;

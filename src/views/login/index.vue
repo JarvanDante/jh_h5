@@ -1,5 +1,11 @@
 <template>
   <div class="login-page">
+    <!-- 背景层 -->
+    <div class="bg-image"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+    <div class="bg-glow-3"></div>
+
     <van-nav-bar
       title="Login"
       left-arrow
@@ -248,7 +254,62 @@ const handleForgotPassword = () => {
 
 .login-page {
   min-height: 100vh;
-  background: $background-color;
+  background: #0d0618;
+  position: relative;
+  overflow: hidden;
+
+  // 背景图 - 置灰低透明度
+  .bg-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('/coin.webp') center center / cover no-repeat;
+    filter: grayscale(100%) brightness(0.3);
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  // 紫色光晕 - 左上
+  .bg-glow-1 {
+    position: absolute;
+    top: -10%;
+    left: -15%;
+    width: 50%;
+    height: 45%;
+    background: radial-gradient(circle, rgba(85, 37, 131, 0.4) 0%, transparent 70%);
+    filter: blur(50px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  // 金色光晕 - 右下
+  .bg-glow-2 {
+    position: absolute;
+    bottom: 5%;
+    right: -10%;
+    width: 45%;
+    height: 40%;
+    background: radial-gradient(circle, rgba(253, 185, 39, 0.1) 0%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  // 紫色光晕 - 右上角微弱
+  .bg-glow-3 {
+    position: absolute;
+    top: 15%;
+    right: -5%;
+    width: 35%;
+    height: 30%;
+    background: radial-gradient(circle, rgba(123, 63, 168, 0.2) 0%, transparent 70%);
+    filter: blur(40px);
+    pointer-events: none;
+    z-index: 0;
+  }
 
   :deep(.van-nav-bar) {
     .van-nav-bar__title {
@@ -258,10 +319,16 @@ const handleForgotPassword = () => {
     .van-icon {
       color: #fff;
     }
+
+    &::after {
+      display: none;
+    }
   }
 
   .login-form {
     padding: 40px 16px;
+    position: relative;
+    z-index: 1;
 
     .logo {
       text-align: center;
@@ -274,7 +341,7 @@ const handleForgotPassword = () => {
       }
 
       .welcome-text {
-        color: #1f1f1f;
+        color: rgba(255, 255, 255, 0.9);
         font-size: 24px;
         font-weight: 600;
         margin: 0;
@@ -294,6 +361,12 @@ const handleForgotPassword = () => {
     .submit-button {
       margin-top: 24px;
       padding: 0 16px;
+
+      :deep(.van-button) {
+        background: linear-gradient(135deg, #552583, #7b3fa8) !important;
+        border: none !important;
+        box-shadow: 0 4px 16px rgba(85, 37, 131, 0.5);
+      }
     }
 
     .captcha-image {
@@ -301,8 +374,32 @@ const handleForgotPassword = () => {
       width: 120px;
       border-radius: 4px;
       cursor: pointer;
-      border: 1px solid #ebedf0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
       object-fit: cover;
+    }
+
+    :deep(.van-cell-group--inset) {
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+    }
+
+    :deep(.van-cell) {
+      background: transparent;
+      &::after {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    :deep(.van-field__label) {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    :deep(.van-field__control) {
+      color: #fff;
+    }
+    :deep(.van-field__control::placeholder) {
+      color: rgba(255, 255, 255, 0.3);
     }
 
     .extra-links {
@@ -312,7 +409,7 @@ const handleForgotPassword = () => {
       margin-top: 16px;
 
       .link {
-        color: #552583;
+        color: #fdb927;
         font-size: 14px;
         text-decoration: none;
 
