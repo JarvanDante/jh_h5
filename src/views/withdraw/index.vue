@@ -452,18 +452,34 @@ const handleWithdraw = async () => {
 
     try {
       // 第1步：一键回收游戏余额
-      const recallRes = await recallGameBalance()
+      const recallRes: any = await recallGameBalance()
+      if (recallRes.code && recallRes.code !== 0) {
+        closeToast()
+        showToast({
+          type: 'fail',
+          message: recallRes.msg || recallRes.message || '回收游戏余额失败',
+        })
+        return
+      }
       if (!recallRes.success) {
         closeToast()
         showToast({
           type: 'fail',
-          message: recallRes.message || 'Failed to recall game balance',
+          message: recallRes.message || '回收游戏余额失败',
         })
         return
       }
 
       // 第2步：获取提现 nonce
-      const nonceRes = await getWithdrawNonce()
+      const nonceRes: any = await getWithdrawNonce()
+      if (nonceRes.code && nonceRes.code !== 0) {
+        closeToast()
+        showToast({
+          type: 'fail',
+          message: nonceRes.msg || nonceRes.message || '获取nonce失败',
+        })
+        return
+      }
       if (!nonceRes.nonce) {
         closeToast()
         showToast({
@@ -477,7 +493,7 @@ const handleWithdraw = async () => {
       // 获取默认银行卡ID
       const defaultCard = defaultBankCards.value[0]
 
-      const withdrawRes = await withdraw({
+      const withdrawRes: any = await withdraw({
         nonce: nonceRes.nonce,
         money: amount,
         withdraw_id: channel.withdraw_id,
@@ -485,6 +501,15 @@ const handleWithdraw = async () => {
       })
 
       closeToast()
+
+      // 检查是否有错误码（如 429 请求过于频繁）
+      if (withdrawRes.code && withdrawRes.code !== 0) {
+        showToast({
+          type: 'fail',
+          message: withdrawRes.msg || withdrawRes.message || '提现失败',
+        })
+        return
+      }
 
       if (withdrawRes.success) {
         // 显示成功提示（绿色对号），使用接口返回的 message
