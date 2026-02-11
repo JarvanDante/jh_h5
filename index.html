@@ -9,11 +9,13 @@
   </head>
   <body>
     <div id="app"></div>
+    <script src="/devtools-detect.js"></script>
+    <script src="/disable-devtool.min.js"></script>
     <script>
-      // DevTools 检测 - 窗口尺寸差检测
+      // DevTools 检测 - devtools-detect
       ;(function(){
-        var isDev = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-        if(isDev) return;
+        var isProd = '%MODE%' === 'production';
+        if(!isProd) return;
         var c = false;
         function crash(){
           if(c) return;
@@ -36,15 +38,53 @@
             + '<p style="font-size:14px;color:#999;margin:0;">Error code: 5</p>'
             + '</div></body>';
         }
-        function checkSize(){
-          if(c) return;
-          var w = window.outerWidth - window.innerWidth > 160;
-          var h = window.outerHeight - window.innerHeight > 160;
-          if(w || h) crash();
+        function handleDevtoolsOpen(isOpen){
+          if(isOpen) crash();
         }
-        setInterval(checkSize, 1000);
-        window.addEventListener('resize', checkSize);
-        checkSize();
+        if(window.devtools && window.devtools.open){
+          crash();
+        }
+        window.addEventListener('devtoolschange', function(e){
+          var detail = e && e.detail ? e.detail : null;
+          if(!detail) return;
+          handleDevtoolsOpen(!!detail.isOpen || !!detail.open);
+        });
+
+        // disable-devtool（更强的兜底）
+        if (window.DisableDevtool) {
+          window.DisableDevtool({
+            ondevtoolopen: function() {
+              crash();
+            }
+          });
+        }
+
+        // console 兜底（支持 DevTools 独立窗口）
+        (function(){
+          var element = new Image();
+          Object.defineProperty(element, 'id', {
+            get: function() {
+              crash();
+              throw new Error('DevTools detected');
+            }
+          });
+          setInterval(function(){
+            if(c) return;
+            console.log(element);
+            console.clear();
+          }, 1000);
+        })();
+
+        // 时间差检测兜底（应对独立窗口不触发事件）
+        setInterval(function(){
+          if(c) return;
+          var start = (performance && performance.now) ? performance.now() : Date.now();
+          debugger;
+          var end = (performance && performance.now) ? performance.now() : Date.now();
+          if(end - start > 120) {
+            crash();
+          }
+        }, 1000);
       })();
     </script>
     <script type="module" src="/src/main.ts"></script>
