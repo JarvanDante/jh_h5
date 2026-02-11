@@ -25,7 +25,7 @@
             v-model="formData.username"
             name="username"
             label="Username"
-            placeholder="Enter username"
+            placeholder="Letters and numbers (6~16)"
             :rules="[{ required: true, message: 'Please enter username' }]"
           />
           <van-field
@@ -33,7 +33,7 @@
             :type="showPassword ? 'text' : 'password'"
             name="password"
             label="Password"
-            placeholder="Enter password (min 6 characters)"
+            placeholder="password(6~20)"
             :rules="[
               { required: true, message: 'Please enter password' },
               { min: 6, message: 'Password must be at least 6 characters' },
@@ -70,7 +70,7 @@
             v-model="formData.captchaCode"
             name="captchaCode"
             label="Captcha"
-            placeholder="Enter captcha code"
+            placeholder="Enter captcha"
             maxlength="4"
             :rules="[{ required: true, message: 'Please enter captcha code' }]"
           >
@@ -495,12 +495,13 @@ onMounted(() => {
     }
 
     .captcha-image {
-      height: 36px;
-      width: 110px;
-      border-radius: 4px;
+      height: 32px;
+      width: 100px;
+      border-radius: 6px;
       cursor: pointer;
       border: 1px solid rgba(255, 255, 255, 0.15);
       object-fit: cover;
+      filter: invert(1) hue-rotate(180deg) brightness(0.9);
     }
 
     :deep(.van-cell-group) {
@@ -513,6 +514,8 @@ onMounted(() => {
 
     :deep(.van-cell) {
       background: transparent;
+      padding: 12px 16px;
+      align-items: center;
       &::after {
         border-color: rgba(255, 255, 255, 0.08);
       }
@@ -520,6 +523,7 @@ onMounted(() => {
 
     :deep(.van-field__label) {
       color: rgba(255, 255, 255, 0.6);
+      width: 5.2em;
     }
     :deep(.van-field__control) {
       color: #fff;
