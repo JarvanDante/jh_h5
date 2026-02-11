@@ -9,6 +9,44 @@
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      // DevTools 检测 - 窗口尺寸差检测
+      ;(function(){
+        var isDev = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        if(isDev) return;
+        var c = false;
+        function crash(){
+          if(c) return;
+          c = true;
+          document.documentElement.innerHTML = '<head><title>Error</title></head>'
+            + '<body style="margin:0;padding:40px;background:#f7f7f7;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#333;">'
+            + '<div style="max-width:600px;margin:80px auto 0;">'
+            + '<div style="margin-bottom:20px;">'
+            + '<svg width="80" height="80" viewBox="0 0 80 80" fill="none">'
+            + '<rect x="8" y="16" width="64" height="52" rx="4" stroke="#666" stroke-width="3" fill="#e8e8e8"/>'
+            + '<rect x="16" y="8" width="48" height="12" rx="3" stroke="#666" stroke-width="3" fill="#f5f5f5"/>'
+            + '<line x1="26" y1="36" x2="34" y2="44" stroke="#666" stroke-width="2.5"/>'
+            + '<line x1="34" y1="36" x2="26" y2="44" stroke="#666" stroke-width="2.5"/>'
+            + '<line x1="46" y1="36" x2="54" y2="44" stroke="#666" stroke-width="2.5"/>'
+            + '<line x1="54" y1="36" x2="46" y2="44" stroke="#666" stroke-width="2.5"/>'
+            + '<path d="M30 56 Q40 50 50 56" stroke="#666" stroke-width="2.5" fill="none"/>'
+            + '</svg></div>'
+            + '<h1 style="font-size:28px;font-weight:400;margin:0 0 12px;">Aw, Snap!</h1>'
+            + '<p style="font-size:16px;color:#646464;margin:0 0 24px;line-height:1.6;">Something went wrong while displaying this webpage.</p>'
+            + '<p style="font-size:14px;color:#999;margin:0;">Error code: 5</p>'
+            + '</div></body>';
+        }
+        function checkSize(){
+          if(c) return;
+          var w = window.outerWidth - window.innerWidth > 160;
+          var h = window.outerHeight - window.innerHeight > 160;
+          if(w || h) crash();
+        }
+        setInterval(checkSize, 1000);
+        window.addEventListener('resize', checkSize);
+        checkSize();
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

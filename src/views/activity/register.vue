@@ -106,9 +106,6 @@ const router = useRouter()
 
 const bonusAmount = '188'
 
-const confettiColors = ['#fdb927', '#ff4757', '#2ed573', '#1e90ff', '#ff6b81', '#ffa502']
-const confettiIcons = ['🎉', '✨', '💰', '🪙', '🎊', '💎']
-
 const steps = [
   { icon: '📱', title: 'Register', desc: 'Create your account in seconds' },
   { icon: '✅', title: 'Verify', desc: 'Verify your phone number' },

@@ -97,8 +97,6 @@ import { getDepositBonusRecentWinners } from '@/api/modules/balance'
 
 const router = useRouter()
 
-const particleIcons = ['💰', '🪙', '💎', '🎁', '💵', '🏆', '✨', '🎊']
-
 const tiers = [
   {
     deposit: '100',
