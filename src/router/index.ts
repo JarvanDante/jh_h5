@@ -64,6 +64,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/promotion/index.vue'),
     meta: {
       title: '促销活动',
+      requiresAuth: true,
     },
   },
   {
