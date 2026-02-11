@@ -81,6 +81,12 @@
                   <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
                 </div>
 
+                <!-- 备注 -->
+                <div v-if="record.remark" class="remark-row">
+                  <span class="remark-label">Remark:</span>
+                  <span class="remark-value">{{ record.remark }}</span>
+                </div>
+
                 <!-- 时间 -->
                 <div class="time-row">
                   <span class="time-label">Time:</span>
@@ -187,6 +193,12 @@
                 <div class="amount-row">
                   <span class="amount-label">Amount:</span>
                   <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
+                </div>
+
+                <!-- 备注 -->
+                <div v-if="record.remark" class="remark-row">
+                  <span class="remark-label">Remark:</span>
+                  <span class="remark-value">{{ record.remark }}</span>
                 </div>
 
                 <!-- 时间 -->
@@ -297,6 +309,12 @@
                   <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
                 </div>
 
+                <!-- 备注 -->
+                <div v-if="record.remark" class="remark-row">
+                  <span class="remark-label">Remark:</span>
+                  <span class="remark-value">{{ record.remark }}</span>
+                </div>
+
                 <!-- 时间 -->
                 <div class="time-row">
                   <span class="time-label">Time:</span>
@@ -403,6 +421,12 @@
                 <div class="amount-row">
                   <span class="amount-label">Amount:</span>
                   <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
+                </div>
+
+                <!-- 备注 -->
+                <div v-if="record.remark" class="remark-row">
+                  <span class="remark-label">Remark:</span>
+                  <span class="remark-value">{{ record.remark }}</span>
                 </div>
 
                 <!-- 时间 -->
@@ -807,6 +831,7 @@ const loadDepositRecords = async (isLoadMore = false) => {
       id: item.trade_no,
       tradeNo: item.trade_no,
       amount: item.money,
+      remark: item.remark,
       date: item.time,
       status: item.status,
       statusText: getStatusText(item.status),
@@ -859,6 +884,7 @@ const loadWithdrawRecords = async (isLoadMore = false) => {
       id: item.trade_no,
       tradeNo: item.trade_no,
       amount: item.money,
+      remark: item.remark,
       date: item.time,
       status: item.status,
       statusText: getStatusText(item.status),
@@ -1000,6 +1026,7 @@ const loadBonusRecords = async (isLoadMore = false) => {
       id: item.trade_no,
       tradeNo: item.trade_no,
       amount: item.money,
+      remark: item.remark,
       date: item.time,
       status: item.status,
       statusText: getStatusText(item.status),
@@ -1063,6 +1090,7 @@ const loadRebateRecords = async (isLoadMore = false) => {
       id: item.trade_no,
       tradeNo: item.trade_no,
       amount: item.money,
+      remark: item.remark,
       date: item.time,
       status: item.status,
       statusText: getStatusText(item.status),
@@ -1222,6 +1250,7 @@ onMounted(() => {
   min-height: 100vh;
   background: #f5f5f5;
   padding-bottom: 70px;
+  overflow: auto;
 
   .top-bar {
     display: flex;
@@ -1284,12 +1313,11 @@ onMounted(() => {
     }
 
     :deep(.van-tab__panel) {
-      background: transparent;
+      background: #f5f5f5;
     }
 
     :deep(.van-tabs__content) {
-      height: calc(100vh - 110px);
-      overflow-y: auto;
+      min-height: calc(100vh - 110px);
     }
   }
 
@@ -1510,6 +1538,27 @@ onMounted(() => {
         .time-value {
           color: #999;
           font-size: 13px;
+        }
+      }
+
+      // 备注行
+      .remark-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 8px;
+
+        .remark-label {
+          color: #666;
+          font-size: 13px;
+        }
+
+        .remark-value {
+          color: #552583;
+          font-size: 13px;
+          text-align: right;
+          max-width: 65%;
+          word-break: break-all;
         }
       }
 

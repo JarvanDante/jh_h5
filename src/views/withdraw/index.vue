@@ -55,7 +55,12 @@
     </div>
 
     <!-- 金额选择卡片 -->
-    <div class="amount-card">
+    <div class="amount-card" :class="{ 'card-disabled': hasRollover }">
+      <!-- 流水未完成提示 -->
+      <div v-if="hasRollover" class="rollover-tip">
+        ⚠️ Please complete rollover requirement before withdrawing
+      </div>
+
       <!-- 快捷金额选择 -->
       <div class="quick-amounts">
         <div
@@ -63,10 +68,10 @@
           :key="amount"
           class="amount-btn"
           :class="{
-            active: parseFloat(withdrawAmount) === amount,
-            disabled: amount > accountBalance,
+            active: !hasRollover && parseFloat(withdrawAmount) === amount,
+            disabled: hasRollover || amount > accountBalance,
           }"
-          @click="amount <= accountBalance && selectAmount(amount)"
+          @click="!hasRollover && amount <= accountBalance && selectAmount(amount)"
         >
           {{ formatAmount(amount) }}
         </div>
@@ -80,6 +85,7 @@
           type="number"
           :placeholder="`${minAmount} - ${formatAmount(maxAmount)}`"
           class="amount-input"
+          :disabled="hasRollover"
         />
       </div>
     </div>
@@ -122,7 +128,15 @@
 
     <!-- 提现按钮 -->
     <div class="withdraw-action">
-      <van-button class="withdraw-btn" block @click="handleWithdraw">Withdraw Now</van-button>
+      <van-button
+        class="withdraw-btn"
+        :class="{ 'btn-disabled': hasRollover }"
+        block
+        :disabled="hasRollover"
+        @click="handleWithdraw"
+      >
+        {{ hasRollover ? 'Rollover Incomplete' : 'Withdraw Now' }}
+      </van-button>
     </div>
   </div>
 </template>
@@ -153,6 +167,9 @@ const accountBalance = ref(0.0)
 
 // 流水要求
 const rolloverRequirement = ref(0.0)
+
+// 是否有未完成的流水要求
+const hasRollover = computed(() => rolloverRequirement.value > 0)
 
 // 是否正在刷新余额
 const isRefreshing = ref(false)
@@ -660,6 +677,22 @@ onMounted(() => {
     border-radius: 16px;
     padding: 20px 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s;
+
+    &.card-disabled {
+      pointer-events: none;
+    }
+
+    .rollover-tip {
+      background: rgba(255, 151, 106, 0.15);
+      color: #e67e22;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
   }
 
   // 快捷金额选择
@@ -928,6 +961,12 @@ onMounted(() => {
       &:active {
         transform: scale(0.98);
         opacity: 0.9;
+      }
+
+      &.btn-disabled {
+        background: #ccc;
+        box-shadow: none;
+        opacity: 0.7;
       }
     }
   }

@@ -65,6 +65,12 @@
               <span class="amount-value">₱{{ record.amount }}</span>
             </div>
 
+            <!-- 备注 -->
+            <div v-if="record.remark" class="remark-row">
+              <span class="remark-label">Remark:</span>
+              <span class="remark-value">{{ record.remark }}</span>
+            </div>
+
             <!-- 时间 -->
             <div class="time-row">
               <span class="time-label">Time:</span>
@@ -202,6 +208,7 @@ const loadDepositRecords = async (isLoadMore = false) => {
       id: item.trade_no,
       orderNo: item.trade_no,
       amount: item.money.toFixed(2),
+      remark: item.remark,
       method: item.remark || 'Online Payment',
       time: item.time,
       status: item.status,
@@ -572,6 +579,26 @@ onMounted(() => {
         .time-value {
           color: #999;
           font-size: 13px;
+        }
+      }
+
+      // 备注行
+      .remark-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .remark-label {
+          color: #666;
+          font-size: 13px;
+        }
+
+        .remark-value {
+          color: #552583;
+          font-size: 13px;
+          text-align: right;
+          max-width: 65%;
+          word-break: break-all;
         }
       }
 
