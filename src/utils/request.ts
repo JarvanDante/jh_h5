@@ -14,6 +14,12 @@ type SignSession = {
 let currentSignSession: SignSession | null = null
 let signSessionPromise: Promise<SignSession | null> | null = null
 
+function isInvalidTokenMessage(message?: string): boolean {
+  if (!message) return false
+  const text = message.toLowerCase()
+  return text.includes('invalid token') || text.includes('please login') || text.includes('未登录')
+}
+
 function toPathWithQuery(url: string): string {
   const parsed = new URL(url, window.location.origin)
   return `${parsed.pathname}${parsed.search}`
@@ -91,31 +97,53 @@ async function requestSignSession(force = false, tokenOverride = ''): Promise<Si
   }
 
   signSessionPromise = (async () => {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    }
-    if (tokenSnapshot) {
-      headers.Authorization = `Bearer ${tokenSnapshot}`
+    const fetchSignSession = async (token?: string) => {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+
+      const response = await fetch(`${apiBaseUrl}/frontend/app/sign-session`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ app_id: apiSignAppId }),
+      })
+
+      const result = await response.json().catch(() => null)
+      return { response, result }
     }
 
-    const response = await fetch(`${apiBaseUrl}/frontend/app/sign-session`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ app_id: apiSignAppId }),
-    })
-    const result = await response.json()
+    // 先尝试携带当前 token 获取签名会话
+    let { result } = await fetchSignSession(tokenSnapshot || undefined)
+
+    // token 无效时，回退为匿名签名会话，避免首页等公共接口完全不可用
+    if (
+      tokenSnapshot &&
+      (result?.code === 401 || isInvalidTokenMessage(result?.msg))
+    ) {
+      localStorage.removeItem('user_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user_info')
+      localStorage.removeItem('user')
+      clearSignSession()
+      ;({ result } = await fetchSignSession())
+    }
+
     if (result?.code !== 0 || !result?.data?.key_id || !result?.data?.sign_key) {
       currentSignSession = null
       return null
     }
 
     const expiresIn = Number(result.data.expires_in || 0)
+    const finalTokenSnapshot = getUserToken()
     currentSignSession = {
       keyId: String(result.data.key_id),
       signKey: String(result.data.sign_key),
       appId: String(result.data.app_id || apiSignAppId),
       expiresAt: Date.now() + Math.max(60, expiresIn) * 1000,
-      tokenSnapshot,
+      tokenSnapshot: finalTokenSnapshot,
     }
     return currentSignSession
   })()
