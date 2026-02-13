@@ -816,7 +816,7 @@ const fetchAdList = async () => {
       // position=1 的是 banner 轮播
       const bannerAds = res.list
         .filter((ad: AdItem) => ad.position === 1)
-        .sort((a: AdItem, b: AdItem) => (a.sort ?? 0) - (b.sort ?? 0))
+        .sort((a: AdItem, b: AdItem) => (b.sort ?? 0) - (a.sort ?? 0))
       if (bannerAds.length > 0) {
         banners.value = bannerAds
       }
