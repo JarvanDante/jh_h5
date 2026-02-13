@@ -60,7 +60,14 @@
     <div class="banner-section">
       <van-swipe :autoplay="3000" indicator-color="#ffd700">
         <van-swipe-item v-for="(banner, index) in banners" :key="index">
-          <img :src="banner" class="banner-img" @error="handleImageError" @load="handleImageLoad" />
+          <img
+            :src="banner.image"
+            :alt="banner.name || `banner-${index}`"
+            class="banner-img"
+            @click="handleBannerClick(banner)"
+            @error="handleImageError"
+            @load="handleImageLoad"
+          />
         </van-swipe-item>
       </van-swipe>
     </div>
@@ -318,7 +325,7 @@ const balance = computed(() => {
 })
 
 // 轮播图
-const banners = ref<string[]>([])
+const banners = ref<AdItem[]>([])
 const adList = ref<AdItem[]>([])
 
 // 广告弹窗
@@ -807,9 +814,11 @@ const fetchAdList = async () => {
       adList.value = res.list
 
       // position=1 的是 banner 轮播
-      const bannerAds = res.list.filter((ad: AdItem) => ad.position === 1)
+      const bannerAds = res.list
+        .filter((ad: AdItem) => ad.position === 1)
+        .sort((a: AdItem, b: AdItem) => (a.sort ?? 0) - (b.sort ?? 0))
       if (bannerAds.length > 0) {
-        banners.value = bannerAds.map((ad: AdItem) => ad.image)
+        banners.value = bannerAds
       }
 
       // position=2 的是弹窗广告
@@ -832,18 +841,66 @@ const fetchAdList = async () => {
       console.log('接口没有返回数据，使用默认图片')
       // 如果接口没有数据，使用默认图片
       banners.value = [
-        'https://via.placeholder.com/750x360/552583/FDB927?text=Welcome+Bonus',
-        'https://via.placeholder.com/750x360/FDB927/552583?text=Daily+Rewards',
-        'https://via.placeholder.com/750x360/552583/FFFFFF?text=VIP+Club',
+        {
+          before_login: 0,
+          image: 'https://via.placeholder.com/750x360/552583/FDB927?text=Welcome+Bonus',
+          name: 'Welcome Bonus',
+          position: 1,
+          sort: 1,
+          type: 1,
+          url: '/promotion',
+        },
+        {
+          before_login: 0,
+          image: 'https://via.placeholder.com/750x360/FDB927/552583?text=Daily+Rewards',
+          name: 'Daily Rewards',
+          position: 1,
+          sort: 2,
+          type: 1,
+          url: '/activity/lucky',
+        },
+        {
+          before_login: 0,
+          image: 'https://via.placeholder.com/750x360/552583/FFFFFF?text=VIP+Club',
+          name: 'VIP Club',
+          position: 1,
+          sort: 3,
+          type: 1,
+          url: '/invite',
+        },
       ]
     }
   } catch (error) {
     console.error('获取广告列表失败:', error)
     // 失败时使用默认图片
     banners.value = [
-      'https://via.placeholder.com/750x360/552583/FDB927?text=Welcome+Bonus',
-      'https://via.placeholder.com/750x360/FDB927/552583?text=Daily+Rewards',
-      'https://via.placeholder.com/750x360/552583/FFFFFF?text=VIP+Club',
+      {
+        before_login: 0,
+        image: 'https://via.placeholder.com/750x360/552583/FDB927?text=Welcome+Bonus',
+        name: 'Welcome Bonus',
+        position: 1,
+        sort: 1,
+        type: 1,
+        url: '/promotion',
+      },
+      {
+        before_login: 0,
+        image: 'https://via.placeholder.com/750x360/FDB927/552583?text=Daily+Rewards',
+        name: 'Daily Rewards',
+        position: 1,
+        sort: 2,
+        type: 1,
+        url: '/activity/lucky',
+      },
+      {
+        before_login: 0,
+        image: 'https://via.placeholder.com/750x360/552583/FFFFFF?text=VIP+Club',
+        name: 'VIP Club',
+        position: 1,
+        sort: 3,
+        type: 1,
+        url: '/invite',
+      },
     ]
   }
 }
@@ -867,6 +924,23 @@ const handleAdPopupClick = () => {
   if (!userStore.isLogin) {
     localStorage.setItem('ad_popup_resume', '1')
   }
+}
+
+const handleBannerClick = (ad: AdItem) => {
+  if (!ad?.url) return
+
+  const url = ad.url.trim()
+  if (!url) return
+
+  // 外链直接跳转
+  if (/^https?:\/\//i.test(url)) {
+    window.location.href = url
+    return
+  }
+
+  // 站内路由跳转
+  const routePath = url.startsWith('/') ? url : `/${url}`
+  router.push(routePath)
 }
 
 // 获取游戏分类列表
