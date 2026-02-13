@@ -1,4 +1,85 @@
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+const apiSignAppId = import.meta.env.VITE_API_SIGN_APP_ID || 'h5'
+const apiSignSecret = import.meta.env.VITE_API_SIGN_SECRET || ''
+
+function toPathWithQuery(url: string): string {
+  const parsed = new URL(url, window.location.origin)
+  return `${parsed.pathname}${parsed.search}`
+}
+
+function getTimestamp(): string {
+  return Math.floor(Date.now() / 1000).toString()
+}
+
+function getNonce(): string {
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+function toBodyText(body?: BodyInit | null): string {
+  if (!body) return ''
+  if (typeof body === 'string') return body
+  if (body instanceof URLSearchParams) return body.toString()
+  return ''
+}
+
+function encodeHex(bytes: Uint8Array): string {
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function sha256Hex(text: string): Promise<string> {
+  const data = new TextEncoder().encode(text)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  return encodeHex(new Uint8Array(digest))
+}
+
+async function hmacSha256Hex(text: string, secret: string): Promise<string> {
+  const keyData = new TextEncoder().encode(secret)
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(text))
+  return encodeHex(new Uint8Array(signature))
+}
+
+async function addSignatureHeaders(url: string, options: RequestInit): Promise<Headers> {
+  const headers = new Headers(options.headers || {})
+  if (!apiSignSecret) {
+    return headers
+  }
+
+  const contentType = headers.get('Content-Type') || ''
+  if (contentType.toLowerCase().startsWith('multipart/form-data')) {
+    return headers
+  }
+
+  const method = (options.method || 'GET').toUpperCase()
+  const timestamp = getTimestamp()
+  const nonce = getNonce()
+  const bodyText = toBodyText(options.body)
+  const bodyHash = await sha256Hex(bodyText)
+  const payload = [method, toPathWithQuery(url), timestamp, nonce, bodyHash].join('\n')
+  const sign = await hmacSha256Hex(payload, apiSignSecret)
+
+  headers.set('X-App-Id', apiSignAppId)
+  headers.set('X-Timestamp', timestamp)
+  headers.set('X-Nonce', nonce)
+  headers.set('X-Sign', sign)
+  return headers
+}
+
+export async function signedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const signedHeaders = await addSignatureHeaders(url, options)
+  return fetch(url, {
+    ...options,
+    headers: signedHeaders,
+  })
+}
 
 class Request {
   private isRefreshing = false
@@ -13,17 +94,21 @@ class Request {
     return message
   }
 
-  private getHeaders(): HeadersInit {
+  private getHeaders(tokenOverride?: string): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     }
 
-    const token = localStorage.getItem('user_token')
+    const token = tokenOverride || localStorage.getItem('user_token')
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
     }
 
     return headers
+  }
+
+  private async doFetch(url: string, options: RequestInit): Promise<Response> {
+    return signedFetch(`${apiBaseUrl}${url}`, options)
   }
 
   // 订阅 token 刷新
@@ -40,7 +125,6 @@ class Request {
   // 刷新 token
   private async refreshToken(): Promise<string | null> {
     try {
-      // 从 localStorage 获取用户信息
       const userStr = localStorage.getItem('user')
       if (!userStr) {
         return null
@@ -48,13 +132,11 @@ class Request {
 
       const user = JSON.parse(userStr)
       const refreshToken = user.refreshToken
-
       if (!refreshToken) {
         return null
       }
 
-      // 调用刷新 token 接口
-      const response = await fetch(`${apiBaseUrl}/frontend/app/refresh-token`, {
+      const response = await this.doFetch('/frontend/app/refresh-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,11 +150,8 @@ class Request {
 
       if (result.code === 0 && result.data) {
         const { token, refresh_token } = result.data
-
-        // 更新 localStorage 中的 token
         localStorage.setItem('user_token', token)
 
-        // 更新 user 对象中的 refreshToken
         const updatedUser = {
           ...user,
           token,
@@ -98,18 +177,15 @@ class Request {
   ): Promise<T> {
     const result = await response.json()
 
-    // 检查是否是 401 错误
     if (result.code === 401) {
-      // 如果正在刷新 token，等待刷新完成
       if (this.isRefreshing) {
         return new Promise((resolve, reject) => {
           this.subscribeTokenRefresh(async (token: string) => {
             try {
-              // 使用新 token 重试请求
-              const retryResponse = await fetch(`${apiBaseUrl}${url}`, {
+              const retryResponse = await this.doFetch(url, {
                 ...options,
                 headers: {
-                  ...options?.headers,
+                  ...(options?.headers || {}),
                   Authorization: `Bearer ${token}`,
                 },
               })
@@ -122,28 +198,24 @@ class Request {
         })
       }
 
-      // 开始刷新 token
       this.isRefreshing = true
 
       try {
         const newToken = await this.refreshToken()
 
         if (newToken) {
-          // 通知所有等待的请求
           this.onTokenRefreshed(newToken)
 
-          // 使用新 token 重试当前请求
-          const retryResponse = await fetch(`${apiBaseUrl}${url}`, {
+          const retryResponse = await this.doFetch(url, {
             ...options,
             headers: {
-              ...options?.headers,
+              ...(options?.headers || {}),
               Authorization: `Bearer ${newToken}`,
             },
           })
           const retryResult = await retryResponse.json()
           return retryResult.data || retryResult
         } else {
-          // 刷新失败，清除登录信息并跳转到登录页
           localStorage.removeItem('user_token')
           localStorage.removeItem('user')
           window.location.href = '/login'
@@ -154,7 +226,6 @@ class Request {
       }
     }
 
-    // 正常返回数据
     if (result && typeof result === 'object') {
       if (result.msg) {
         result.msg = this.normalizeMessage(result.msg)
@@ -167,7 +238,6 @@ class Request {
   }
 
   async get<T = any>(url: string, options?: { params?: Record<string, any> }): Promise<T> {
-    // 构建 query 参数
     let fullUrl = url
     if (options?.params) {
       const queryString = new URLSearchParams(
@@ -188,7 +258,7 @@ class Request {
       headers: this.getHeaders(),
     }
 
-    const response = await fetch(`${apiBaseUrl}${fullUrl}`, requestOptions)
+    const response = await this.doFetch(fullUrl, requestOptions)
     return this.handleResponse<T>(response, fullUrl, requestOptions)
   }
 
@@ -199,7 +269,7 @@ class Request {
       body: JSON.stringify(data),
     }
 
-    const response = await fetch(`${apiBaseUrl}${url}`, options)
+    const response = await this.doFetch(url, options)
     return this.handleResponse<T>(response, url, options)
   }
 }

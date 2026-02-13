@@ -79,6 +79,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { showToast, showDialog } from 'vant'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api'
+import { signedFetch } from '@/utils/request'
 
 const router = useRouter()
 const route = useRoute()
@@ -124,7 +125,7 @@ const onSubmit = async () => {
 
     // 调用真实的登录接口
     const loginUrl = `${apiBaseUrl}/frontend/app/login`
-    const response = await fetch(loginUrl, {
+    const response = await signedFetch(loginUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -182,7 +183,7 @@ const onSubmit = async () => {
       // 调用刷新余额接口
       try {
         const refreshBalanceUrl = `${apiBaseUrl}/frontend/balance/refresh-balance`
-        const refreshBalanceResponse = await fetch(refreshBalanceUrl, {
+        const refreshBalanceResponse = await signedFetch(refreshBalanceUrl, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,

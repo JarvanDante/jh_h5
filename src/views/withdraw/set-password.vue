@@ -94,6 +94,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
+import { signedFetch } from '@/utils/request'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -229,7 +230,7 @@ const handleSubmit = async () => {
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
     const setPasswordUrl = `${apiBaseUrl}/frontend/app/set-pay-password`
 
-    const response = await fetch(setPasswordUrl, {
+    const response = await signedFetch(setPasswordUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

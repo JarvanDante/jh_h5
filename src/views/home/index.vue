@@ -255,6 +255,7 @@ import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/modules/user'
 import { gameApi } from '@/api/modules/game'
 import { refreshBalance as refreshBalanceApi } from '@/api'
+import { signedFetch } from '@/utils/request'
 import type { AdItem, NoticeItem } from '@/api/modules/user'
 import type { GameCategory, GameItem } from '@/api/modules/game'
 import AdPopup from '@/components/AdPopup.vue'
@@ -671,7 +672,7 @@ const refreshBalance = async () => {
 
     // 先调用刷新余额接口
     const refreshBalanceUrl = `${apiBaseUrl}/frontend/balance/refresh-balance`
-    const refreshBalanceResponse = await fetch(refreshBalanceUrl, {
+    const refreshBalanceResponse = await signedFetch(refreshBalanceUrl, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${userStore.token}`,
@@ -686,7 +687,7 @@ const refreshBalance = async () => {
       const refreshToken = userStore.refreshToken
       if (refreshToken) {
         const refreshUrl = `${apiBaseUrl}/frontend/app/refresh-token`
-        const refreshResponse = await fetch(refreshUrl, {
+        const refreshResponse = await signedFetch(refreshUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -706,7 +707,7 @@ const refreshBalance = async () => {
           }
 
           // 使用新 token 重新请求余额
-          const retryResponse = await fetch(refreshBalanceUrl, {
+          const retryResponse = await signedFetch(refreshBalanceUrl, {
             method: 'GET',
             headers: {
               Authorization: `Bearer ${refreshResult.data.token}`,
