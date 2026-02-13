@@ -1289,13 +1289,18 @@ onUnmounted(() => {
   // 轮播图
   .banner-section {
     padding: 0;
-    margin-bottom: 8px;
+    margin: 0 10px 10px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #2b1148;
+    box-shadow: 0 8px 18px rgba(33, 10, 62, 0.35);
 
     .banner-img {
       width: 100%;
-      height: 180px;
-      border-radius: 0;
+      height: 172px;
+      display: block;
       object-fit: cover;
+      object-position: center;
     }
   }
 
