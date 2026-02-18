@@ -61,7 +61,7 @@
       <van-swipe :autoplay="3000" indicator-color="#ffd700">
         <van-swipe-item v-for="(banner, index) in banners" :key="index">
           <img
-            :src="banner.image"
+            :src="normalizeAssetUrl(banner.image)"
             :alt="banner.name || `banner-${index}`"
             class="banner-img"
             @click="handleBannerClick(banner)"
@@ -148,7 +148,7 @@
             @click="handleGameClick(game)"
           >
             <div class="game-image-wrapper">
-              <img :src="game.img" :alt="game.name" class="game-cover" />
+              <img :src="normalizeAssetUrl(game.img || game.cover)" :alt="game.name" class="game-cover" />
               <div class="game-overlay">
                 <van-icon name="play-circle" size="40" color="#fff" />
               </div>
@@ -269,6 +269,31 @@ import AdPopup from '@/components/AdPopup.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+const normalizeAssetUrl = (rawUrl?: string) => {
+  const url = (rawUrl || '').trim()
+  if (!url) return ''
+
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url
+
+  const host = window.location.hostname
+  const port = window.location.port
+
+  if (url.startsWith('//')) {
+    return `${window.location.protocol}${url}`
+  }
+
+  if (url.startsWith('/')) {
+    return `${window.location.origin}${url}`
+  }
+
+  // 本地调试时，把 127.0.0.1 / localhost / 10.0.2.2 自动替换成当前访问主机
+  return url.replace(/https?:\/\/(127\.0\.0\.1|localhost|10\.0\.2\.2)(:\d+)?/gi, (m, _h, p) => {
+    const protocol = m.startsWith('https') ? 'https' : 'http'
+    const usePort = p || (port ? `:${port}` : '')
+    return `${protocol}://${host}${usePort}`
+  })
+}
 
 // 状态
 const activeTab = ref(0)
@@ -818,11 +843,19 @@ const fetchAdList = async () => {
         .filter((ad: AdItem) => ad.position === 1)
         .sort((a: AdItem, b: AdItem) => (b.sort ?? 0) - (a.sort ?? 0))
       if (bannerAds.length > 0) {
-        banners.value = bannerAds
+        banners.value = bannerAds.map((ad: AdItem) => ({
+          ...ad,
+          image: normalizeAssetUrl(ad.image),
+        }))
       }
 
       // position=2 的是弹窗广告
-      const popupAdList = res.list.filter((ad: AdItem) => ad.position === 2)
+      const popupAdList = res.list
+        .filter((ad: AdItem) => ad.position === 2)
+        .map((ad: AdItem) => ({
+          ...ad,
+          image: normalizeAssetUrl(ad.image),
+        }))
       const adPopupShown = sessionStorage.getItem('ad_popup_shown')
       const adPopupResume = localStorage.getItem('ad_popup_resume') === '1'
       if ((adPopupResume || !adPopupShown) && popupAdList.length > 0) {
@@ -983,7 +1016,11 @@ const fetchGameList = async () => {
     console.log('游戏列表响应:', res)
 
     if (res?.list && res.list.length > 0) {
-      gameList.value = res.list
+      gameList.value = res.list.map((game: any) => ({
+        ...game,
+        img: normalizeAssetUrl(game.img || game.cover),
+        cover: normalizeAssetUrl(game.cover || game.img),
+      }))
       gameListTotal.value = res.total
       console.log('游戏列表:', gameList.value)
     } else {
