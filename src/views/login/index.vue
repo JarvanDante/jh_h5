@@ -113,6 +113,31 @@ const goBack = () => {
   router.back()
 }
 
+const detectClientMeta = () => {
+  const ua = navigator.userAgent || ''
+  const uaLower = ua.toLowerCase()
+
+  let os = 'Unknown'
+  if (uaLower.includes('android')) os = 'Android'
+  else if (uaLower.includes('iphone') || uaLower.includes('ios')) os = 'iOS'
+  else if (uaLower.includes('ipad')) os = 'iPadOS'
+  else if (uaLower.includes('windows')) os = 'Windows'
+  else if (uaLower.includes('mac os') || uaLower.includes('macintosh')) os = 'macOS'
+  else if (uaLower.includes('linux')) os = 'Linux'
+
+  let browser = 'Unknown'
+  if (uaLower.includes('edg/')) browser = 'Edge'
+  else if (uaLower.includes('opr/') || uaLower.includes('opera')) browser = 'Opera'
+  else if (uaLower.includes('chrome/')) browser = 'Chrome'
+  else if (uaLower.includes('safari/') && !uaLower.includes('chrome/')) browser = 'Safari'
+  else if (uaLower.includes('firefox/')) browser = 'Firefox'
+
+  const network = (navigator as any).connection?.effectiveType || ''
+  const screen = `${window.screen.width || 0}x${window.screen.height || 0}`
+
+  return { os, browser, network, screen }
+}
+
 const onSubmit = async () => {
   try {
     loading.value = true
@@ -125,10 +150,15 @@ const onSubmit = async () => {
 
     // 调用真实的登录接口
     const loginUrl = `${apiBaseUrl}/frontend/app/login`
+    const clientMeta = detectClientMeta()
     const response = await signedFetch(loginUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Device-OS': clientMeta.os,
+        'X-Device-Browser': clientMeta.browser,
+        'X-Network-Type': clientMeta.network,
+        'X-Screen-Resolution': clientMeta.screen,
       },
       body: new URLSearchParams({
         username: formData.username,
