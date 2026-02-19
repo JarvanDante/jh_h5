@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '0.0.0.0',
       port: 5173,
-      allowedHosts: ['i.jh_h5.com', 'a01.jh_h5.com', 'a02.jh_h5.com'],
+      allowedHosts: ['i.jhh5.com', 'a01.jhh5.com', 'a02.jhh5.com'],
       proxy: {
         '/api/frontend': {
           target: proxyTarget,
