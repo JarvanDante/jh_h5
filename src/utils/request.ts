@@ -2,6 +2,7 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 const apiSignAppId = import.meta.env.VITE_API_SIGN_APP_ID || 'h5'
 const signSkipPathSuffixes = ['/login', '/logout', '/refresh-token', '/captcha', '/sign-session']
 const signSessionRenewSkewMs = 30 * 1000
+const devAllowInsecureNoSign = import.meta.env.DEV && import.meta.env.VITE_DEV_ALLOW_INSECURE_NO_SIGN === '1'
 
 type SignSession = {
   keyId: string
@@ -61,12 +62,18 @@ function encodeHex(bytes: Uint8Array): string {
 }
 
 async function sha256Hex(text: string): Promise<string> {
+  if (!globalThis.crypto?.subtle) {
+    throw new Error('WebCrypto is unavailable in current context')
+  }
   const data = new TextEncoder().encode(text)
   const digest = await crypto.subtle.digest('SHA-256', data)
   return encodeHex(new Uint8Array(digest))
 }
 
 async function hmacSha256Hex(text: string, secret: string): Promise<string> {
+  if (!globalThis.crypto?.subtle) {
+    throw new Error('WebCrypto is unavailable in current context')
+  }
   const keyData = new TextEncoder().encode(secret)
   const key = await crypto.subtle.importKey(
     'raw',
@@ -162,6 +169,12 @@ function clearSignSession() {
 async function addSignatureHeaders(url: string, options: RequestInit): Promise<Headers> {
   const headers = new Headers(options.headers || {})
   if (shouldSkipSignatureByPath(url)) {
+    return headers
+  }
+
+  // 开发环境兜底：非安全上下文下 WebCrypto 不可用，允许临时跳过签名
+  if (devAllowInsecureNoSign && (!window.isSecureContext || !globalThis.crypto?.subtle)) {
+    console.warn('[request] skip signature in insecure dev context:', url)
     return headers
   }
 
