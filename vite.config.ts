@@ -8,6 +8,7 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const proxyTarget = env.VITE_DEV_PROXY_TARGET || 'http://127.0.0.1:8000'
+  const useFixedSiteHeaders = env.VITE_DEV_USE_FIXED_SITE_HEADERS === '1'
   const devSiteId = env.VITE_DEV_SITE_ID || '1'
   const devSiteCode = env.VITE_DEV_SITE_CODE || 'jh'
 
@@ -27,31 +28,44 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '0.0.0.0',
       port: 5173,
-      allowedHosts: ['i.jhh5.com', 'a01.jhh5.com', 'a02.jhh5.com'],
+      allowedHosts: ['i.jh_h5.com', 'a01.jh_h5.com', 'a02.jh_h5.com', 'i.jhh5.com', 'a01.jhh5.com', 'a02.jhh5.com'],
       proxy: {
         '/api/frontend': {
           target: proxyTarget,
-          changeOrigin: true,
-          headers: {
-            'X-Site-Id': devSiteId,
-            'X-Site-Code': devSiteCode,
-          },
+          // 保留原始Host，便于gateway按域名解析site_id
+          changeOrigin: false,
+          ...(useFixedSiteHeaders
+            ? {
+                headers: {
+                  'X-Site-Id': devSiteId,
+                  'X-Site-Code': devSiteCode,
+                },
+              }
+            : {}),
         },
         '/api/backend': {
           target: proxyTarget,
-          changeOrigin: true,
-          headers: {
-            'X-Site-Id': devSiteId,
-            'X-Site-Code': devSiteCode,
-          },
+          changeOrigin: false,
+          ...(useFixedSiteHeaders
+            ? {
+                headers: {
+                  'X-Site-Id': devSiteId,
+                  'X-Site-Code': devSiteCode,
+                },
+              }
+            : {}),
         },
         '/api': {
           target: proxyTarget,
-          changeOrigin: true,
-          headers: {
-            'X-Site-Id': devSiteId,
-            'X-Site-Code': devSiteCode,
-          },
+          changeOrigin: false,
+          ...(useFixedSiteHeaders
+            ? {
+                headers: {
+                  'X-Site-Id': devSiteId,
+                  'X-Site-Code': devSiteCode,
+                },
+              }
+            : {}),
         },
       },
     },
