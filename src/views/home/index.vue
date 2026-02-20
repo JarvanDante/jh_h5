@@ -163,7 +163,7 @@
             <van-icon
               :name="isGameFavorite(game.id) ? 'star' : 'star-o'"
               :color="isGameFavorite(game.id) ? '#FDB927' : '#999'"
-              size="16"
+              size="18"
               class="favorite-icon"
               :class="{ active: isGameFavorite(game.id) }"
               @click.stop="toggleFavorite(game)"
@@ -1788,7 +1788,7 @@ onUnmounted(() => {
         top: 4px;
         right: 4px;
         background: rgba(255, 255, 255, 0.92);
-        padding: 2px;
+        padding: 3px;
         border-radius: 50%;
         transition: all 0.25s ease;
         z-index: 2;
