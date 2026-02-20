@@ -1512,10 +1512,13 @@ onUnmounted(() => {
       .digit-wrapper {
         width: 18px;
         height: 24px;
-        background: linear-gradient(180deg, #fff3bf 0%, #efc24f 100%);
+        background: linear-gradient(180deg, #fff8da 0%, #f9da7b 45%, #e6b63d 100%);
         border-radius: 4px;
-        border: 1px solid #8450cf;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 3px rgba(86, 44, 145, 0.45);
+        border: 1px solid #9b6a1b;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.82),
+          inset 0 -1px 0 rgba(166, 103, 10, 0.35),
+          0 1px 3px rgba(86, 44, 145, 0.35);
         overflow: hidden;
       }
 
