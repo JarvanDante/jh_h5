@@ -302,7 +302,7 @@ const normalizeAssetUrl = (rawUrl?: string) => {
 const activeTab = ref(0)
 const searchValue = ref('')
 const notificationCount = ref(0)
-const jackpotValue = ref(2476515.21)
+const jackpotValue = ref(24765152.13)
 const activeHall = ref('hot')
 
 // 游戏分类列表（从接口获取）
@@ -376,7 +376,7 @@ const noticeText = computed(() => {
 })
 
 // Jackpot 数字
-const previousJackpotValue = ref(2476515.21)
+const previousJackpotValue = ref(24765152.13)
 const jackpotRollTick = ref(0)
 
 const formatJackpot = (value: number) => {
@@ -1137,8 +1137,8 @@ onMounted(() => {
   setInterval(() => {
     previousJackpotValue.value = jackpotValue.value
     jackpotValue.value += Math.floor(Math.random() * 20) + Math.round(Math.random() * 99) / 100
-    if (jackpotValue.value >= 9999999.99) {
-      jackpotValue.value = 1000000 + Math.round(Math.random() * 8999999 * 100) / 100
+    if (jackpotValue.value >= 99999999.99) {
+      jackpotValue.value = 10000000 + Math.round(Math.random() * 89999999 * 100) / 100
     }
     jackpotRollTick.value += 1
   }, 1200)
