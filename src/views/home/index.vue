@@ -1475,7 +1475,7 @@ onUnmounted(() => {
         height: 100%;
         object-fit: contain;
         display: block;
-        transform: translateX(12px) scale(1.14);
+        transform: translateX(14px) scale(1.14);
       }
     }
 
