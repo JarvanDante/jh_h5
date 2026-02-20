@@ -21,6 +21,8 @@
           <van-icon :name="currentRoute === '/promotion' ? 'gift' : 'gift-o'" size="20" />
           <span>Promotion</span>
         </div>
+        <!-- Invite 活动下线，先注释底部中间入口 -->
+        <!--
         <div
           class="tabbar-item"
           :class="{ active: currentRoute === '/invite_activity' }"
@@ -32,6 +34,7 @@
           />
           <span>Invite</span>
         </div>
+        -->
         <div
           class="tabbar-item"
           :class="{ active: currentRoute === '/deposit' }"

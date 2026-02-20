@@ -113,8 +113,8 @@
           </van-button>
         </div> -->
 
-        <!-- 提示信息 -->
-        <div class="tips-text">💡 Invite 1 person and get ₱200</div>
+        <!-- Invite 活动下线，去掉注册页邀请提示 -->
+        <!-- <div class="tips-text">💡 Invite 1 person and get ₱200</div> -->
 
         <!-- 已有账号 -->
         <div class="login-link">

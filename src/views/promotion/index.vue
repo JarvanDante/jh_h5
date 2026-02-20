@@ -99,11 +99,10 @@ const fetchSiteActivities = async () => {
     eventsLoading.value = true
     const res = await userApi.getSiteActivityList()
     console.log('活动列表响应:', res)
-    if (res?.list && res.list.length > 0) {
-      eventPromotions.value = res.list
-    } else if (Array.isArray(res)) {
-      eventPromotions.value = res
-    }
+    const rawList = res?.list && res.list.length > 0 ? res.list : Array.isArray(res) ? res : []
+
+    // 只展示启用中的活动，并过滤掉 Invite（已下线）
+    eventPromotions.value = rawList.filter((item: any) => Number(item?.status) === 1 && item?.code !== 'INVITE')
   } catch (error) {
     console.error('获取活动列表失败:', error)
   } finally {

@@ -119,6 +119,8 @@
 
       <div class="menu-divider"></div>
 
+      <!-- Invite 活动下线，先注释 user 页入口 -->
+      <!--
       <div class="menu-item" @click="goToInvite">
         <div class="menu-icon invite-icon">👥</div>
         <div class="menu-content">
@@ -129,6 +131,7 @@
       </div>
 
       <div class="menu-divider"></div>
+      -->
 
       <div class="menu-item" @click="goToRebate">
         <div class="menu-icon redeem-icon">🎁</div>

@@ -105,11 +105,10 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/invite_activity',
-    name: 'InviteActivity',
-    component: () => import('@/views/invite/index.vue'),
+    name: 'InviteActivityOffline',
+    component: () => import('@/views/error/404.vue'),
     meta: {
-      title: '邀请好友',
-      requiresAuth: true,
+      title: '页面不存在',
     },
   },
   {
