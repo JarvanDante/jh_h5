@@ -19,7 +19,7 @@
       </div>
       <div class="detail-row">
         <span class="label">Transaction amount</span>
-        <span class="value">₱{{ formatAmount(detail.amount) }}</span>
+        <span class="value">₱{{ formatAmount(getDisplayTransactionAmount(detail)) }}</span>
       </div>
       <div class="detail-row">
         <span class="label">Audit multiplier</span>
@@ -95,6 +95,12 @@ const formatInteger = (value: number) => {
   const num = Number(value)
   if (Number.isNaN(num)) return '0'
   return String(Math.trunc(num))
+}
+
+const getDisplayTransactionAmount = (item: UserFlowRequirement) => {
+  const amount = Number(item?.amount || 0)
+  if (amount > 0) return amount
+  return Number(item?.bonus_amount || 0)
 }
 
 const getFlowTypeText = (type: number) => {
