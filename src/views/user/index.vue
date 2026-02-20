@@ -264,7 +264,7 @@ function getVipBadgeStyle() {
 const showFundPasswordDialog = ref(false)
 
 // 默认狮子头像（本地图片）
-const defaultAvatar = '/lion-avatar..png'
+const defaultAvatar = '/lion-avatar.png'
 
 // 用户数据
 const userId = computed(() => userStore.userInfo?.id || '285560778')
