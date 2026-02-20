@@ -165,6 +165,7 @@
               :color="isGameFavorite(game.id) ? '#FDB927' : '#999'"
               size="20"
               class="favorite-icon"
+              :class="{ active: isGameFavorite(game.id) }"
               @click.stop="toggleFavorite(game)"
             />
             <!-- 热门标签 -->
@@ -1786,14 +1787,22 @@ onUnmounted(() => {
         position: absolute;
         top: 4px;
         right: 4px;
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.92);
         padding: 4px;
         border-radius: 50%;
-        transition: all 0.3s ease;
+        transition: all 0.25s ease;
         z-index: 2;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+
+        &.active {
+          background: rgba(85, 37, 131, 0.92);
+          border-color: rgba(253, 185, 39, 0.8);
+          box-shadow: 0 0 0 1px rgba(253, 185, 39, 0.25), 0 4px 10px rgba(35, 12, 63, 0.45);
+        }
 
         &:active {
-          transform: scale(1.2);
+          transform: scale(1.15);
         }
       }
 
