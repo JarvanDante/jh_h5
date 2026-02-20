@@ -89,18 +89,12 @@
           <div v-for="digitInfo in jackpotDigits" :key="digitInfo.key" class="digit-wrapper">
             <div class="digit-scroll" :class="{ 'digit-rolling': digitInfo.changed }">
               <template v-if="digitInfo.changed">
-                <span class="digit">0</span>
-                <span class="digit">1</span>
-                <span class="digit">2</span>
-                <span class="digit">3</span>
-                <span class="digit">4</span>
-                <span class="digit">5</span>
-                <span class="digit">6</span>
-                <span class="digit">7</span>
-                <span class="digit">8</span>
-                <span class="digit">9</span>
+                <span class="digit">{{ digitInfo.prev }}</span>
+                <span class="digit">{{ digitInfo.value }}</span>
               </template>
-              <span class="digit">{{ digitInfo.value }}</span>
+              <template v-else>
+                <span class="digit">{{ digitInfo.value }}</span>
+              </template>
             </div>
           </div>
         </div>
@@ -374,6 +368,7 @@ const noticeText = computed(() => {
 
 // Jackpot 数字
 const previousJackpotValue = ref(2476515210800)
+const jackpotRollTick = ref(0)
 const jackpotDigits = computed(() => {
   const current = jackpotValue.value.toString().split('')
   const previous = previousJackpotValue.value.toString().split('')
@@ -388,8 +383,9 @@ const jackpotDigits = computed(() => {
 
   return current.map((digit, index) => ({
     value: digit,
+    prev: previous[index],
     changed: digit !== previous[index],
-    key: `${index}-${digit}-${digit !== previous[index] ? Date.now() : 'static'}`,
+    key: `${index}-${jackpotRollTick.value}`,
   }))
 })
 
@@ -1125,11 +1121,12 @@ onMounted(() => {
     }
   }
 
-  // Jackpot 滚动
+  // Jackpot 滚动（更平滑，接近赌场数字翻牌效果）
   setInterval(() => {
     previousJackpotValue.value = jackpotValue.value
-    jackpotValue.value += Math.floor(Math.random() * 100)
-  }, 2000)
+    jackpotValue.value += Math.floor(Math.random() * 20) + 1
+    jackpotRollTick.value += 1
+  }, 1200)
 
   // 监听滚动，固定左侧边栏
   const scrollContainer = document.querySelector('.app-container')
@@ -1496,10 +1493,10 @@ onUnmounted(() => {
       .digit-scroll {
         display: flex;
         flex-direction: column;
-        transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        transform: translateY(0);
 
         &.digit-rolling {
-          animation: rollToTarget 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+          animation: rollStep 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
       }
 
@@ -1517,12 +1514,12 @@ onUnmounted(() => {
     }
   }
 
-  @keyframes rollToTarget {
+  @keyframes rollStep {
     0% {
       transform: translateY(0);
     }
     100% {
-      transform: translateY(-360px);
+      transform: translateY(-20px);
     }
   }
 
