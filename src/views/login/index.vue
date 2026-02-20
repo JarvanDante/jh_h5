@@ -240,6 +240,9 @@ const onSubmit = async () => {
 
       showToast('Login successful')
 
+      // 登录成功后回到首页时，广告弹窗再展示一次
+      localStorage.setItem('ad_popup_resume', '1')
+
       // 跳转到之前的页面或首页
       const redirect = route.query.redirect as string
       router.replace(redirect || '/home')
