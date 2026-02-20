@@ -1429,27 +1429,37 @@ onUnmounted(() => {
   .jackpot-section {
     margin: 0 10px 8px;
     padding: 6px 10px 7px;
-    background: linear-gradient(90deg, #1e1208 0%, #3a2616 48%, #1f140b 100%);
-    border: 1px solid #8a5f28;
+    background: linear-gradient(90deg, #23123d 0%, #4a2378 52%, #2a1548 100%);
+    border: 1px solid #fdb927;
     border-radius: 10px;
     display: flex;
     align-items: center;
     gap: 8px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 4px 10px rgba(31, 15, 50, 0.45);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 70% 50%, rgba(253, 185, 39, 0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
 
     .jackpot-avatar {
       width: 36px;
       height: 36px;
       border-radius: 8px;
-      background: radial-gradient(circle at 50% 30%, #f7d98d 0%, #c7882b 60%, #7b4d14 100%);
+      background: radial-gradient(circle at 50% 30%, #7a49ba 0%, #552583 60%, #2d134b 100%);
+      border: 1px solid rgba(253, 185, 39, 0.7);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 20px;
       flex-shrink: 0;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      z-index: 1;
     }
 
     .jackpot-content {
@@ -1458,6 +1468,7 @@ onUnmounted(() => {
       display: flex;
       flex-direction: column;
       gap: 4px;
+      z-index: 1;
     }
 
     .jackpot-title-wrap {
@@ -1473,12 +1484,12 @@ onUnmounted(() => {
     }
 
     .jackpot-title {
-      color: #ffce52;
+      color: #fdb927;
       font-size: 16px;
       font-weight: 900;
       line-height: 1;
       letter-spacing: 0.5px;
-      text-shadow: 0 1px 0 #8a3f07, 0 2px 8px rgba(255, 153, 0, 0.45);
+      text-shadow: 0 1px 0 #7f4d12, 0 0 8px rgba(130, 79, 213, 0.55);
     }
 
     .jackpot-amount {
@@ -1490,11 +1501,12 @@ onUnmounted(() => {
       overflow: hidden;
 
       .digit-separator {
-        color: #f2c24f;
+        color: #f7d16e;
         font-size: 20px;
         font-weight: 800;
         line-height: 24px;
         margin: 0 1px;
+        text-shadow: 0 0 6px rgba(85, 37, 131, 0.6);
       }
 
       .digit-wrapper {
@@ -1502,8 +1514,8 @@ onUnmounted(() => {
         height: 24px;
         background: linear-gradient(180deg, #fff7cc 0%, #f3ce69 100%);
         border-radius: 4px;
-        border: 1px solid #9a691c;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.35);
+        border: 1px solid #6b3bb1;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(34, 16, 55, 0.45);
         overflow: hidden;
       }
 
