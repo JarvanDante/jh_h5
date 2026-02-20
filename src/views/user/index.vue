@@ -168,7 +168,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
@@ -449,6 +449,9 @@ const refreshBalance = async () => {
 
       // 触发余额动画
       animateBalance(oldBalance, refreshBalanceResult.data.balance || '0.00')
+
+      // 同步刷新VIP进度（充值后可能变化）
+      fetchVipProgress()
     } else {
       showToast(refreshBalanceResult.msg || 'Failed to refresh balance')
     }
@@ -564,6 +567,11 @@ const handleLogout = async () => {
 }
 
 // 页面加载时获取用户信息
+onActivated(() => {
+  if (!userStore.isLogin) return
+  fetchVipProgress()
+})
+
 onMounted(async () => {
   // 检查是否登录
   if (!userStore.isLogin) {
