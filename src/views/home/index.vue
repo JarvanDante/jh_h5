@@ -1452,8 +1452,8 @@ onUnmounted(() => {
     }
 
     .jackpot-avatar {
-      width: 62px;
-      height: 62px;
+      width: 78px;
+      height: 78px;
       border-radius: 0;
       background: transparent;
       border: none;
@@ -1470,7 +1470,7 @@ onUnmounted(() => {
         height: 100%;
         object-fit: contain;
         display: block;
-        transform: scale(1.05);
+        transform: scale(1.12);
       }
     }
 
