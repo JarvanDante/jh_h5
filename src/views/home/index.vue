@@ -161,8 +161,8 @@
               <div class="game-name">{{ game.name }}</div>
             </div>
             <van-icon
-              name="like"
-              :color="isGameFavorite(game.id) ? '#ff6b6b' : '#999'"
+              :name="isGameFavorite(game.id) ? 'star' : 'star-o'"
+              :color="isGameFavorite(game.id) ? '#FDB927' : '#999'"
               size="20"
               class="favorite-icon"
               @click.stop="toggleFavorite(game)"
