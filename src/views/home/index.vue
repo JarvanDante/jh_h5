@@ -82,7 +82,9 @@
 
     <!-- Jackpot 显示 -->
     <div class="jackpot-section">
-      <div class="jackpot-avatar">👑</div>
+      <div class="jackpot-avatar">
+        <img src="/jackpot_left.png" alt="jackpot" class="jackpot-avatar-img" />
+      </div>
       <div class="jackpot-content">
         <div class="jackpot-title-wrap">
           <span class="star">★</span>
@@ -1456,10 +1458,17 @@ onUnmounted(() => {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
       flex-shrink: 0;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
       z-index: 1;
+      overflow: hidden;
+
+      .jackpot-avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
     }
 
     .jackpot-content {
