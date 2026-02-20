@@ -585,7 +585,7 @@ const menuVisible = ref(false)
 
 const menuItems = [
   { icon: 'gift-o', label: 'Promotion', path: '/promotion' },
-  { icon: 'friends-o', label: 'Invite', path: '/invite_activity' },
+  // { icon: 'friends-o', label: 'Invite', path: '/invite_activity' }, // Invite 活动下线
   { icon: 'gold-coin-o', label: 'Deposit', path: '/deposit' },
   { icon: 'card', label: 'Withdraw', path: '/withdraw' },
   { icon: 'bar-chart-o', label: 'Report', path: '/report' },
