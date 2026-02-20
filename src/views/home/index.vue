@@ -93,7 +93,7 @@
         </div>
         <div class="jackpot-amount">
           <template v-for="digitInfo in jackpotDigits" :key="digitInfo.key">
-            <span v-if="digitInfo.separator" class="digit-separator">,</span>
+            <span v-if="digitInfo.separator" class="digit-separator">{{ digitInfo.value }}</span>
             <div v-else class="digit-wrapper">
               <div class="digit-scroll" :class="{ 'digit-rolling': digitInfo.changed }">
                 <template v-if="digitInfo.changed">
@@ -380,7 +380,9 @@ const previousJackpotValue = ref(2476515210800)
 const jackpotRollTick = ref(0)
 
 const formatJackpot = (value: number) => {
-  return Math.floor(value).toLocaleString('en-US')
+  const safeValue = Math.max(0, value)
+  const [intPart, decimalPart] = safeValue.toFixed(2).split('.')
+  return `${Number(intPart).toLocaleString('en-US')}.${decimalPart}`
 }
 
 const jackpotDigits = computed(() => {
@@ -393,8 +395,8 @@ const jackpotDigits = computed(() => {
   return current.map((digit, index) => ({
     value: digit,
     prev: previous[index],
-    separator: digit === ',',
-    changed: digit !== ',' && digit !== previous[index],
+    separator: digit === ',' || digit === '.',
+    changed: digit !== ',' && digit !== '.' && digit !== previous[index],
     key: `${index}-${jackpotRollTick.value}`,
   }))
 })
@@ -1134,7 +1136,7 @@ onMounted(() => {
   // Jackpot 滚动（更平滑，接近赌场数字翻牌效果）
   setInterval(() => {
     previousJackpotValue.value = jackpotValue.value
-    jackpotValue.value += Math.floor(Math.random() * 20) + 1
+    jackpotValue.value += Math.floor(Math.random() * 20) + Math.round(Math.random() * 99) / 100
     jackpotRollTick.value += 1
   }, 1200)
 
