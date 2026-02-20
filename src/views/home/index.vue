@@ -674,7 +674,8 @@ const toggleFavorite = async (game: GameItem) => {
       game_img: game.img || game.img1 || '',
     })
     game.is_favorite = Number(res?.is_favorite || 0)
-    showToast(game.is_favorite === 1 ? '已添加到收藏' : '已取消收藏')
+    const tip = res?.message || (game.is_favorite === 1 ? 'Added to favorites' : 'Removed from favorites')
+    showToast(tip)
   } catch (error) {
     console.error('收藏操作失败:', error)
     showToast('操作失败，请重试')
