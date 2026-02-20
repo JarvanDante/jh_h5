@@ -1432,7 +1432,7 @@ onUnmounted(() => {
   // Jackpot 显示（参考赌场风格）
   .jackpot-section {
     margin: 0 10px 8px;
-    padding: 4px 10px 5px;
+    padding: 2px 10px 3px;
     background: linear-gradient(90deg, #3a1f62 0%, #6b37a7 52%, #43226f 100%);
     border: 1px solid #ffcf5a;
     border-radius: 10px;
@@ -1452,8 +1452,8 @@ onUnmounted(() => {
     }
 
     .jackpot-avatar {
-      width: 80px;
-      height: 80px;
+      width: 72px;
+      height: 72px;
       border-radius: 0;
       background: transparent;
       border: none;
