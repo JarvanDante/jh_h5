@@ -83,7 +83,7 @@
     <!-- Jackpot 显示 -->
     <div class="jackpot-section">
       <div class="jackpot-avatar">
-        <img src="/luck777.png" alt="jackpot" class="jackpot-avatar-img" />
+        <img src="/luck777_transparent.png" alt="jackpot" class="jackpot-avatar-img" />
       </div>
       <div class="jackpot-content">
         <div class="jackpot-title-wrap">
