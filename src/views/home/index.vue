@@ -1452,21 +1452,21 @@ onUnmounted(() => {
     .jackpot-avatar {
       width: 36px;
       height: 36px;
-      border-radius: 8px;
-      background: radial-gradient(circle at 50% 30%, #9e69e6 0%, #6f39b5 58%, #3c1b63 100%);
-      border: 1px solid rgba(255, 211, 98, 0.85);
+      border-radius: 0;
+      background: transparent;
+      border: none;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      box-shadow: none;
       z-index: 1;
-      overflow: hidden;
+      overflow: visible;
 
       .jackpot-avatar-img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         display: block;
       }
     }
