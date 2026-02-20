@@ -1643,7 +1643,6 @@ onUnmounted(() => {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
-    min-height: 200px;
     overflow: hidden;
 
     .game-card {
