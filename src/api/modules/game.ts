@@ -34,6 +34,7 @@ export interface GameItem {
   status: number
   sort: number
   game_id: number
+  is_favorite?: number
 }
 
 // 游戏列表响应
@@ -99,6 +100,22 @@ export interface WashCodeQuotaResponse {
   last_rebate_time: string
 }
 
+export interface ToggleFavoriteParams {
+  platform: string
+  game_code: string
+  game_id?: number
+  game_name?: string
+  vendor?: string
+  style?: string
+  game_img?: string
+}
+
+export interface ToggleFavoriteResponse {
+  success: boolean
+  message: string
+  is_favorite: number
+}
+
 // 游戏 API
 export const gameApi = {
   // 获取游戏分类
@@ -131,6 +148,16 @@ export const gameApi = {
   // 获取投注历史
   getBetHistory(params: BetHistoryParams): Promise<BetHistoryResponse> {
     return request.get('/frontend/game/bet-history', { params })
+  },
+
+  // 收藏/取消收藏游戏
+  toggleFavoriteGame(params: ToggleFavoriteParams): Promise<ToggleFavoriteResponse> {
+    return request.post('/frontend/game/favorite-toggle', params)
+  },
+
+  // 获取我的收藏游戏
+  getFavoriteGameList(): Promise<GameListResponse> {
+    return request.get('/frontend/game/favorite-list')
   },
 
   // 获取可洗码额度

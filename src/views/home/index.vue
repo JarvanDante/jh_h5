@@ -439,8 +439,7 @@ const games = ref([
   },
 ])
 
-// 收藏的游戏ID列表
-const favoriteGameIds = ref<number[]>([])
+// 收藏状态由后端返回 is_favorite 字段
 
 // 是否正在刷新余额
 const isRefreshing = ref(false)
@@ -510,7 +509,7 @@ const filteredGames = computed(() => {
   // 根据选中的游戏厅过滤
   if (activeHall.value === 'favorite') {
     // 显示收藏的游戏
-    result = result.filter((game) => favoriteGameIds.value.includes(game.id))
+    result = result.filter((game) => Number(game.is_favorite || 0) === 1)
   } else if (activeHall.value === 'hot') {
     // 显示热门游戏
     result = result.filter((game) => game.hot === 1)
@@ -648,20 +647,35 @@ const handleGameClick = (game: GameItem) => {
   })
 }
 
-const toggleFavorite = (game: GameItem) => {
-  const index = favoriteGameIds.value.indexOf(game.id)
-  if (index > -1) {
-    favoriteGameIds.value.splice(index, 1)
-    showToast('已取消收藏')
-  } else {
-    favoriteGameIds.value.push(game.id)
-    showToast('已添加到收藏')
+const toggleFavorite = async (game: GameItem) => {
+  if (!isLogin.value) {
+    showToast('Please login first')
+    router.push('/login')
+    return
+  }
+
+  try {
+    const res = await gameApi.toggleFavoriteGame({
+      platform: game.platform,
+      game_code: game.code,
+      game_id: game.game_id,
+      game_name: game.name,
+      vendor: game.vendor,
+      style: game.style,
+      game_img: game.img || game.img1 || '',
+    })
+    game.is_favorite = Number(res?.is_favorite || 0)
+    showToast(game.is_favorite === 1 ? '已添加到收藏' : '已取消收藏')
+  } catch (error) {
+    console.error('收藏操作失败:', error)
+    showToast('操作失败，请重试')
   }
 }
 
 // 检查游戏是否被收藏
 const isGameFavorite = (gameId: number) => {
-  return favoriteGameIds.value.includes(gameId)
+  const game = gameList.value.find((it) => Number(it.id) === Number(gameId))
+  return Number(game?.is_favorite || 0) === 1
 }
 
 const handleTelegram = () => {
