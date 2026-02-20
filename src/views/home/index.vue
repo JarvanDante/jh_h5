@@ -1429,8 +1429,8 @@ onUnmounted(() => {
   .jackpot-section {
     margin: 0 10px 8px;
     padding: 6px 10px 7px;
-    background: linear-gradient(90deg, #23123d 0%, #4a2378 52%, #2a1548 100%);
-    border: 1px solid #fdb927;
+    background: linear-gradient(90deg, #3a1f62 0%, #6b37a7 52%, #43226f 100%);
+    border: 1px solid #ffcf5a;
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -1443,7 +1443,7 @@ onUnmounted(() => {
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 70% 50%, rgba(253, 185, 39, 0.12) 0%, transparent 60%);
+      background: radial-gradient(circle at 70% 50%, rgba(189, 133, 255, 0.22) 0%, transparent 62%);
       pointer-events: none;
     }
 
@@ -1451,8 +1451,8 @@ onUnmounted(() => {
       width: 36px;
       height: 36px;
       border-radius: 8px;
-      background: radial-gradient(circle at 50% 30%, #7a49ba 0%, #552583 60%, #2d134b 100%);
-      border: 1px solid rgba(253, 185, 39, 0.7);
+      background: radial-gradient(circle at 50% 30%, #9e69e6 0%, #6f39b5 58%, #3c1b63 100%);
+      border: 1px solid rgba(255, 211, 98, 0.85);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1478,18 +1478,18 @@ onUnmounted(() => {
       gap: 4px;
 
       .star {
-        color: #fdb927;
+        color: #ffdf7a;
         font-size: 10px;
       }
     }
 
     .jackpot-title {
-      color: #fdb927;
+      color: #ffe083;
       font-size: 16px;
       font-weight: 900;
       line-height: 1;
       letter-spacing: 0.5px;
-      text-shadow: 0 1px 0 #7f4d12, 0 0 8px rgba(130, 79, 213, 0.55);
+      text-shadow: 0 1px 0 #8d5a1b, 0 0 10px rgba(179, 122, 255, 0.75);
     }
 
     .jackpot-amount {
@@ -1501,7 +1501,7 @@ onUnmounted(() => {
       overflow: hidden;
 
       .digit-separator {
-        color: #f7d16e;
+        color: #ffe08a;
         font-size: 20px;
         font-weight: 800;
         line-height: 24px;
@@ -1514,8 +1514,8 @@ onUnmounted(() => {
         height: 24px;
         background: linear-gradient(180deg, #fff7cc 0%, #f3ce69 100%);
         border-radius: 4px;
-        border: 1px solid #6b3bb1;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(34, 16, 55, 0.45);
+        border: 1px solid #8450cf;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 1px 3px rgba(86, 44, 145, 0.55);
         overflow: hidden;
       }
 
