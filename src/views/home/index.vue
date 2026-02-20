@@ -82,21 +82,28 @@
 
     <!-- Jackpot 显示 -->
     <div class="jackpot-section">
-      <div class="jackpot-icon">💰</div>
+      <div class="jackpot-avatar">👑</div>
       <div class="jackpot-content">
-        <div class="jackpot-title">JACKPOT</div>
+        <div class="jackpot-title-wrap">
+          <span class="star">★</span>
+          <div class="jackpot-title">JACKPOT</div>
+          <span class="star">★</span>
+        </div>
         <div class="jackpot-amount">
-          <div v-for="digitInfo in jackpotDigits" :key="digitInfo.key" class="digit-wrapper">
-            <div class="digit-scroll" :class="{ 'digit-rolling': digitInfo.changed }">
-              <template v-if="digitInfo.changed">
-                <span class="digit">{{ digitInfo.prev }}</span>
-                <span class="digit">{{ digitInfo.value }}</span>
-              </template>
-              <template v-else>
-                <span class="digit">{{ digitInfo.value }}</span>
-              </template>
+          <template v-for="digitInfo in jackpotDigits" :key="digitInfo.key">
+            <span v-if="digitInfo.separator" class="digit-separator">,</span>
+            <div v-else class="digit-wrapper">
+              <div class="digit-scroll" :class="{ 'digit-rolling': digitInfo.changed }">
+                <template v-if="digitInfo.changed">
+                  <span class="digit">{{ digitInfo.prev }}</span>
+                  <span class="digit">{{ digitInfo.value }}</span>
+                </template>
+                <template v-else>
+                  <span class="digit">{{ digitInfo.value }}</span>
+                </template>
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </div>
     </div>
@@ -369,22 +376,23 @@ const noticeText = computed(() => {
 // Jackpot 数字
 const previousJackpotValue = ref(2476515210800)
 const jackpotRollTick = ref(0)
-const jackpotDigits = computed(() => {
-  const current = jackpotValue.value.toString().split('')
-  const previous = previousJackpotValue.value.toString().split('')
 
-  // 补齐位数，确保长度一致
-  while (current.length < previous.length) {
-    current.unshift('0')
-  }
-  while (previous.length < current.length) {
-    previous.unshift('0')
-  }
+const formatJackpot = (value: number) => {
+  return Math.floor(value).toLocaleString('en-US')
+}
+
+const jackpotDigits = computed(() => {
+  const current = formatJackpot(jackpotValue.value).split('')
+  const previous = formatJackpot(previousJackpotValue.value).split('')
+
+  while (current.length < previous.length) current.unshift('0')
+  while (previous.length < current.length) previous.unshift('0')
 
   return current.map((digit, index) => ({
     value: digit,
     prev: previous[index],
-    changed: digit !== previous[index],
+    separator: digit === ',',
+    changed: digit !== ',' && digit !== previous[index],
     key: `${index}-${jackpotRollTick.value}`,
   }))
 })
@@ -1417,77 +1425,86 @@ onUnmounted(() => {
     }
   }
 
-  // Jackpot 显示
+  // Jackpot 显示（参考赌场风格）
   .jackpot-section {
-    margin: 0 12px 8px;
-    padding: 6px 10px;
-    background: #552583;
-    border: 2px solid #fdb927;
-    border-radius: $border-radius-lg;
+    margin: 0 10px 8px;
+    padding: 6px 10px 7px;
+    background: linear-gradient(90deg, #1e1208 0%, #3a2616 48%, #1f140b 100%);
+    border: 1px solid #8a5f28;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     gap: 8px;
     position: relative;
     overflow: hidden;
-    box-shadow: $shadow-lg;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(circle at 50% 50%, rgba(253, 185, 39, 0.2) 0%, transparent 70%);
-      opacity: 0.5;
-    }
-
-    .jackpot-icon {
-      width: 24px;
-      height: 24px;
-      font-size: 20px;
+    .jackpot-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: radial-gradient(circle at 50% 30%, #f7d98d 0%, #c7882b 60%, #7b4d14 100%);
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 20px;
       flex-shrink: 0;
-      z-index: 1;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
 
     .jackpot-content {
       flex: 1;
       min-width: 0;
-      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .jackpot-title-wrap {
       display: flex;
       align-items: center;
-      gap: 24px;
+      justify-content: center;
+      gap: 4px;
+
+      .star {
+        color: #fdb927;
+        font-size: 10px;
+      }
     }
 
     .jackpot-title {
-      color: #fdb927;
-      font-size: 11px;
-      font-weight: bold;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      flex-shrink: 0;
+      color: #ffce52;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 0 #8a3f07, 0 2px 8px rgba(255, 153, 0, 0.45);
     }
 
     .jackpot-amount {
       display: flex;
-      justify-content: flex-start;
-      gap: 1px;
+      justify-content: center;
+      align-items: center;
+      gap: 2px;
       flex-wrap: nowrap;
       overflow: hidden;
-      flex: 1;
+
+      .digit-separator {
+        color: #f2c24f;
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 24px;
+        margin: 0 1px;
+      }
 
       .digit-wrapper {
-        min-width: 16px;
-        max-width: 20px;
-        flex: 0 1 auto;
-        height: 20px;
-        background: #fdb927;
-        border-radius: 2px;
-        box-shadow: $shadow-md;
+        width: 18px;
+        height: 24px;
+        background: linear-gradient(180deg, #fff7cc 0%, #f3ce69 100%);
+        border-radius: 4px;
+        border: 1px solid #9a691c;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.35);
         overflow: hidden;
-        position: relative;
       }
 
       .digit-scroll {
@@ -1496,20 +1513,19 @@ onUnmounted(() => {
         transform: translateY(0);
 
         &.digit-rolling {
-          animation: rollStep 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          animation: rollStep 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
       }
 
       .digit {
         display: block;
         width: 100%;
-        height: 20px;
-        color: #1f1f1f;
-        font-size: 13px;
-        font-weight: bold;
+        height: 24px;
+        color: #161616;
+        font-size: 16px;
+        font-weight: 900;
         text-align: center;
-        line-height: 20px;
-        flex-shrink: 0;
+        line-height: 24px;
       }
     }
   }
@@ -1519,7 +1535,7 @@ onUnmounted(() => {
       transform: translateY(0);
     }
     100% {
-      transform: translateY(-20px);
+      transform: translateY(-24px);
     }
   }
 
