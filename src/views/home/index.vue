@@ -1141,7 +1141,7 @@ onMounted(() => {
       jackpotValue.value = 10000000 + Math.round(Math.random() * 89999999 * 100) / 100
     }
     jackpotRollTick.value += 1
-  }, 1200)
+  }, 2200)
 
   // 监听滚动，固定左侧边栏
   const scrollContainer = document.querySelector('.app-container')
