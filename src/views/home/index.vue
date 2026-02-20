@@ -1403,15 +1403,17 @@ onUnmounted(() => {
       flex: 1;
       overflow: hidden;
       position: relative;
-      height: 16px;
+      height: 18px;
+      display: flex;
+      align-items: center;
 
       .notice-text {
         display: inline-block;
         white-space: nowrap;
-        color: #fdb927;
+        color: #7a49ba;
         font-size: 11px;
-        font-weight: 500;
-        line-height: 16px;
+        font-weight: 600;
+        line-height: 18px;
         animation: marquee 20s linear infinite;
         padding-left: 100%;
       }
