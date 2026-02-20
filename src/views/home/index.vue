@@ -1010,6 +1010,30 @@ const fetchGameList = async () => {
   try {
     gameListLoading.value = true
 
+    // 收藏大厅走专用接口
+    if (activeHall.value === 'favorite') {
+      if (!isLogin.value) {
+        gameList.value = []
+        gameListTotal.value = 0
+        return
+      }
+      const favRes = await gameApi.getFavoriteGameList()
+      console.log('收藏游戏列表响应:', favRes)
+      if (favRes?.list && favRes.list.length > 0) {
+        gameList.value = favRes.list.map((game: any) => ({
+          ...game,
+          is_favorite: 1,
+          img: normalizeAssetUrl(game.img || game.cover),
+          cover: normalizeAssetUrl(game.cover || game.img),
+        }))
+        gameListTotal.value = favRes.total || favRes.list.length
+      } else {
+        gameList.value = []
+        gameListTotal.value = 0
+      }
+      return
+    }
+
     // 根据当前选中的游戏厅构建请求参数
     const params: any = {
       page: 1,
@@ -1018,7 +1042,7 @@ const fetchGameList = async () => {
 
     if (activeHall.value === 'hot') {
       params.hot = 1
-    } else if (activeHall.value !== 'favorite') {
+    } else {
       // 如果选中的是平台
       const selectedHall = gameHalls.value.find((hall) => hall.id === activeHall.value)
       if (selectedHall && selectedHall.platform) {
