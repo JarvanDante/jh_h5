@@ -13,9 +13,10 @@
         <!-- 已登录状态 -->
         <template v-else>
           <div class="notification" @click="goToMessages">
-            <van-badge :content="notificationCount" max="99">
+            <van-badge v-if="notificationCount > 0" :content="notificationCount" max="99">
               <van-icon name="envelop-o" size="24" color="#fff" />
             </van-badge>
+            <van-icon v-else name="envelop-o" size="24" color="#fff" />
           </div>
           <div class="user-info" @click="goToUser">
             <van-icon name="user-circle-o" size="24" color="#fff" />
