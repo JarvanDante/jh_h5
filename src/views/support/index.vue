@@ -19,7 +19,34 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const lhcChatUrl = computed(() => {
-  const base = 'http://localhost:8086/index.php/chat/start'
+  let base = ''
+  try {
+    const raw = localStorage.getItem('site_setting')
+    if (raw) {
+      const setting = JSON.parse(raw)
+      base = String(setting?.service_url || '').trim()
+    }
+  } catch (error) {
+    console.error('Failed to parse site_setting:', error)
+  }
+
+  if (!base) {
+    base = 'http://localhost:8086/index.php/chat/start'
+  }
+
+  // 兼容后台仅配置域名/端口（如 //localhost:8086）
+  if (base.startsWith('//')) {
+    const hostOnly = base.slice(2)
+    const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(hostOnly)
+    base = `${isLocal ? 'http:' : window.location.protocol}${base}`
+  }
+  if (!/^https?:\/\//i.test(base)) {
+    const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(\/|$)/i.test(base)
+    base = `${isLocal ? 'http' : 'https'}://${base}`
+  }
+  if (!/\/index\.php\/chat\/start/i.test(base)) {
+    base = `${base.replace(/\/$/, '')}/index.php/chat/start`
+  }
   const rawName = String(userStore.userInfo?.username || '').trim()
   const email = String((userStore.userInfo as any)?.email || '').trim()
 

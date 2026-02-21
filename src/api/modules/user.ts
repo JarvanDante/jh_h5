@@ -166,6 +166,21 @@ export interface GradeListResponse {
   list: GradeInfo[]
 }
 
+
+// 站点设置响应
+export interface SiteSettingResponse {
+  url_tg?: string
+  site_name?: string
+  mobile_url?: string
+  switch_register?: number
+  service_url?: string
+  close?: number
+  min_withdraw?: string
+  max_withdraw?: string
+  mobile_logo?: string
+  close_reason?: string
+}
+
 // 用户 API
 export const userApi = {
   // 登录
@@ -252,6 +267,12 @@ export const userApi = {
   // 获取会员等级列表
   getGradeList(): Promise<GradeListResponse> {
     return request.get('/frontend/app/grade-list')
+  },
+
+
+  // 获取站点设置
+  getSiteSetting(): Promise<SiteSettingResponse> {
+    return request.get('/frontend/app/setting-site')
   },
 
   // 获取站点活动列表

@@ -343,7 +343,34 @@ const username = computed(() => userStore.userInfo?.username || 'Guest')
 
 // 客服聊天地址：登录后把用户名/邮箱预填给 LHC，避免显示 Visitor
 const lhcChatUrl = computed(() => {
-  const base = 'http://localhost:8086/index.php/chat/start'
+  let base = ''
+  try {
+    const raw = localStorage.getItem('site_setting')
+    if (raw) {
+      const setting = JSON.parse(raw)
+      base = String(setting?.service_url || '').trim()
+    }
+  } catch (error) {
+    console.error('Failed to parse site_setting:', error)
+  }
+
+  if (!base) {
+    base = 'http://localhost:8086/index.php/chat/start'
+  }
+
+  // 兼容后台仅配置域名/端口（如 //localhost:8086）
+  if (base.startsWith('//')) {
+    const hostOnly = base.slice(2)
+    const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(hostOnly)
+    base = `${isLocal ? 'http:' : window.location.protocol}${base}`
+  }
+  if (!/^https?:\/\//i.test(base)) {
+    const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(\/|$)/i.test(base)
+    base = `${isLocal ? 'http' : 'https'}://${base}`
+  }
+  if (!/\/index\.php\/chat\/start/i.test(base)) {
+    base = `${base.replace(/\/$/, '')}/index.php/chat/start`
+  }
   const rawName = String(userStore.userInfo?.username || '').trim()
   const email = String((userStore.userInfo as any)?.email || '').trim()
 
@@ -721,7 +748,27 @@ const isGameFavorite = (gameId: number) => {
 }
 
 const handleTelegram = () => {
-  window.open('https://t.me/EdisonWang5566', '_blank')
+  let tgUrl = ''
+  try {
+    const raw = localStorage.getItem('site_setting')
+    if (raw) {
+      const setting = JSON.parse(raw)
+      tgUrl = String(setting?.url_tg || '').trim()
+    }
+  } catch (error) {
+    console.error('Failed to parse site_setting:', error)
+  }
+
+  if (!tgUrl) {
+    showToast('Telegram link not configured')
+    return
+  }
+
+  if (!/^https?:\/\//i.test(tgUrl)) {
+    tgUrl = `https://${tgUrl}`
+  }
+
+  window.open(tgUrl, '_blank')
 }
 
 const showLhcPanel = ref(false)
@@ -871,6 +918,18 @@ const refreshBalance = async () => {
     setTimeout(() => {
       isRefreshing.value = false
     }, 1000) // 确保动画完成后才允许再次点击
+  }
+}
+
+
+const fetchSiteSetting = async () => {
+  try {
+    const res = await userApi.getSiteSetting()
+    if (res && typeof res === 'object') {
+      localStorage.setItem('site_setting', JSON.stringify(res))
+    }
+  } catch (error) {
+    console.error('获取站点设置失败:', error)
   }
 }
 
@@ -1110,6 +1169,9 @@ const fetchGameList = async () => {
 onMounted(() => {
   // 初始化显示余额
   displayBalance.value = balance.value
+
+  // 获取站点设置（首页请求一次并缓存）
+  fetchSiteSetting()
 
   // 获取广告列表
   fetchAdList()
