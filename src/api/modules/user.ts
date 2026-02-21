@@ -170,6 +170,7 @@ export interface GradeListResponse {
 // 站点设置响应
 export interface SiteSettingResponse {
   url_tg?: string
+  web_url?: string
   site_name?: string
   mobile_url?: string
   switch_register?: number

@@ -3,8 +3,8 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <div class="logo">
-        <div class="logo-img">🎰</div>
-        <span class="logo-text">JILIEVO.CC</span>
+        <div class="logo-img"><img v-if="siteLogoUrl" :src="siteLogoUrl" alt="logo" class="site-logo-img" /><span v-else>🎰</span></div>
+        <span class="logo-text">{{ siteDisplayName }}</span>
       </div>
       <div class="top-actions">
         <!-- 未登录状态：不显示顶部Login按钮 -->
@@ -230,8 +230,8 @@
       <div v-if="menuVisible" class="drawer-panel" @click.stop>
         <div class="drawer-header">
           <div class="drawer-logo">
-            <div class="drawer-logo-img">🎰</div>
-            <span class="drawer-logo-text">JILIEVO.CC</span>
+            <div class="drawer-logo-img"><img v-if="siteLogoUrl" :src="siteLogoUrl" alt="logo" class="site-logo-img" /><span v-else>🎰</span></div>
+            <span class="drawer-logo-text">{{ siteDisplayName }}</span>
           </div>
           <van-icon name="cross" size="20" color="#fdb927" @click="menuVisible = false" />
         </div>
@@ -341,6 +341,41 @@ const isLogin = computed(() => userStore.isLogin)
 // 用户信息
 const username = computed(() => userStore.userInfo?.username || 'Guest')
 
+
+const siteLogoUrl = computed(() => {
+  try {
+    const raw = localStorage.getItem('site_setting')
+    if (raw) {
+      const setting = JSON.parse(raw)
+      const logo = String(setting?.mobile_logo || '').trim()
+      if (logo) return normalizeAssetUrl(logo)
+    }
+  } catch (error) {
+    console.error('Failed to parse site_setting:', error)
+  }
+  return ''
+})
+
+const siteDisplayName = computed(() => {
+  try {
+    const raw = localStorage.getItem('site_setting')
+    if (raw) {
+      const setting = JSON.parse(raw)
+      const webUrl = String(setting?.web_url || '').trim()
+      if (webUrl) {
+        return webUrl
+          .replace(/^https?:\/\//i, '')
+          .replace(/^\/\//, '')
+          .replace(/\/$/, '')
+          .toUpperCase()
+      }
+    }
+  } catch (error) {
+    console.error('Failed to parse site_setting:', error)
+  }
+  return 'JILIEVO.CC'
+})
+
 // 客服聊天地址：登录后把用户名/邮箱预填给 LHC，避免显示 Visitor
 const lhcChatUrl = computed(() => {
   let base = ''
@@ -431,7 +466,7 @@ const sidebarFixed = ref(false)
 // 公告列表
 const noticeList = ref<NoticeItem[]>([])
 const noticeText = computed(() => {
-  if (noticeList.value.length === 0) return 'Welcome to JILIEVO.CC'
+  if (noticeList.value.length === 0) return `Welcome to ${siteDisplayName.value}`
   return noticeList.value.map((notice) => notice.title).join('  •  ')
 })
 
@@ -1330,6 +1365,13 @@ onUnmounted(() => {
       gap: 8px;
 
       .logo-img {
+        .site-logo-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          border-radius: 6px;
+        }
+
         width: 40px;
         height: 40px;
         border-radius: 8px;
@@ -2152,6 +2194,13 @@ onUnmounted(() => {
 }
 
 .drawer-logo-img {
+  .site-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+  }
+
   width: 40px;
   height: 40px;
   border-radius: 10px;
