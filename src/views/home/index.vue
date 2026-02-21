@@ -219,6 +219,15 @@
       </div>
     </div>
 
+    <!-- 站内客服窗口（嵌入 app-container，点击客服按钮后显示） -->
+    <div v-if="showLhcPanel" class="lhc-panel">
+      <div class="lhc-panel-header">
+        <span>Support</span>
+        <van-icon name="cross" size="16" color="#fff" @click="showLhcPanel = false" />
+      </div>
+      <iframe class="lhc-panel-frame" :src="lhcChatUrl" />
+    </div>
+
     <!-- 广告弹窗 -->
     <AdPopup v-model:show="showAdPopup" :ads="popupAds" @click="handleAdPopupClick" />
 
@@ -338,6 +347,35 @@ const isLogin = computed(() => userStore.isLogin)
 
 // 用户信息
 const username = computed(() => userStore.userInfo?.username || 'Guest')
+
+// 客服聊天地址：登录后把用户名/邮箱预填给 LHC，避免显示 Visitor
+const lhcChatUrl = computed(() => {
+  const base = 'http://localhost:8086/index.php/chat/start'
+  const rawName = String(userStore.userInfo?.username || '').trim()
+  const email = String((userStore.userInfo as any)?.email || '').trim()
+
+  // 优先使用 VIP 等级名称；没有名称时再回退到等级ID
+  const gradeName = String((userStore.userInfo as any)?.grade_name || '').trim()
+  const vipRaw =
+    (userStore.userInfo as any)?.vip_level ??
+    (userStore.userInfo as any)?.grade_id ??
+    (userStore.userInfo as any)?.vip
+  const vipLevel = Number(vipRaw)
+
+  const vipLabel = gradeName || (Number.isFinite(vipLevel) && vipLevel > 0 ? `VIP${vipLevel}` : '')
+  const uname = rawName && vipLabel ? `${rawName} (${vipLabel})` : rawName
+
+  if (!isLogin.value || !uname) {
+    return base
+  }
+
+  const query = new URLSearchParams()
+  query.set('prefill[username]', uname)
+  if (email) query.set('prefill[email]', email)
+
+  return `${base}?${query.toString()}`
+})
+
 const balance = computed(() => {
   // 优先从 localStorage 中的 user_balance 获取余额
   try {
@@ -705,8 +743,10 @@ const handleWhatsapp = () => {
   )
 }
 
+const showLhcPanel = ref(false)
+
 const handleService = () => {
-  showToast('联系客服')
+  showLhcPanel.value = !showLhcPanel.value
 }
 
 // 刷新余额
@@ -1151,6 +1191,7 @@ onMounted(() => {
   if (scrollContainer) {
     scrollContainer.addEventListener('scroll', handleScroll)
   }
+
 })
 
 const handleScroll = () => {
@@ -2156,5 +2197,36 @@ onUnmounted(() => {
 
 .drawer-slide-leave-to {
   width: 0 !important;
+}
+
+.lhc-panel {
+  position: fixed;
+  right: calc((100vw - min(100vw, 414px)) / 2 + 8px);
+  bottom: 72px;
+  width: 300px;
+  height: 430px;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  z-index: 1100;
+
+  .lhc-panel-header {
+    height: 34px;
+    background: #552583;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .lhc-panel-frame {
+    width: 100%;
+    height: calc(100% - 34px);
+    border: none;
+    background: #fff;
+  }
 }
 </style>
