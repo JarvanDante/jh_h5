@@ -144,7 +144,6 @@
       <div class="menu-item" @click="goToSupport">
         <div class="menu-icon support-icon">💬</div>
         <span class="menu-title">Support</span>
-        <van-badge :content="supportCount" max="99" />
         <van-icon name="arrow" size="20" color="rgba(255,255,255,0.6)" />
       </div>
 
@@ -288,7 +287,6 @@ const balance = computed(() => {
   return userStore.userInfo?.balance || '0.00'
 })
 const messageCount = ref(0)
-const supportCount = ref(7)
 
 // 余额动画相关
 const isRefreshing = ref(false)
@@ -547,7 +545,7 @@ const goToRebate = () => {
 }
 
 const goToSupport = () => {
-  showToast('Support')
+  router.push('/support')
 }
 
 const goToSecurity = () => {
