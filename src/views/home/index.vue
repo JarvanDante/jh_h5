@@ -373,7 +373,7 @@ const siteDisplayName = computed(() => {
   } catch (error) {
     console.error('Failed to parse site_setting:', error)
   }
-  return 'JILIEVO.CC'
+  return 'PANALOW.CC'
 })
 
 // 客服聊天地址：登录后把用户名/邮箱预填给 LHC，避免显示 Visitor
@@ -2165,7 +2165,7 @@ onUnmounted(() => {
   position: fixed;
   top: 0;
   right: calc(50% - 207px);
-  width: 200px;
+  width: 220px;
   height: 100%;
   background: linear-gradient(180deg, #552583 0%, #3a1a5e 100%);
   display: flex;
