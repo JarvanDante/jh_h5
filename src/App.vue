@@ -74,17 +74,41 @@ const cacheViews = computed(() => appStore.cacheViews)
 const currentRoute = computed(() => route.path)
 const showGlobalLoading = ref(true)
 let loadingCount = 0
+let loadingShownAt = Date.now()
+let hideTimer: number | null = null
+const minLoadingMs = 1000
 
 const showLoading = () => {
   loadingCount += 1
-  showGlobalLoading.value = true
+
+  if (hideTimer) {
+    window.clearTimeout(hideTimer)
+    hideTimer = null
+  }
+
+  if (!showGlobalLoading.value) {
+    showGlobalLoading.value = true
+    loadingShownAt = Date.now()
+  }
 }
 
 const hideLoading = () => {
   loadingCount = Math.max(0, loadingCount - 1)
-  if (loadingCount === 0) {
-    showGlobalLoading.value = false
+  if (loadingCount !== 0) return
+
+  const elapsed = Date.now() - loadingShownAt
+  const remain = Math.max(0, minLoadingMs - elapsed)
+
+  if (hideTimer) {
+    window.clearTimeout(hideTimer)
   }
+
+  hideTimer = window.setTimeout(() => {
+    if (loadingCount === 0) {
+      showGlobalLoading.value = false
+    }
+    hideTimer = null
+  }, remain)
 }
 
 const onGlobalLoadingStart = () => {
@@ -98,12 +122,15 @@ const onGlobalLoadingEnd = () => {
 onMounted(() => {
   // 首屏加载
   showGlobalLoading.value = true
+  loadingShownAt = Date.now()
   const hideInitialLoading = () => {
+    const elapsed = Date.now() - loadingShownAt
+    const remain = Math.max(0, minLoadingMs - elapsed)
     setTimeout(() => {
       if (loadingCount === 0) {
         showGlobalLoading.value = false
       }
-    }, 300)
+    }, remain)
   }
 
   if (document.readyState === 'complete') {
@@ -120,6 +147,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('app:global-loading-start', onGlobalLoadingStart)
   window.removeEventListener('app:global-loading-end', onGlobalLoadingEnd)
+  if (hideTimer) {
+    window.clearTimeout(hideTimer)
+    hideTimer = null
+  }
 })
 
 // 判断是否是首页（包括 / 和 /home）

@@ -1,3 +1,5 @@
+import { showToast } from 'vant'
+
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 const apiSignAppId = import.meta.env.VITE_API_SIGN_APP_ID || 'h5'
 const signSkipPathSuffixes = ['/login', '/logout', '/refresh-token', '/captcha', '/sign-session']
@@ -14,6 +16,7 @@ type SignSession = {
 
 let currentSignSession: SignSession | null = null
 let signSessionPromise: Promise<SignSession | null> | null = null
+let last429ToastAt = 0
 
 function isInvalidTokenMessage(message?: string): boolean {
   if (!message) return false
@@ -345,9 +348,22 @@ class Request {
     options?: RequestInit,
   ): Promise<T> {
     const result = await response.json()
+    const resultCode = Number(result?.code)
     const resultMessage = this.normalizeMessage(result?.msg || result?.message)
 
-    if (result.code === 401) {
+    if (resultCode === 429) {
+      const message = 'The system is busy, please try again later. [code: 429]'
+      result.msg = message
+      result.message = message
+
+      const now = Date.now()
+      if (now - last429ToastAt > 2000) {
+        showToast(message)
+        last429ToastAt = now
+      }
+    }
+
+    if (resultCode === 401) {
       const customOptions = (options || {}) as RequestInit & { _signRetried?: boolean }
       if (!customOptions._signRetried && this.isSignatureError(resultMessage)) {
         await requestSignSession(true)
