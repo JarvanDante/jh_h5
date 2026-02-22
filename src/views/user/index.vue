@@ -196,6 +196,7 @@ const nextGrade = computed(() => {
 })
 // VIP升级进度数据（来自API）
 const vipUpgradeProgress = ref<VipUpgradeProgressResponse | null>(null)
+const vipProgressLoading = ref(false)
 
 const depositProgress = computed(() => vipUpgradeProgress.value?.deposit_progress ?? 0)
 const betProgress = computed(() => vipUpgradeProgress.value?.bet_progress ?? 0)
@@ -218,6 +219,8 @@ const betTarget = computed(() => {
 })
 
 async function fetchVipProgress() {
+  if (vipProgressLoading.value) return
+  vipProgressLoading.value = true
   try {
     const res = await getVipUpgradeProgress()
     if (res) {
@@ -225,6 +228,8 @@ async function fetchVipProgress() {
     }
   } catch (e) {
     console.error('获取VIP升级进度失败:', e)
+  } finally {
+    vipProgressLoading.value = false
   }
 }
 
@@ -584,8 +589,6 @@ onMounted(async () => {
   // 获取VIP等级列表
   fetchGradeList()
 
-  // 获取VIP升级进度
-  fetchVipProgress()
 
   // 初始化显示余额
   displayBalance.value = balance.value

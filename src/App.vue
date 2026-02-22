@@ -1,5 +1,11 @@
 <template>
   <div id="app">
+    <div v-if="showGlobalLoading" class="global-loading-overlay">
+      <div class="global-loading-dots">
+        <span v-for="i in 5" :key="i"></span>
+      </div>
+    </div>
+
     <div class="app-container">
       <router-view v-slot="{ Component }">
         <keep-alive :include="cacheViews">
@@ -57,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 
@@ -66,6 +72,55 @@ const route = useRoute()
 const appStore = useAppStore()
 const cacheViews = computed(() => appStore.cacheViews)
 const currentRoute = computed(() => route.path)
+const showGlobalLoading = ref(true)
+let loadingCount = 0
+
+const showLoading = () => {
+  loadingCount += 1
+  showGlobalLoading.value = true
+}
+
+const hideLoading = () => {
+  loadingCount = Math.max(0, loadingCount - 1)
+  if (loadingCount === 0) {
+    showGlobalLoading.value = false
+  }
+}
+
+const onGlobalLoadingStart = () => {
+  showLoading()
+}
+
+const onGlobalLoadingEnd = () => {
+  hideLoading()
+}
+
+onMounted(() => {
+  // 首屏加载
+  showGlobalLoading.value = true
+  const hideInitialLoading = () => {
+    setTimeout(() => {
+      if (loadingCount === 0) {
+        showGlobalLoading.value = false
+      }
+    }, 300)
+  }
+
+  if (document.readyState === 'complete') {
+    hideInitialLoading()
+  } else {
+    window.addEventListener('load', hideInitialLoading, { once: true })
+  }
+
+  // 路由切换 + 慢接口 全局 loading 事件
+  window.addEventListener('app:global-loading-start', onGlobalLoadingStart)
+  window.addEventListener('app:global-loading-end', onGlobalLoadingEnd)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('app:global-loading-start', onGlobalLoadingStart)
+  window.removeEventListener('app:global-loading-end', onGlobalLoadingEnd)
+})
 
 // 判断是否是首页（包括 / 和 /home）
 const isHomeActive = computed(() => {
@@ -85,6 +140,65 @@ const navigateTo = (path: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.global-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.global-loading-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.global-loading-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.global-loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+  background: #f472b6;
+}
+
+.global-loading-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+  background: #c084fc;
+}
+
+.global-loading-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+  background: #818cf8;
+}
+
+.global-loading-dots span:nth-child(4) {
+  animation-delay: 0.45s;
+  background: #22d3ee;
+}
+
+.global-loading-dots span:nth-child(5) {
+  animation-delay: 0.6s;
+  background: #34d399;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
 }
 
 .app-container {

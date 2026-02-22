@@ -293,6 +293,8 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, _from, next) => {
+  window.dispatchEvent(new CustomEvent('app:global-loading-start'))
+
   // 设置页面标题
   document.title = (to.meta.title as string) || 'JH H5'
 
@@ -310,6 +312,14 @@ router.beforeEach((to, _from, next) => {
   }
 
   next()
+})
+
+router.afterEach(() => {
+  window.dispatchEvent(new CustomEvent('app:global-loading-end'))
+})
+
+router.onError(() => {
+  window.dispatchEvent(new CustomEvent('app:global-loading-end'))
 })
 
 export default router

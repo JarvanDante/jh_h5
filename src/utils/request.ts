@@ -166,6 +166,14 @@ function clearSignSession() {
   currentSignSession = null
 }
 
+function emitGlobalLoadingStart() {
+  window.dispatchEvent(new CustomEvent('app:global-loading-start'))
+}
+
+function emitGlobalLoadingEnd() {
+  window.dispatchEvent(new CustomEvent('app:global-loading-end'))
+}
+
 async function addSignatureHeaders(url: string, options: RequestInit): Promise<Headers> {
   const headers = new Headers(options.headers || {})
   if (shouldSkipSignatureByPath(url)) {
@@ -205,11 +213,24 @@ async function addSignatureHeaders(url: string, options: RequestInit): Promise<H
 }
 
 export async function signedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  const signedHeaders = await addSignatureHeaders(url, options)
-  return fetch(url, {
-    ...options,
-    headers: signedHeaders,
-  })
+  let loadingShown = false
+  const timer = window.setTimeout(() => {
+    loadingShown = true
+    emitGlobalLoadingStart()
+  }, 500)
+
+  try {
+    const signedHeaders = await addSignatureHeaders(url, options)
+    return await fetch(url, {
+      ...options,
+      headers: signedHeaders,
+    })
+  } finally {
+    window.clearTimeout(timer)
+    if (loadingShown) {
+      emitGlobalLoadingEnd()
+    }
+  }
 }
 
 class Request {
