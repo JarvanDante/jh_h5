@@ -4,7 +4,9 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 const apiSignAppId = import.meta.env.VITE_API_SIGN_APP_ID || 'h5'
 const signSkipPathSuffixes = ['/login', '/logout', '/refresh-token', '/captcha', '/sign-session']
 const signSessionRenewSkewMs = 30 * 1000
-const devAllowInsecureNoSign = import.meta.env.DEV && import.meta.env.VITE_DEV_ALLOW_INSECURE_NO_SIGN === '1'
+const allowInsecureNoSign =
+  import.meta.env.VITE_ALLOW_INSECURE_NO_SIGN === '1' ||
+  (import.meta.env.DEV && import.meta.env.VITE_DEV_ALLOW_INSECURE_NO_SIGN === '1')
 
 type SignSession = {
   keyId: string
@@ -184,8 +186,8 @@ async function addSignatureHeaders(url: string, options: RequestInit): Promise<H
   }
 
   // 开发环境兜底：非安全上下文下 WebCrypto 不可用，允许临时跳过签名
-  if (devAllowInsecureNoSign && (!window.isSecureContext || !globalThis.crypto?.subtle)) {
-    console.warn('[request] skip signature in insecure dev context:', url)
+  if (allowInsecureNoSign && (!window.isSecureContext || !globalThis.crypto?.subtle)) {
+    console.warn('[request] skip signature in insecure context:', url)
     return headers
   }
 

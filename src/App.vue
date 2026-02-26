@@ -76,7 +76,9 @@ const showGlobalLoading = ref(true)
 let loadingCount = 0
 let loadingShownAt = Date.now()
 let hideTimer: number | null = null
+let forceHideTimer: number | null = null
 const minLoadingMs = 1000
+const maxLoadingMs = 8000
 
 const showLoading = () => {
   loadingCount += 1
@@ -89,6 +91,15 @@ const showLoading = () => {
   if (!showGlobalLoading.value) {
     showGlobalLoading.value = true
     loadingShownAt = Date.now()
+  }
+
+  // 兜底：避免计数异常导致全局 loading 永久不消失
+  if (!forceHideTimer) {
+    forceHideTimer = window.setTimeout(() => {
+      loadingCount = 0
+      showGlobalLoading.value = false
+      forceHideTimer = null
+    }, maxLoadingMs)
   }
 }
 
@@ -106,6 +117,10 @@ const hideLoading = () => {
   hideTimer = window.setTimeout(() => {
     if (loadingCount === 0) {
       showGlobalLoading.value = false
+      if (forceHideTimer) {
+        window.clearTimeout(forceHideTimer)
+        forceHideTimer = null
+      }
     }
     hideTimer = null
   }, remain)
@@ -117,6 +132,19 @@ const onGlobalLoadingStart = () => {
 
 const onGlobalLoadingEnd = () => {
   hideLoading()
+}
+
+const onGlobalLoadingReset = () => {
+  loadingCount = 0
+  showGlobalLoading.value = false
+  if (hideTimer) {
+    window.clearTimeout(hideTimer)
+    hideTimer = null
+  }
+  if (forceHideTimer) {
+    window.clearTimeout(forceHideTimer)
+    forceHideTimer = null
+  }
 }
 
 onMounted(() => {
@@ -142,14 +170,20 @@ onMounted(() => {
   // 路由切换 + 慢接口 全局 loading 事件
   window.addEventListener('app:global-loading-start', onGlobalLoadingStart)
   window.addEventListener('app:global-loading-end', onGlobalLoadingEnd)
+  window.addEventListener('app:global-loading-reset', onGlobalLoadingReset)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('app:global-loading-start', onGlobalLoadingStart)
   window.removeEventListener('app:global-loading-end', onGlobalLoadingEnd)
+  window.removeEventListener('app:global-loading-reset', onGlobalLoadingReset)
   if (hideTimer) {
     window.clearTimeout(hideTimer)
     hideTimer = null
+  }
+  if (forceHideTimer) {
+    window.clearTimeout(forceHideTimer)
+    forceHideTimer = null
   }
 })
 

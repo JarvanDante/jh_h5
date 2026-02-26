@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { showToast, showDialog } from 'vant'
 import { useUserStore } from '@/stores/user'
@@ -101,6 +101,11 @@ const captchaTime = ref(Date.now().toString())
 
 // 验证码URL - 使用完整的 API 路径
 const captchaUrl = ref(`${apiBaseUrl}/frontend/app/captcha?time=${captchaTime.value}`)
+
+onMounted(() => {
+  // 兜底：进入登录页时重置可能残留的全局 loading
+  window.dispatchEvent(new CustomEvent('app:global-loading-reset'))
+})
 
 // 刷新验证码
 const refreshCaptcha = () => {
