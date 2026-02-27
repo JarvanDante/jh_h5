@@ -316,10 +316,34 @@ router.beforeEach((to, _from, next) => {
 
 router.afterEach(() => {
   window.dispatchEvent(new CustomEvent('app:global-loading-end'))
+  // 路由成功后清理一次性刷新标记
+  sessionStorage.removeItem('h5:chunk-reload-once')
 })
 
-router.onError(() => {
+router.onError((error: any) => {
   window.dispatchEvent(new CustomEvent('app:global-loading-end'))
+
+  // 打印真实错误，避免黑屏时无日志可查
+  console.error('[router.onError]', error)
+
+  // 懒加载 chunk 失败（常见于发布后缓存不一致）时，自动刷新一次自愈
+  const message = String(error?.message || error || '').toLowerCase()
+  const isChunkLoadError =
+    message.includes('failed to fetch dynamically imported module') ||
+    message.includes('importing a module script failed') ||
+    message.includes('loading chunk') ||
+    message.includes('chunkloaderror')
+
+  if (!isChunkLoadError) return
+
+  const reloadKey = 'h5:chunk-reload-once'
+  if (sessionStorage.getItem(reloadKey) === '1') {
+    // 已自动刷新过，避免死循环
+    return
+  }
+
+  sessionStorage.setItem(reloadKey, '1')
+  window.location.reload()
 })
 
 export default router

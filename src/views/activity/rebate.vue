@@ -158,12 +158,17 @@ const washResult = ref<WashCodeRebateResponse>({
   max_bet_id: 0,
 })
 
-function formatMoney(val: number): string {
-  return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+function toSafeNumber(val: unknown): number {
+  const n = Number(val)
+  return Number.isFinite(n) ? n : 0
 }
 
-function formatMoneyPrecise(val: number): string {
-  return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
+function formatMoney(val: unknown): string {
+  return toSafeNumber(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function formatMoneyPrecise(val: unknown): string {
+  return toSafeNumber(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
 }
 
 const badgeGradients: string[] = [
@@ -209,12 +214,23 @@ async function fetchGradeList() {
 // 获取可洗码额度
 async function fetchQuota() {
   try {
-    const res = await gameApi.getWashCodeQuota()
-    if (res) {
-      quota.value = res
+    const res: any = await gameApi.getWashCodeQuota()
+    quota.value = {
+      success: !!res?.success,
+      message: String(res?.message || ''),
+      valid_bet_amount: toSafeNumber(res?.valid_bet_amount),
+      max_bet_id: toSafeNumber(res?.max_bet_id),
+      last_rebate_time: String(res?.last_rebate_time || ''),
     }
   } catch (e) {
     console.error('获取洗码额度失败:', e)
+    quota.value = {
+      success: false,
+      message: '获取洗码额度失败',
+      valid_bet_amount: 0,
+      max_bet_id: 0,
+      last_rebate_time: '',
+    }
   }
 }
 

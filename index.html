@@ -9,15 +9,25 @@
   </head>
   <body>
     <div id="app"></div>
-    <script src="/devtools-detect.js"></script>
-    <script src="/disable-devtool.min.js"></script>
     <script>
-      // DevTools 检测 - devtools-detect
+      // DevTools 保护（按开关加载）：VITE_ENABLE_VCONSOLE=1 时完全关闭
       ;(function(){
         var isProd = '%MODE%' === 'production';
         var enableVConsole = '%VITE_ENABLE_VCONSOLE%' === '1';
-        // 同一开关控制：开启 vConsole 时，关闭 DevTools 崩溃拦截
-        if(!isProd || enableVConsole) return;
+        var enableDevtoolsProtect = '%VITE_ENABLE_DEVTOOLS_PROTECT%' === '1';
+        // 同一开关控制：开启 vConsole / debug 模式 / 关闭保护时，不执行崩溃拦截
+        var forceDebug = /[?&]debug=1/.test(location.search) || localStorage.getItem('h5_debug') === '1';
+        if(!isProd || enableVConsole || forceDebug || !enableDevtoolsProtect) return;
+
+        function loadScript(src, cb){
+          var s = document.createElement('script');
+          s.src = src;
+          s.onload = function(){ cb && cb(); };
+          s.onerror = function(){ cb && cb(); };
+          document.head.appendChild(s);
+        }
+
+        function initProtection(){
         var c = false;
         function crash(){
           if(c) return;
@@ -87,6 +97,13 @@
             crash();
           }
         }, 1000);
+        }
+
+        loadScript('/devtools-detect.js', function(){
+          loadScript('/disable-devtool.min.js', function(){
+            initProtection();
+          });
+        });
       })();
     </script>
     <script type="module" src="/src/main.ts"></script>
