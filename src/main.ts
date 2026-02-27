@@ -12,6 +12,17 @@ import './styles/index.scss'
 // 在桌面端使用时，可以使用 touch-emulator 模拟移动端 touch 事件
 import '@vant/touch-emulator'
 
+if (import.meta.env.VITE_ENABLE_VCONSOLE === '1') {
+  import('vconsole')
+    .then(({ default: VConsole }) => {
+      new VConsole()
+      console.log('[debug] vConsole enabled')
+    })
+    .catch((err) => {
+      console.error('[debug] failed to load vConsole', err)
+    })
+}
+
 const app = createApp(App)
 
 // Pinia

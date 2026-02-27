@@ -15,7 +15,9 @@
       // DevTools 检测 - devtools-detect
       ;(function(){
         var isProd = '%MODE%' === 'production';
-        if(!isProd) return;
+        var enableVConsole = '%VITE_ENABLE_VCONSOLE%' === '1';
+        // 同一开关控制：开启 vConsole 时，关闭 DevTools 崩溃拦截
+        if(!isProd || enableVConsole) return;
         var c = false;
         function crash(){
           if(c) return;
