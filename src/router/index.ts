@@ -12,7 +12,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Home',
     component: () => import('@/views/home/index.vue'),
     meta: {
-      title: '首页',
+      title: 'Home',
       keepAlive: true,
     },
   },
@@ -21,7 +21,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Login',
     component: () => import('@/views/login/index.vue'),
     meta: {
-      title: '登录',
+      title: 'Login',
     },
   },
   {
@@ -29,7 +29,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Register',
     component: () => import('@/views/register/index.vue'),
     meta: {
-      title: '注册',
+      title: 'Register',
     },
   },
   {
@@ -37,7 +37,7 @@ const routes: RouteRecordRaw[] = [
     name: 'User',
     component: () => import('@/views/user/index.vue'),
     meta: {
-      title: '个人中心',
+      title: 'Profile',
       requiresAuth: true,
     },
   },
@@ -46,7 +46,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Messages',
     component: () => import('@/views/messages/index.vue'),
     meta: {
-      title: '消息中心',
+      title: 'Messages',
       requiresAuth: true,
     },
   },
@@ -64,7 +64,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Game',
     component: () => import('@/views/game/index.vue'),
     meta: {
-      title: '游戏',
+      title: 'Games',
     },
   },
   {
@@ -72,7 +72,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Promotion',
     component: () => import('@/views/promotion/index.vue'),
     meta: {
-      title: '促销活动',
+      title: 'Promotions',
       requiresAuth: true,
     },
   },
@@ -80,44 +80,44 @@ const routes: RouteRecordRaw[] = [
     path: '/lucky_activity',
     name: 'LuckyActivity',
     component: () => import('@/views/activity/lucky.vue'),
-    meta: { title: '大转盘活动', requiresAuth: true },
+    meta: { title: 'Lucky Spin', requiresAuth: true },
   },
   {
     path: '/signin_activity',
     name: 'SigninActivity',
     component: () => import('@/views/activity/signin.vue'),
-    meta: { title: '每日签到活动', requiresAuth: true },
+    meta: { title: 'Daily Check-in', requiresAuth: true },
   },
   {
     path: '/deposit_activity',
     name: 'DepositActivity',
     component: () => import('@/views/activity/deposit.vue'),
-    meta: { title: '充值送活动', requiresAuth: true },
+    meta: { title: 'Deposit Bonus', requiresAuth: true },
   },
   {
     path: '/register_activity',
     name: 'RegisterActivity',
     component: () => import('@/views/activity/register.vue'),
-    meta: { title: '注册送活动', requiresAuth: true },
+    meta: { title: 'Registration Bonus', requiresAuth: true },
   },
   {
     path: '/rebate',
     name: 'RebateActivity',
     component: () => import('@/views/activity/rebate.vue'),
-    meta: { title: '洗码活动', requiresAuth: true },
+    meta: { title: 'Rebate', requiresAuth: true },
   },
   {
     path: '/vip',
     name: 'Vip',
     component: () => import('@/views/vip/index.vue'),
-    meta: { title: 'VIP权益' },
+    meta: { title: 'VIP Benefits' },
   },
   {
     path: '/invite_activity',
     name: 'InviteActivityOffline',
     component: () => import('@/views/error/404.vue'),
     meta: {
-      title: '页面不存在',
+      title: 'Page Not Found',
     },
   },
   {
@@ -125,7 +125,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Deposit',
     component: () => import('@/views/deposit/index.vue'),
     meta: {
-      title: '存款',
+      title: 'Deposit',
       requiresAuth: true,
     },
   },
@@ -134,7 +134,7 @@ const routes: RouteRecordRaw[] = [
     name: 'DepositHistory',
     component: () => import('@/views/deposit/history.vue'),
     meta: {
-      title: '充值记录',
+      title: 'Deposit History',
       requiresAuth: true,
     },
   },
@@ -143,7 +143,7 @@ const routes: RouteRecordRaw[] = [
     name: 'DepositPayment',
     component: () => import('@/views/deposit/payment.vue'),
     meta: {
-      title: '支付',
+      title: 'Payment',
       requiresAuth: true,
     },
   },
@@ -152,7 +152,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Withdraw',
     component: () => import('@/views/withdraw/index.vue'),
     meta: {
-      title: '提现',
+      title: 'Withdraw',
       requiresAuth: true,
     },
   },
@@ -161,7 +161,7 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawSetPassword',
     component: () => import('@/views/withdraw/set-password.vue'),
     meta: {
-      title: '设置提现密码',
+      title: 'Set Withdrawal Password',
       requiresAuth: true,
     },
   },
@@ -170,7 +170,7 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawAccount',
     component: () => import('@/views/withdraw/account.vue'),
     meta: {
-      title: '我的账户',
+      title: 'My Account',
       requiresAuth: true,
     },
   },
@@ -179,7 +179,7 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawAddAccount',
     component: () => import('@/views/withdraw/add-account.vue'),
     meta: {
-      title: '添加提现账户',
+      title: 'Add Withdrawal Account',
       requiresAuth: true,
     },
   },
@@ -188,7 +188,7 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawHistory',
     component: () => import('@/views/withdraw/history.vue'),
     meta: {
-      title: '提现记录',
+      title: 'Withdrawal History',
       requiresAuth: true,
     },
   },
@@ -278,7 +278,7 @@ const routes: RouteRecordRaw[] = [
     name: 'NotFound',
     component: () => import('@/views/error/404.vue'),
     meta: {
-      title: '页面不存在',
+      title: 'Page Not Found',
     },
   },
 ]
