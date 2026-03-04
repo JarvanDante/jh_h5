@@ -171,12 +171,28 @@ function clearSignSession() {
   currentSignSession = null
 }
 
+let slowLoadingRefCount = 0
+let loadingResetBound = false
+
+if (typeof window !== 'undefined' && !loadingResetBound) {
+  window.addEventListener('app:global-loading-reset', () => {
+    slowLoadingRefCount = 0
+  })
+  loadingResetBound = true
+}
+
 function emitGlobalLoadingStart() {
-  window.dispatchEvent(new CustomEvent('app:global-loading-start'))
+  if (slowLoadingRefCount === 0) {
+    window.dispatchEvent(new CustomEvent('app:global-loading-start'))
+  }
+  slowLoadingRefCount += 1
 }
 
 function emitGlobalLoadingEnd() {
-  window.dispatchEvent(new CustomEvent('app:global-loading-end'))
+  slowLoadingRefCount = Math.max(0, slowLoadingRefCount - 1)
+  if (slowLoadingRefCount === 0) {
+    window.dispatchEvent(new CustomEvent('app:global-loading-end'))
+  }
 }
 
 async function addSignatureHeaders(url: string, options: RequestInit): Promise<Headers> {

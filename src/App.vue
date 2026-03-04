@@ -78,7 +78,7 @@ let loadingShownAt = Date.now()
 let hideTimer: number | null = null
 let forceHideTimer: number | null = null
 const minLoadingMs = 1000
-const maxLoadingMs = 8000
+const maxLoadingMs = 4000
 
 const showLoading = () => {
   loadingCount += 1
