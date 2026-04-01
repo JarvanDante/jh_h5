@@ -80,7 +80,7 @@ let hideTimer: number | null = null
 let forceHideTimer: number | null = null
 // 防闪烁：耗时小于 300ms 的加载不展示
 const showDelayMs = 300
-const minLoadingMs = 1000
+const minLoadingMs = 100
 const maxLoadingMs = 2000
 
 const scheduleForceHide = () => {
