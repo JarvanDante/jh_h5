@@ -234,12 +234,7 @@ async function addSignatureHeaders(url: string, options: RequestInit): Promise<H
 }
 
 export async function signedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  let loadingShown = false
-  const timer = window.setTimeout(() => {
-    loadingShown = true
-    emitGlobalLoadingStart()
-  }, 500)
-
+  emitGlobalLoadingStart()
   try {
     const signedHeaders = await addSignatureHeaders(url, options)
     return await fetch(url, {
@@ -247,10 +242,7 @@ export async function signedFetch(url: string, options: RequestInit = {}): Promi
       headers: signedHeaders,
     })
   } finally {
-    window.clearTimeout(timer)
-    if (loadingShown) {
-      emitGlobalLoadingEnd()
-    }
+    emitGlobalLoadingEnd()
   }
 }
 

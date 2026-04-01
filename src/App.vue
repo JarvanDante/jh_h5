@@ -75,24 +75,15 @@ const currentRoute = computed(() => route.path)
 const showGlobalLoading = ref(true)
 let loadingCount = 0
 let loadingShownAt = Date.now()
+let showTimer: number | null = null
 let hideTimer: number | null = null
 let forceHideTimer: number | null = null
+// 防闪烁：耗时小于 300ms 的加载不展示
+const showDelayMs = 300
 const minLoadingMs = 1000
 const maxLoadingMs = 2000
 
-const showLoading = () => {
-  loadingCount += 1
-
-  if (hideTimer) {
-    window.clearTimeout(hideTimer)
-    hideTimer = null
-  }
-
-  if (!showGlobalLoading.value) {
-    showGlobalLoading.value = true
-    loadingShownAt = Date.now()
-  }
-
+const scheduleForceHide = () => {
   // 兜底：避免计数异常导致全局 loading 永久不消失
   if (!forceHideTimer) {
     forceHideTimer = window.setTimeout(() => {
@@ -103,9 +94,47 @@ const showLoading = () => {
   }
 }
 
+const showLoading = () => {
+  loadingCount += 1
+
+  if (hideTimer) {
+    window.clearTimeout(hideTimer)
+    hideTimer = null
+  }
+
+  if (showGlobalLoading.value) {
+    scheduleForceHide()
+    return
+  }
+
+  if (showTimer) return
+
+  showTimer = window.setTimeout(() => {
+    showTimer = null
+    if (loadingCount === 0 || showGlobalLoading.value) return
+    showGlobalLoading.value = true
+    loadingShownAt = Date.now()
+    scheduleForceHide()
+  }, showDelayMs)
+}
+
 const hideLoading = () => {
   loadingCount = Math.max(0, loadingCount - 1)
   if (loadingCount !== 0) return
+
+  // 还没到展示阈值就结束，直接取消展示
+  if (showTimer) {
+    window.clearTimeout(showTimer)
+    showTimer = null
+  }
+
+  if (!showGlobalLoading.value) {
+    if (forceHideTimer) {
+      window.clearTimeout(forceHideTimer)
+      forceHideTimer = null
+    }
+    return
+  }
 
   const elapsed = Date.now() - loadingShownAt
   const remain = Math.max(0, minLoadingMs - elapsed)
@@ -137,6 +166,10 @@ const onGlobalLoadingEnd = () => {
 const onGlobalLoadingReset = () => {
   loadingCount = 0
   showGlobalLoading.value = false
+  if (showTimer) {
+    window.clearTimeout(showTimer)
+    showTimer = null
+  }
   if (hideTimer) {
     window.clearTimeout(hideTimer)
     hideTimer = null
@@ -177,6 +210,10 @@ onBeforeUnmount(() => {
   window.removeEventListener('app:global-loading-start', onGlobalLoadingStart)
   window.removeEventListener('app:global-loading-end', onGlobalLoadingEnd)
   window.removeEventListener('app:global-loading-reset', onGlobalLoadingReset)
+  if (showTimer) {
+    window.clearTimeout(showTimer)
+    showTimer = null
+  }
   if (hideTimer) {
     window.clearTimeout(hideTimer)
     hideTimer = null
