@@ -2,7 +2,7 @@
   <div class="support-page">
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="router.back()" />
-      <span class="title">Support</span>
+      <span class="title">{{ t('support.title') }}</span>
       <span class="placeholder"></span>
     </div>
 
@@ -13,10 +13,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 const lhcChatUrl = computed(() => {
   let base = ''

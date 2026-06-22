@@ -8,8 +8,8 @@
           <van-icon name="arrow-left" size="20" color="#fff" />
         </div>
         <div class="title-area">
-          <div class="title">🎁 REGISTER BONUS 🎁</div>
-          <div class="subtitle">Sign up and get free money!</div>
+          <div class="title">🎁 {{ t('activityRegister.title') }} 🎁</div>
+          <div class="subtitle">{{ t('activityRegister.subtitle') }}</div>
         </div>
       </div>
       <div class="gift-float">
@@ -18,19 +18,19 @@
         <div class="gift-icon">🎁</div>
       </div>
       <div class="amount-card">
-        <div class="amount-badge">NEW MEMBER BONUS</div>
+        <div class="amount-badge">{{ t('activityRegister.newMemberBonus') }}</div>
         <div class="amount-row">
           <span class="amount-currency">₱</span>
           <span class="amount-num">{{ bonusAmount }}</span>
         </div>
-        <div class="amount-desc">Register now and claim your welcome gift!</div>
-        <div class="amount-tag">FREE — No Deposit Required</div>
+        <div class="amount-desc">{{ t('activityRegister.claimDesc') }}</div>
+        <div class="amount-tag">{{ t('activityRegister.noDepositRequired') }}</div>
       </div>
     </div>
 
     <!-- 3步领取 -->
     <div class="steps-section">
-      <div class="section-title">✨ 3 Easy Steps</div>
+      <div class="section-title">✨ {{ t('activityRegister.easySteps') }}</div>
       <div class="steps-list">
         <div v-for="(step, i) in steps" :key="i" class="step-card">
           <div class="step-num">{{ i + 1 }}</div>
@@ -45,25 +45,26 @@
     <div class="social-proof">
       <div class="proof-icon">🔥</div>
       <div class="proof-text">
-        <span class="proof-count">{{ claimedCount.toLocaleString() }}</span> players already claimed
+        <span class="proof-count">{{ claimedCount.toLocaleString() }}</span>
+        {{ t('activityRegister.playersClaimed') }}
       </div>
-      <div class="proof-live"><span class="live-dot"></span> LIVE</div>
+      <div class="proof-live"><span class="live-dot"></span> {{ t('activityRegister.live') }}</div>
     </div>
 
     <!-- 注册按钮 -->
     <div class="cta-area">
-      <div class="cta-btn" @click="goRegister">🚀 Register Now & Get ₱{{ bonusAmount }} FREE</div>
-      <div class="cta-hint">Takes less than 30 seconds</div>
+      <div class="cta-btn" @click="goRegister">🚀 {{ t('activityRegister.registerNow', { amount: bonusAmount }) }}</div>
+      <div class="cta-hint">{{ t('activityRegister.takesSeconds') }}</div>
     </div>
 
     <!-- 中奖滚动 -->
     <div class="winner-marquee">
-      <div class="marquee-label">🏆 New Members Who Claimed</div>
+      <div class="marquee-label">🏆 {{ t('activityRegister.newMembersClaimed') }}</div>
       <div class="marquee-viewport">
         <div class="marquee-vertical">
           <div v-for="(w, i) in [...regWinners, ...regWinners]" :key="i" class="winner-row">
             <span class="winner-name">{{ w.name }}</span>
-            <span class="winner-text">claimed</span>
+            <span class="winner-text">{{ t('activityRegister.claimed') }}</span>
             <span class="winner-amount">₱{{ w.amount }}</span>
             <span class="winner-time">{{ w.time }}</span>
           </div>
@@ -73,7 +74,7 @@
 
     <!-- 奖励明细 -->
     <div class="bonus-detail">
-      <div class="detail-title">🎯 Bonus Breakdown</div>
+      <div class="detail-title">🎯 {{ t('activityRegister.bonusBreakdown') }}</div>
       <div class="detail-list">
         <div v-for="(item, i) in bonusItems" :key="i" class="detail-item">
           <span class="detail-icon">{{ item.icon }}</span>
@@ -85,7 +86,7 @@
 
     <!-- 规则 -->
     <div class="rules-section">
-      <div class="rules-title">📋 Rules</div>
+      <div class="rules-title">📋 {{ t('activityRegister.rules') }}</div>
       <div class="rules-list">
         <div class="rule-item">1. Each new user can claim the bonus once</div>
         <div class="rule-item">2. Bonus is credited instantly after registration</div>
@@ -99,10 +100,12 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { getRegisterBonusRecentWinners } from '@/api/modules/balance'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const bonusAmount = '188'
 

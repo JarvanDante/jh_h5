@@ -36,11 +36,20 @@
           </div>
         </template>
 
-        <div class="language">
-          <div class="flag-circle">
-            <img src="/flag.jpg" alt="PH" class="flag-img" />
-          </div>
-        </div>
+        <van-popover
+          v-model:show="langPopoverVisible"
+          placement="bottom-end"
+          :actions="langActions"
+          @select="onLangSelect"
+        >
+          <template #reference>
+            <div class="language">
+              <div class="flag-circle">
+                <img src="/flag.jpg" alt="PH" class="flag-img" />
+              </div>
+            </div>
+          </template>
+        </van-popover>
         <van-icon name="wap-nav" size="24" color="#fff" @click="showMenu" />
       </div>
     </div>
@@ -48,12 +57,12 @@
     <!-- 存款/提款 或 登录/注册 按钮 -->
     <div class="action-buttons">
       <template v-if="isLogin">
-        <van-button class="deposit-btn" block @click="handleDeposit"> Deposit </van-button>
-        <van-button class="withdrawal-btn" block @click="handleWithdrawal"> Withdrawal </van-button>
+        <van-button class="deposit-btn" block @click="handleDeposit"> {{ t('common.deposit') }} </van-button>
+        <van-button class="withdrawal-btn" block @click="handleWithdrawal"> {{ t('common.withdrawal') }} </van-button>
       </template>
       <template v-else>
-        <van-button class="deposit-btn" block @click="goToLogin"> Login </van-button>
-        <van-button class="withdrawal-btn" block @click="goToRegister"> Register </van-button>
+        <van-button class="deposit-btn" block @click="goToLogin"> {{ t('common.login') }} </van-button>
+        <van-button class="withdrawal-btn" block @click="goToRegister"> {{ t('common.register') }} </van-button>
       </template>
     </div>
 
@@ -89,7 +98,7 @@
       <div class="jackpot-content">
         <div class="jackpot-title-wrap">
           <span class="star">★</span>
-          <div class="jackpot-title">JACKPOT</div>
+          <div class="jackpot-title">{{ t('home.jackpot') }}</div>
           <span class="star">★</span>
         </div>
         <div class="jackpot-amount">
@@ -137,7 +146,7 @@
         <div class="search-bar">
           <van-search
             v-model="searchValue"
-            placeholder="Search"
+            :placeholder="t('common.search')"
             shape="round"
             background="transparent"
           />
@@ -179,12 +188,12 @@
 
           <!-- 加载中提示 -->
           <div v-if="gameListLoading" class="loading-wrapper">
-            <van-loading type="spinner" size="24px">加载中...</van-loading>
+            <van-loading type="spinner" size="24px">{{ t('home.loadingGames') }}</van-loading>
           </div>
 
           <!-- 空状态 -->
           <div v-if="!gameListLoading && filteredGames.length === 0" class="empty-wrapper">
-            <van-empty description="暂无游戏" />
+            <van-empty :description="t('home.noGames')" />
           </div>
         </div>
       </div>
@@ -215,7 +224,7 @@
     <!-- 站内客服窗口（嵌入 app-container，点击客服按钮后显示） -->
     <div v-if="showLhcPanel" class="lhc-panel">
       <div class="lhc-panel-header">
-        <span>Support</span>
+        <span>{{ t('home.support') }}</span>
         <van-icon name="cross" size="16" color="#fff" @click="showLhcPanel = false" />
       </div>
       <iframe class="lhc-panel-frame" :src="lhcChatUrl" />
@@ -249,11 +258,11 @@
         <div class="drawer-footer">
           <div v-if="isLogin" class="logout-btn" @click="handleLogout">
             <van-icon name="revoke" size="20" color="#fdb927" />
-            <span>Logout</span>
+            <span>{{ t('common.logout') }}</span>
           </div>
           <div v-else class="logout-btn" @click="handleMenuClick('/login')">
             <van-icon name="manager-o" size="20" color="#fdb927" />
-            <span>Login / Register</span>
+            <span>{{ t('home.loginRegister') }}</span>
           </div>
         </div>
       </div>
@@ -264,8 +273,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
+import { useLocaleStore } from '@/stores/locale'
+import type { AppLocale } from '@/i18n'
 import { userApi } from '@/api/modules/user'
 import { gameApi } from '@/api/modules/game'
 import { refreshBalance as refreshBalanceApi } from '@/api'
@@ -276,6 +288,19 @@ import AdPopup from '@/components/AdPopup.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+const localeStore = useLocaleStore()
+const { t } = useI18n()
+
+const langPopoverVisible = ref(false)
+const langActions = computed(() => [
+  { text: t('common.english'), value: 'en-US' as AppLocale },
+  { text: t('common.chinese'), value: 'zh-CN' as AppLocale },
+])
+
+const onLangSelect = (action: { value: AppLocale }) => {
+  localeStore.setLocale(action.value)
+  langPopoverVisible.value = false
+}
 
 const normalizeAssetUrl = (rawUrl?: string) => {
   const url = (rawUrl || '').trim()
@@ -320,8 +345,8 @@ const gameListLoading = ref(false)
 // 游戏厅类型（固定的 Hot 和 favorite + 动态的平台列表）
 const gameHalls = computed(() => {
   const fixedHalls = [
-    { id: 'hot', name: 'Hot', icon: 'fire', platform: '' },
-    { id: 'favorite', name: 'favorite', icon: 'star', platform: '' },
+    { id: 'hot', name: t('home.hot'), icon: 'fire', platform: '' },
+    { id: 'favorite', name: t('home.favorite'), icon: 'star', platform: '' },
   ]
 
   // 从接口获取的平台列表
@@ -339,7 +364,7 @@ const gameHalls = computed(() => {
 const isLogin = computed(() => userStore.isLogin)
 
 // 用户信息
-const username = computed(() => userStore.userInfo?.username || 'Guest')
+const username = computed(() => userStore.userInfo?.username || t('home.guest'))
 
 
 const siteLogoUrl = computed(() => {
@@ -466,7 +491,7 @@ const sidebarFixed = ref(false)
 // 公告列表
 const noticeList = ref<NoticeItem[]>([])
 const noticeText = computed(() => {
-  if (noticeList.value.length === 0) return `Welcome to ${siteDisplayName.value}`
+  if (noticeList.value.length === 0) return t('home.welcomeTo', { name: siteDisplayName.value })
   return noticeList.value.map((notice) => notice.title).join('  •  ')
 })
 
@@ -654,7 +679,7 @@ const goToRegister = () => {
 
 const goToUser = () => {
   if (!isLogin.value) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -663,7 +688,7 @@ const goToUser = () => {
 
 const goToMessages = () => {
   if (!isLogin.value) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -676,15 +701,14 @@ const showMenu = () => {
 
 const menuVisible = ref(false)
 
-const menuItems = [
-  { icon: 'gift-o', label: 'Promotion', path: '/promotion' },
-  // { icon: 'friends-o', label: 'Invite', path: '/invite_activity' }, // Invite 活动下线
-  { icon: 'gold-coin-o', label: 'Deposit', path: '/deposit' },
-  { icon: 'card', label: 'Withdraw', path: '/withdraw' },
-  { icon: 'bar-chart-o', label: 'Report', path: '/report' },
-  { icon: 'shield-o', label: 'Security', path: '/security' },
-  { icon: 'manager-o', label: 'Profile', path: '/user' },
-]
+const menuItems = computed(() => [
+  { icon: 'gift-o', label: t('home.menuPromotion'), path: '/promotion' },
+  { icon: 'gold-coin-o', label: t('home.menuDeposit'), path: '/deposit' },
+  { icon: 'card', label: t('home.menuWithdraw'), path: '/withdraw' },
+  { icon: 'bar-chart-o', label: t('home.menuReport'), path: '/report' },
+  { icon: 'shield-o', label: t('home.menuSecurity'), path: '/security' },
+  { icon: 'manager-o', label: t('home.menuProfile'), path: '/user' },
+])
 
 const handleMenuClick = (path: string) => {
   menuVisible.value = false
@@ -694,13 +718,13 @@ const handleMenuClick = (path: string) => {
 const handleLogout = () => {
   menuVisible.value = false
   userStore.logout()
-  showToast('Logged out')
+  showToast(t('common.loggedOut'))
   router.push('/login')
 }
 
 const handleDeposit = () => {
   if (!isLogin.value) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -709,7 +733,7 @@ const handleDeposit = () => {
 
 const handleWithdrawal = () => {
   if (!isLogin.value) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -718,25 +742,25 @@ const handleWithdrawal = () => {
 
 const handleInvite = () => {
   if (!isLogin.value) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
-  showToast('邀请好友')
+  showToast(t('home.inviteFriends'))
 }
 
 const handleHot = () => {
-  showToast('热门游戏')
+  showToast(t('home.hotGames'))
 }
 
 const handleCategory = (category: string) => {
-  showToast(`分类: ${category}`)
+  showToast(t('home.category', { name: category }))
 }
 
 const handleGameClick = (game: GameItem) => {
   // 检查是否有 game_id
   if (!game.game_id) {
-    showToast('游戏暂不可用')
+    showToast(t('home.gameUnavailable'))
     return
   }
 
@@ -752,7 +776,7 @@ const handleGameClick = (game: GameItem) => {
 
 const toggleFavorite = async (game: GameItem) => {
   if (!isLogin.value) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -768,11 +792,13 @@ const toggleFavorite = async (game: GameItem) => {
       game_img: game.img || game.img1 || '',
     })
     game.is_favorite = Number(res?.is_favorite || 0)
-    const tip = res?.message || (game.is_favorite === 1 ? 'Added to favorites' : 'Removed from favorites')
+    const tip =
+      res?.message ||
+      (game.is_favorite === 1 ? t('home.addedToFavorites') : t('home.removedFromFavorites'))
     showToast(tip)
   } catch (error) {
     console.error('收藏操作失败:', error)
-    showToast('操作失败，请重试')
+    showToast(t('common.operationFailed'))
   }
 }
 
@@ -795,7 +821,7 @@ const handleTelegram = () => {
   }
 
   if (!tgUrl) {
-    showToast('Telegram link not configured')
+    showToast(t('home.telegramNotConfigured'))
     return
   }
 
@@ -815,7 +841,7 @@ const handleService = () => {
 // 刷新余额
 const refreshBalance = async () => {
   if (!isLogin.value) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -905,13 +931,13 @@ const refreshBalance = async () => {
         } else {
           // 刷新失败，跳转到登录页
           userStore.logout()
-          showToast('Login expired, please login again')
+          showToast(t('common.loginExpired'))
           router.push('/login')
         }
       } else {
         // 没有 refresh_token，跳转到登录页
         userStore.logout()
-        showToast('Please login again')
+        showToast(t('common.pleaseLoginAgain'))
         router.push('/login')
       }
       isRefreshing.value = false
@@ -944,11 +970,11 @@ const refreshBalance = async () => {
       // 触发余额动画
       animateBalance(oldBalance, refreshBalanceResult.data.balance || '0.000')
     } else {
-      showToast(refreshBalanceResult.msg || 'Failed to refresh balance')
+      showToast(refreshBalanceResult.msg || t('home.refreshBalanceFailed'))
     }
   } catch (error) {
     console.error('Failed to refresh balance:', error)
-    showToast('Failed to refresh balance')
+    showToast(t('home.refreshBalanceFailed'))
   } finally {
     setTimeout(() => {
       isRefreshing.value = false

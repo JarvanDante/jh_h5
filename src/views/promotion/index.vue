@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Promotion</span>
+      <span class="title">{{ t('promotion.title') }}</span>
       <div class="placeholder"></div>
     </div>
 
@@ -14,11 +14,11 @@
       title-active-color="#552583"
       background="#fff"
     >
-      <van-tab title="Events">
+      <van-tab :title="t('promotion.events')">
         <div class="promotion-list">
-          <van-loading v-if="eventsLoading" type="spinner" size="24px" class="loading-center"
-            >Loading...</van-loading
-          >
+          <van-loading v-if="eventsLoading" type="spinner" size="24px" class="loading-center">{{
+            t('common.loading')
+          }}</van-loading>
           <template v-else-if="eventPromotions.length > 0">
             <div
               v-for="promo in eventPromotions"
@@ -31,28 +31,28 @@
                 <h3 class="event-title">{{ promo.name }}</h3>
                 <p v-if="promo.description" class="event-desc">{{ promo.description }}</p>
                 <div class="event-status">
-                  <span v-if="promo.status === 1" class="status-tag active">Active</span>
-                  <span v-else class="status-tag inactive">Inactive</span>
+                  <span v-if="promo.status === 1" class="status-tag active">{{ t('common.active') }}</span>
+                  <span v-else class="status-tag inactive">{{ t('common.inactive') }}</span>
                 </div>
               </div>
               <van-icon name="arrow" size="20" color="#fdb927" />
             </div>
           </template>
-          <van-empty v-else description="No events available" />
+          <van-empty v-else :description="t('promotion.noEvents')" />
         </div>
       </van-tab>
 
-      <van-tab title="Rebate">
+      <van-tab :title="t('promotion.rebate')">
         <div class="promotion-list">
           <div class="rebate-card" @click="router.push('/rebate')">
             <div class="rebate-icon">💰</div>
             <div class="rebate-body">
-              <h3 class="rebate-title">Daily Rebate</h3>
-              <p class="rebate-desc">Bet more, earn more. Get rebate on every bet you place.</p>
+              <h3 class="rebate-title">{{ t('promotion.dailyRebate') }}</h3>
+              <p class="rebate-desc">{{ t('promotion.dailyRebateDesc') }}</p>
               <div class="rebate-highlights">
-                <span class="highlight-tag">Up to 1.2%</span>
-                <span class="highlight-tag">Auto Claim</span>
-                <span class="highlight-tag">Daily</span>
+                <span class="highlight-tag">{{ t('promotion.upToRebate') }}</span>
+                <span class="highlight-tag">{{ t('promotion.autoClaim') }}</span>
+                <span class="highlight-tag">{{ t('promotion.daily') }}</span>
               </div>
             </div>
             <van-icon name="arrow" size="20" color="#fdb927" />
@@ -60,16 +60,16 @@
         </div>
       </van-tab>
 
-      <van-tab title="VIP">
+      <van-tab :title="t('promotion.vip')">
         <div class="promotion-list">
           <div class="vip-card" @click="router.push('/vip')">
             <div class="vip-crown">👑</div>
             <div class="vip-body">
-              <h3 class="vip-title">VIP Club</h3>
-              <p class="vip-desc">Level up and unlock exclusive rewards, bonuses and privileges.</p>
+              <h3 class="vip-title">{{ t('promotion.vipClub') }}</h3>
+              <p class="vip-desc">{{ t('promotion.vipClubDesc') }}</p>
               <div class="vip-highlights">
-                <span class="highlight-tag">Upgrade Bonus</span>
-                <span class="highlight-tag">Exclusive</span>
+                <span class="highlight-tag">{{ t('promotion.upgradeBonus') }}</span>
+                <span class="highlight-tag">{{ t('promotion.exclusive') }}</span>
               </div>
             </div>
             <van-icon name="arrow" size="20" color="#fdb927" />
@@ -83,10 +83,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
+const { t } = useI18n()
 const activeTab = ref(0)
 
 // Events 活动数据（从接口获取）

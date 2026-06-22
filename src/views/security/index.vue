@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Security Center</span>
+      <span class="title">{{ t('security.title') }}</span>
       <div class="placeholder"></div>
     </div>
 
@@ -13,7 +13,7 @@
       <div class="security-item">
         <div class="item-left">
           <van-icon name="user-o" size="24" color="#552583" />
-          <span class="item-label">Account</span>
+          <span class="item-label">{{ t('common.account') }}</span>
         </div>
         <span class="item-value">{{ userInfo.account || '9176661233' }}</span>
       </div>
@@ -22,11 +22,11 @@
       <div class="security-item clickable" @click="handleBindPhone">
         <div class="item-left">
           <van-icon name="phone-o" size="24" color="#552583" />
-          <span class="item-label">Phone</span>
+          <span class="item-label">{{ t('security.phone') }}</span>
         </div>
         <div class="item-right">
           <span class="item-value" :class="{ unbound: !userInfo.phone }">
-            {{ userInfo.phone || 'Unbound' }}
+            {{ userInfo.phone || t('common.unbound') }}
           </span>
           <van-icon name="arrow" size="16" color="#999" />
         </div>
@@ -36,11 +36,11 @@
       <div class="security-item clickable" @click="handleBindEmail">
         <div class="item-left">
           <van-icon name="envelop-o" size="24" color="#552583" />
-          <span class="item-label">Email</span>
+          <span class="item-label">{{ t('security.email') }}</span>
         </div>
         <div class="item-right">
           <span class="item-value" :class="{ unbound: !userInfo.email }">
-            {{ userInfo.email || 'Unbound' }}
+            {{ userInfo.email || t('common.unbound') }}
           </span>
           <van-icon name="arrow" size="16" color="#999" />
         </div>
@@ -50,11 +50,11 @@
       <div class="security-item clickable" @click="handleChangeLoginPassword">
         <div class="item-left">
           <van-icon name="lock" size="24" color="#552583" />
-          <span class="item-label">Login Password</span>
+          <span class="item-label">{{ t('security.loginPassword') }}</span>
         </div>
         <div class="item-right">
           <span class="item-status">{{
-            Number(userInfo.isPassword) === 1 ? 'Already Set' : 'Unbound'
+            Number(userInfo.isPassword) === 1 ? t('common.alreadySet') : t('common.unbound')
           }}</span>
           <van-icon name="arrow" size="16" color="#999" />
         </div>
@@ -64,11 +64,11 @@
       <div class="security-item clickable" @click="handleChangePayPassword">
         <div class="item-left">
           <van-icon name="shield-o" size="24" color="#552583" />
-          <span class="item-label">Assets Password</span>
+          <span class="item-label">{{ t('security.assetsPassword') }}</span>
         </div>
         <div class="item-right">
           <span class="item-status">{{
-            Number(userInfo.isPayPassword) === 1 ? 'Already Set' : 'Unbound'
+            Number(userInfo.isPayPassword) === 1 ? t('common.alreadySet') : t('common.unbound')
           }}</span>
           <van-icon name="arrow" size="16" color="#999" />
         </div>
@@ -84,9 +84,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
+const { t } = useI18n()
 
 // 用户信息
 const userInfo = ref({

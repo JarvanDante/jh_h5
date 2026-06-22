@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="$router.back()" />
-      <span class="title">VIP Privileges</span>
+      <span class="title">{{ t('vip.title') }}</span>
       <div class="placeholder"></div>
     </div>
 
@@ -16,11 +16,11 @@
         </div>
         <div class="card-bottom">
           <div class="card-stat">
-            <span class="stat-label">E-Game Rebate</span>
+            <span class="stat-label">{{ t('vip.eGameRebate') }}</span>
             <span class="stat-value">{{ currentGrade.rebate_percent_egame }}%</span>
           </div>
           <div class="card-stat">
-            <span class="stat-label">Upgrade Bonus</span>
+            <span class="stat-label">{{ t('vip.upgradeBonus') }}</span>
             <span class="stat-value green">₱{{ currentGrade.money_limit }}</span>
           </div>
         </div>
@@ -30,18 +30,18 @@
 
     <!-- 升级进度 -->
     <div class="section" v-if="showProgressSection">
-      <div class="section-title">📊 Upgrade Progress</div>
+      <div class="section-title">📊 {{ t('vip.upgradeProgress') }}</div>
       <div class="progress-card">
         <div class="progress-grid">
           <div class="progress-item">
-            <span class="pi-label">Deposit</span>
+            <span class="pi-label">{{ t('common.deposit') }}</span>
             <span class="pi-value">₱{{ formatMoney(vipProgress.deposit_amount) }}</span>
             <span class="pi-target" v-if="!vipProgress.is_max_grade">
               / ₱{{ formatMoney(vipProgress.next_payment_limit) }}
             </span>
           </div>
           <div class="progress-item">
-            <span class="pi-label">Bet</span>
+            <span class="pi-label">{{ t('common.bet') }}</span>
             <span class="pi-value">₱{{ formatMoney(vipProgress.bet_amount) }}</span>
             <span class="pi-target" v-if="!vipProgress.is_max_grade">
               / ₱{{ formatMoney(vipProgress.next_bet_limit) }}
@@ -50,7 +50,7 @@
         </div>
         <div class="progress-row">
           <div class="progress-head">
-            <span>Deposit Progress</span>
+            <span>{{ t('vip.depositProgress') }}</span>
             <strong>{{ formatPercent(vipProgress.deposit_progress) }}%</strong>
           </div>
           <div class="progress-track">
@@ -62,7 +62,7 @@
         </div>
         <div class="progress-row">
           <div class="progress-head">
-            <span>Bet Progress</span>
+            <span>{{ t('vip.betProgress') }}</span>
             <strong>{{ formatPercent(vipProgress.bet_progress) }}%</strong>
           </div>
           <div class="progress-track">
@@ -73,7 +73,7 @@
           </div>
         </div>
         <div class="progress-overall" v-if="!vipProgress.is_max_grade">
-          <span>Overall (AND)</span>
+          <span>{{ t('vip.overall') }}</span>
           <strong>{{ formatPercent(vipProgress.progress) }}%</strong>
         </div>
       </div>
@@ -81,40 +81,40 @@
 
     <!-- 升级要求 -->
     <div class="section" v-if="showNextLevelSection">
-      <div class="section-title">🚀 Next Level: {{ displayNextGradeName }}</div>
+      <div class="section-title">🚀 {{ t('vip.nextLevel', { name: displayNextGradeName }) }}</div>
       <div class="upgrade-card">
         <div class="upgrade-row">
-          <span class="upgrade-label">Deposit Required</span>
+          <span class="upgrade-label">{{ t('vip.depositRequired') }}</span>
           <span class="upgrade-val">₱{{ displayNextPaymentLimit }}</span>
         </div>
         <div class="upgrade-row">
-          <span class="upgrade-label">Bet Required</span>
+          <span class="upgrade-label">{{ t('vip.betRequired') }}</span>
           <span class="upgrade-val">₱{{ displayNextBetLimit }}</span>
         </div>
         <div class="upgrade-row">
-          <span class="upgrade-label">Upgrade Bonus</span>
+          <span class="upgrade-label">{{ t('vip.upgradeBonus') }}</span>
           <span class="upgrade-val green">₱{{ displayNextBonus }}</span>
         </div>
         <div class="upgrade-row">
-          <span class="upgrade-label">E-Game Rebate</span>
+          <span class="upgrade-label">{{ t('vip.eGameRebate') }}</span>
           <span class="upgrade-val gold">{{ displayNextRebate }}</span>
         </div>
       </div>
     </div>
     <div class="section" v-else-if="showMaxLevelSection">
-      <div class="max-level-card">🎉 You have reached the highest VIP level!</div>
+      <div class="max-level-card">🎉 {{ t('vip.maxLevel') }}</div>
     </div>
 
     <!-- 全部VIP等级 -->
     <div class="section">
-      <div class="section-title">👑 All VIP Levels</div>
+      <div class="section-title">👑 {{ t('vip.allLevels') }}</div>
       <div class="grade-table">
         <div class="table-header">
-          <span class="th">Level</span>
-          <span class="th">Rebate</span>
-          <span class="th">Bonus</span>
-          <span class="th">Deposit</span>
-          <span class="th">Bet</span>
+          <span class="th">{{ t('vip.level') }}</span>
+          <span class="th">{{ t('vip.rebate') }}</span>
+          <span class="th">{{ t('common.bonus') }}</span>
+          <span class="th">{{ t('common.deposit') }}</span>
+          <span class="th">{{ t('common.bet') }}</span>
         </div>
         <div
           v-for="(grade, index) in gradeList"
@@ -135,12 +135,12 @@
 
     <!-- VIP规则 -->
     <div class="section">
-      <div class="section-title">📋 VIP Rules</div>
+      <div class="section-title">📋 {{ t('vip.vipRules') }}</div>
       <div class="rules-card">
-        <div class="rule-item">1. VIP level is determined by total deposit and bet amount</div>
-        <div class="rule-item">2. Higher VIP level unlocks higher rebate percentage</div>
-        <div class="rule-item">3. Upgrade bonus is credited automatically upon level up</div>
-        <div class="rule-item">4. VIP privileges are permanent and will not be downgraded</div>
+        <div class="rule-item">1. {{ t('vip.rule1') }}</div>
+        <div class="rule-item">2. {{ t('vip.rule2') }}</div>
+        <div class="rule-item">3. {{ t('vip.rule3') }}</div>
+        <div class="rule-item">4. {{ t('vip.rule4') }}</div>
       </div>
     </div>
   </div>
@@ -148,11 +148,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/stores/user'
 import { getVipUpgradeProgress, type VipUpgradeProgressResponse } from '@/api/modules/balance'
 import { userApi } from '@/api/modules/user'
 import type { GradeInfo } from '@/api/modules/user'
 
+const { t } = useI18n()
 const userStore = useUserStore()
 const userGradeId = computed(() => userStore.userInfo?.grade_id || 1)
 

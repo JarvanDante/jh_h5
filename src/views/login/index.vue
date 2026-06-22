@@ -7,7 +7,7 @@
     <div class="bg-glow-3"></div>
 
     <van-nav-bar
-      title="Login"
+      :title="t('login.title')"
       left-arrow
       @click-left="goBack"
       :style="{ background: 'linear-gradient(135deg, #552583 0%, #7B3FA8 100%)' }"
@@ -16,7 +16,7 @@
     <div class="login-form">
       <div class="logo">
         <div class="logo-icon">🎰</div>
-        <p class="welcome-text">Welcome Back!</p>
+        <p class="welcome-text">{{ t('login.welcomeBack') }}</p>
       </div>
 
       <van-form @submit="onSubmit">
@@ -24,17 +24,17 @@
           <van-field
             v-model="formData.username"
             name="username"
-            label="Username"
-            placeholder="Enter username"
-            :rules="[{ required: true, message: 'Please enter username' }]"
+            :label="t('login.username')"
+            :placeholder="t('login.usernamePlaceholder')"
+            :rules="[{ required: true, message: t('login.usernameRequired') }]"
           />
           <van-field
             v-model="formData.password"
             :type="showPassword ? 'text' : 'password'"
             name="password"
-            label="Password"
-            placeholder="Enter password"
-            :rules="[{ required: true, message: 'Please enter password' }]"
+            :label="t('login.password')"
+            :placeholder="t('login.passwordPlaceholder')"
+            :rules="[{ required: true, message: t('login.passwordRequired') }]"
           >
             <template #right-icon>
               <van-icon
@@ -47,10 +47,10 @@
           <van-field
             v-model="formData.captcha"
             name="captcha"
-            label="Captcha"
-            placeholder="Enter captcha"
+            :label="t('login.captcha')"
+            :placeholder="t('login.captchaPlaceholder')"
             maxlength="4"
-            :rules="[{ required: true, message: 'Please enter captcha code' }]"
+            :rules="[{ required: true, message: t('login.captchaRequired') }]"
           >
             <template #button>
               <img :src="captchaUrl" alt="captcha" class="captcha-image" @click="refreshCaptcha" />
@@ -60,13 +60,13 @@
 
         <div class="submit-button">
           <van-button round block color="#552583" native-type="submit" :loading="loading">
-            Login
+            {{ t('login.title') }}
           </van-button>
         </div>
 
         <div class="extra-links">
-          <a @click="handleForgotPassword" class="link">Forgot Password?</a>
-          <a @click="goToRegister" class="link">Register</a>
+          <a @click="handleForgotPassword" class="link">{{ t('login.forgotPassword') }}</a>
+          <a @click="goToRegister" class="link">{{ t('common.register') }}</a>
         </div>
       </van-form>
     </div>
@@ -76,6 +76,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast, showDialog } from 'vant'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api'
@@ -84,6 +85,7 @@ import { signedFetch } from '@/utils/request'
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 const loading = ref(false)
 const showPassword = ref(false)
@@ -149,7 +151,7 @@ const onSubmit = async () => {
 
     // 验证验证码
     if (!formData.captcha) {
-      showToast('Please enter captcha code')
+      showToast(t('login.captchaRequired'))
       return
     }
 
@@ -243,7 +245,7 @@ const onSubmit = async () => {
         console.error('Failed to refresh balance:', error)
       }
 
-      showToast('Login successful')
+      showToast(t('login.loginSuccess'))
 
       // 登录成功后回到首页时，广告弹窗再展示一次
       localStorage.setItem('ad_popup_resume', '1')
@@ -253,7 +255,7 @@ const onSubmit = async () => {
       router.replace(redirect || '/home')
     } else {
       // 登录失败
-      showToast(result.msg || 'Login failed')
+      showToast(result.msg || t('login.loginFailed'))
       // 刷新验证码
       refreshCaptcha()
       // 清空验证码输入
@@ -261,7 +263,7 @@ const onSubmit = async () => {
     }
   } catch (error) {
     console.error('Login failed:', error)
-    showToast('Login failed')
+    showToast(t('login.loginFailed'))
     // 刷新验证码
     refreshCaptcha()
     // 清空验证码输入
@@ -279,10 +281,9 @@ const goToRegister = () => {
 // 处理忘记密码
 const handleForgotPassword = () => {
   showDialog({
-    title: 'Forgot Password?',
-    message:
-      'Please contact our customer service to reset your password.\n\n📱 Telegram: @YourSupport\n💬 WhatsApp: +1234567890\n📧 Email: support@example.com',
-    confirmButtonText: 'OK',
+    title: t('login.forgotPasswordTitle'),
+    message: t('login.forgotPasswordMessage'),
+    confirmButtonText: t('common.ok'),
     confirmButtonColor: '#552583',
   })
 }

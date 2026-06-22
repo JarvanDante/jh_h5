@@ -4,24 +4,24 @@
     <div class="header-bg">
       <div class="top-bar">
         <van-icon name="arrow-left" size="24" color="#fff" @click="$router.back()" />
-        <span class="title">Rebate Center</span>
+        <span class="title">{{ t('activityRebate.title') }}</span>
         <div class="placeholder"></div>
       </div>
       <!-- VIP信息 -->
       <div class="vip-hero">
         <div class="vip-left">
           <div class="vip-badge">👑 {{ currentGrade?.name || 'VIP0' }}</div>
-          <div class="vip-sub">Your current rebate level</div>
+          <div class="vip-sub">{{ t('activityRebate.currentLevel') }}</div>
         </div>
         <div class="vip-stats">
           <div class="stat-item">
             <span class="stat-val">{{ currentGrade?.rebate_percent_egame || '0.00' }}%</span>
-            <span class="stat-label">E-Game Rebate</span>
+            <span class="stat-label">{{ t('vip.eGameRebate') }}</span>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
             <span class="stat-val green">₱{{ currentGrade?.money_limit || '0' }}</span>
-            <span class="stat-label">Upgrade Bonus</span>
+            <span class="stat-label">{{ t('vip.upgradeBonus') }}</span>
           </div>
         </div>
       </div>
@@ -30,7 +30,7 @@
     <!-- 额度卡片（浮在紫色背景下方） -->
     <div class="quota-card">
       <div class="quota-top">
-        <span class="quota-label">Valid Bet Amount</span>
+        <span class="quota-label">{{ t('activityRebate.validBetAmount') }}</span>
         <span class="quota-time" v-if="quota.last_rebate_time">{{ quota.last_rebate_time }}</span>
       </div>
       <div class="quota-amount">₱{{ formatMoney(quota.valid_bet_amount) }}</div>
@@ -39,15 +39,15 @@
         :class="{ disabled: isWashing || quota.valid_bet_amount <= 0 }"
         @click="handleWashCode"
       >
-        {{ isWashing ? 'Processing...' : '💰 Claim Rebate' }}
+        {{ isWashing ? t('common.processing') : `💰 ${t('activityRebate.claimRebate')}` }}
       </div>
     </div>
 
     <!-- VIP等级列表 -->
     <div class="vip-section">
       <div class="section-header">
-        <span class="section-title">VIP Rebate Rates</span>
-        <span class="section-hint">Swipe to view all →</span>
+        <span class="section-title">{{ t('activityRebate.vipRebateRates') }}</span>
+        <span class="section-hint">{{ t('activityRebate.swipeHint') }}</span>
       </div>
       <div class="vip-list" ref="vipListRef">
         <div
@@ -58,15 +58,15 @@
         >
           <div class="card-top" :style="getBadgeStyle(index)">
             <span class="card-name">{{ grade.name }}</span>
-            <span v-if="grade.id === userGradeId" class="current-tag">✓ You</span>
+            <span v-if="grade.id === userGradeId" class="current-tag">{{ t('activityRebate.you') }}</span>
           </div>
           <div class="card-body">
             <div class="cb-row">
-              <span class="cb-label">Rebate</span>
+              <span class="cb-label">{{ t('activityRebate.rebate') }}</span>
               <span class="cb-val">{{ grade.rebate_percent_egame }}%</span>
             </div>
             <div class="cb-row">
-              <span class="cb-label">Bonus</span>
+              <span class="cb-label">{{ t('activityRebate.bonus') }}</span>
               <span class="cb-val bonus">₱{{ grade.money_limit }}</span>
             </div>
           </div>
@@ -76,7 +76,7 @@
 
     <!-- 规则 -->
     <div class="rules-section">
-      <div class="rules-title">Rules</div>
+      <div class="rules-title">{{ t('activityRebate.rules') }}</div>
       <div class="rules-list">
         <div class="rule-item">
           <span class="rule-num">1</span>
@@ -113,7 +113,7 @@
               <span>Rate</span><em>{{ washResult.rebate_percent }}%</em>
             </div>
           </div>
-          <div class="rd-btn" @click="closeResultDialog">Done</div>
+          <div class="rd-btn" @click="closeResultDialog">{{ t('common.ok') }}</div>
         </div>
       </div>
     </teleport>
@@ -122,6 +122,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/modules/user'
@@ -132,6 +133,7 @@ import type { WashCodeQuotaResponse } from '@/api/modules/game'
 import type { WashCodeRebateResponse } from '@/api/modules/balance'
 
 const userStore = useUserStore()
+const { t } = useI18n()
 const userGradeId = computed(() => userStore.userInfo?.grade_id || 1)
 
 const gradeList = ref<GradeInfo[]>([])
@@ -239,7 +241,7 @@ async function handleWashCode() {
   if (isWashing.value || quota.value.valid_bet_amount <= 0) return
 
   if (!userStore.isLogin) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     return
   }
 
@@ -250,10 +252,10 @@ async function handleWashCode() {
       washResult.value = res
       showResultDialog.value = true
     } else {
-      showToast(res?.message || 'Wash code failed')
+      showToast(res?.message || t('activityRebate.washCodeFailed'))
     }
   } catch (e: any) {
-    showToast(e?.message || 'Wash code failed')
+    showToast(e?.message || t('activityRebate.washCodeFailed'))
   } finally {
     isWashing.value = false
   }

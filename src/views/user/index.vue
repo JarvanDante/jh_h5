@@ -10,12 +10,12 @@
       <!-- 用户信息 -->
       <div class="user-info">
         <div class="id-row">
-          <span class="label">ID:</span>
+          <span class="label">{{ t('common.id') }}:</span>
           <span class="value">{{ userId }}</span>
           <van-icon name="copy" size="16" color="#fff" @click="copyId" />
         </div>
         <div class="account-row">
-          <span class="label">Account:</span>
+          <span class="label">{{ t('common.account') }}:</span>
           <span class="value">{{ accountNumber }}</span>
         </div>
         <div class="balance-row">
@@ -45,13 +45,13 @@
       <van-button class="withdraw-btn" block @click="handleWithdraw">
         <div class="btn-content">
           <van-icon name="credit-pay" size="24" />
-          <span>Withdraw</span>
+          <span>{{ t('user.withdraw') }}</span>
         </div>
       </van-button>
       <van-button class="deposit-btn" block @click="handleDeposit">
         <div class="btn-content">
           <van-icon name="credit-pay" size="24" />
-          <span>Deposit</span>
+          <span>{{ t('user.deposit') }}</span>
         </div>
       </van-button>
     </div>
@@ -67,7 +67,7 @@
           <van-icon name="arrow-up" size="10" color="#fdb927" />
           <span>{{ nextGrade.name }}</span>
         </div>
-        <div class="vip-max-tag" v-else>🎉 MAX</div>
+        <div class="vip-max-tag" v-else>🎉 {{ t('common.max') }}</div>
         <van-icon name="arrow" size="16" color="rgba(255,255,255,0.4)" class="arrow-icon" />
       </div>
 
@@ -77,7 +77,7 @@
           <div class="req-item">
             <div class="req-left">
               <span class="req-icon">💰</span>
-              <span class="req-label">Deposit</span>
+              <span class="req-label">{{ t('common.deposit') }}</span>
             </div>
             <span class="req-value">₱{{ depositCurrent }}</span>
           </div>
@@ -94,7 +94,7 @@
           <div class="req-item">
             <div class="req-left">
               <span class="req-icon">🎰</span>
-              <span class="req-label">Bet</span>
+              <span class="req-label">{{ t('common.bet') }}</span>
             </div>
             <span class="req-value">₱{{ betCurrent }}</span>
           </div>
@@ -113,7 +113,7 @@
     <div class="menu-card">
       <div class="menu-item" @click="goToReport">
         <div class="menu-icon report-icon">📊</div>
-        <span class="menu-title">Report</span>
+        <span class="menu-title">{{ t('user.report') }}</span>
         <van-icon name="arrow" size="20" color="rgba(255,255,255,0.6)" />
       </div>
 
@@ -135,7 +135,7 @@
 
       <div class="menu-item" @click="goToRebate">
         <div class="menu-icon redeem-icon">🎁</div>
-        <span class="menu-title">Rebate</span>
+        <span class="menu-title">{{ t('user.rebate') }}</span>
         <van-icon name="arrow" size="20" color="rgba(255,255,255,0.6)" />
       </div>
 
@@ -143,7 +143,7 @@
 
       <div class="menu-item" @click="goToSupport">
         <div class="menu-icon support-icon">💬</div>
-        <span class="menu-title">Support</span>
+        <span class="menu-title">{{ t('user.support') }}</span>
         <van-icon name="arrow" size="20" color="rgba(255,255,255,0.6)" />
       </div>
 
@@ -151,7 +151,7 @@
 
       <div class="menu-item" @click="goToSecurity">
         <div class="menu-icon security-icon">🛡️</div>
-        <span class="menu-title">Security Center</span>
+        <span class="menu-title">{{ t('user.securityCenter') }}</span>
         <van-icon name="arrow" size="20" color="rgba(255,255,255,0.6)" />
       </div>
 
@@ -159,7 +159,7 @@
 
       <div class="menu-item" @click="handleLogout">
         <div class="menu-icon logout-icon">🚪</div>
-        <span class="menu-title">Logout</span>
+        <span class="menu-title">{{ t('common.logout') }}</span>
         <van-icon name="arrow" size="20" color="rgba(255,255,255,0.6)" />
       </div>
     </div>
@@ -172,6 +172,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showConfirmDialog, showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/modules/user'
@@ -182,6 +183,7 @@ import { signedFetch } from '@/utils/request'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 // VIP等级数据
 const gradeList = ref<GradeInfo[]>([])
@@ -323,12 +325,12 @@ const animateBalance = (oldValue: string, newValue: string) => {
 const copyId = () => {
   // 复制 ID 到剪贴板
   navigator.clipboard.writeText(userId.value.toString())
-  showToast('ID copied')
+  showToast(t('user.copyIdSuccess'))
 }
 
 const refreshBalance = async () => {
   if (!userStore.isLogin) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     return
   }
 
@@ -417,13 +419,13 @@ const refreshBalance = async () => {
         } else {
           // 刷新失败，跳转到登录页
           userStore.logout()
-          showToast('Login expired, please login again')
+          showToast(t('common.loginExpired'))
           router.push('/login')
         }
       } else {
         // 没有 refresh_token，跳转到登录页
         userStore.logout()
-        showToast('Please login again')
+        showToast(t('common.pleaseLoginAgain'))
         router.push('/login')
       }
       isRefreshing.value = false
@@ -459,11 +461,11 @@ const refreshBalance = async () => {
       // 同步刷新VIP进度（充值后可能变化）
       fetchVipProgress()
     } else {
-      showToast(refreshBalanceResult.msg || 'Failed to refresh balance')
+      showToast(refreshBalanceResult.msg || t('home.refreshBalanceFailed'))
     }
   } catch (error) {
     console.error('Failed to refresh balance:', error)
-    showToast('Failed to refresh balance')
+    showToast(t('home.refreshBalanceFailed'))
   } finally {
     setTimeout(() => {
       isRefreshing.value = false
@@ -494,7 +496,7 @@ const goToMessages = () => {
 
 const handleWithdraw = () => {
   if (!userStore.isLogin) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -525,7 +527,7 @@ const handleConfirmSetPassword = () => {
 
 const handleDeposit = () => {
   if (!userStore.isLogin) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -534,7 +536,7 @@ const handleDeposit = () => {
 
 const goToReport = () => {
   if (!userStore.isLogin) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -560,12 +562,12 @@ const goToSecurity = () => {
 const handleLogout = async () => {
   try {
     await showConfirmDialog({
-      title: 'Confirm',
-      message: 'Are you sure you want to logout?',
+      title: t('user.logoutConfirmTitle'),
+      message: t('user.logoutConfirmMessage'),
     })
 
     userStore.logout()
-    showToast('Logged out successfully')
+    showToast(t('user.loggedOutSuccess'))
     router.replace('/home')
   } catch (error) {
     // 用户取消
@@ -581,7 +583,7 @@ onActivated(() => {
 onMounted(async () => {
   // 检查是否登录
   if (!userStore.isLogin) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
@@ -688,13 +690,13 @@ onMounted(async () => {
         } else {
           // 刷新失败，跳转到登录页
           userStore.logout()
-          showToast('Login expired, please login again')
+          showToast(t('common.loginExpired'))
           router.push('/login')
         }
       } else {
         // 没有 refresh_token，跳转到登录页
         userStore.logout()
-        showToast('Please login again')
+        showToast(t('common.pleaseLoginAgain'))
         router.push('/login')
       }
     } else if (result.code === 0 && result.data) {

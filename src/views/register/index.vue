@@ -7,7 +7,7 @@
     <div class="bg-glow-3"></div>
 
     <van-nav-bar
-      title="Register"
+      :title="t('register.title')"
       left-arrow
       @click-left="onClickLeft"
       :style="{ background: 'linear-gradient(135deg, #552583 0%, #7B3FA8 100%)' }"
@@ -16,7 +16,7 @@
     <div class="register-form">
       <div class="logo">
         <div class="logo-icon">🎰</div>
-        <p class="welcome-text">Join Us Now!</p>
+        <p class="welcome-text">{{ t('register.joinUs') }}</p>
       </div>
 
       <van-form @submit="onSubmit">
@@ -24,19 +24,19 @@
           <van-field
             v-model="formData.username"
             name="username"
-            label="Username"
-            placeholder="Letters and numbers (6~16)"
-            :rules="[{ required: true, message: 'Please enter username' }]"
+            :label="t('register.username')"
+            :placeholder="t('register.usernamePlaceholder')"
+            :rules="[{ required: true, message: t('register.usernameRequired') }]"
           />
           <van-field
             v-model="formData.password"
             :type="showPassword ? 'text' : 'password'"
             name="password"
-            label="Password"
-            placeholder="password(6~20)"
+            :label="t('register.password')"
+            :placeholder="t('register.passwordPlaceholder')"
             :rules="[
-              { required: true, message: 'Please enter password' },
-              { min: 6, message: 'Password must be at least 6 characters' },
+              { required: true, message: t('register.passwordRequired') },
+              { min: 6, message: t('register.passwordMin') },
             ]"
           >
             <template #right-icon>
@@ -51,11 +51,11 @@
             v-model="formData.confirmPassword"
             :type="showConfirmPassword ? 'text' : 'password'"
             name="confirmPassword"
-            label="Confirm"
-            placeholder="Confirm password"
+            :label="t('register.confirm')"
+            :placeholder="t('register.confirmPlaceholder')"
             :rules="[
-              { required: true, message: 'Please confirm password' },
-              { validator: validatePassword, message: 'Passwords do not match' },
+              { required: true, message: t('register.confirmRequired') },
+              { validator: validatePassword, message: t('register.passwordMismatch') },
             ]"
           >
             <template #right-icon>
@@ -69,10 +69,10 @@
           <van-field
             v-model="formData.captchaCode"
             name="captchaCode"
-            label="Captcha"
-            placeholder="Enter captcha"
+            :label="t('register.captcha')"
+            :placeholder="t('register.captchaPlaceholder')"
             maxlength="4"
-            :rules="[{ required: true, message: 'Please enter captcha code' }]"
+            :rules="[{ required: true, message: t('register.captchaRequired') }]"
           >
             <template #button>
               <img
@@ -85,41 +85,21 @@
           </van-field>
         </van-cell-group>
 
-        <!-- 协议勾选 -->
         <div class="agreement-section">
           <van-checkbox v-model="agreed" icon-size="16px">
-            <span class="agreement-text"> I am 18+ and agree to the terms & conditions </span>
+            <span class="agreement-text">{{ t('register.agreeLabel') }}</span>
           </van-checkbox>
         </div>
 
-        <!-- 注册按钮 -->
         <div class="submit-button">
           <van-button round block color="#552583" native-type="submit" :loading="loading">
-            Register
+            {{ t('register.title') }}
           </van-button>
         </div>
 
-        <!-- 快速注册按钮 -->
-        <!-- <div class="quick-register-section">
-          <van-button
-            round
-            block
-            plain
-            color="#FDB927"
-            :loading="quickLoading"
-            @click="handleQuickRegister"
-          >
-            Quick Register 🎁
-          </van-button>
-        </div> -->
-
-        <!-- Invite 活动下线，去掉注册页邀请提示 -->
-        <!-- <div class="tips-text">💡 Invite 1 person and get ₱200</div> -->
-
-        <!-- 已有账号 -->
         <div class="login-link">
-          <span>Already have an account?</span>
-          <a @click="goToLogin">Login now</a>
+          <span>{{ t('register.alreadyHaveAccount') }}</span>
+          <a @click="goToLogin">{{ t('register.loginNow') }}</a>
         </div>
       </van-form>
     </div>
@@ -129,6 +109,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
 import { refreshBalance as refreshBalanceApi, userApi } from '@/api'
@@ -136,6 +117,7 @@ import { refreshBalance as refreshBalanceApi, userApi } from '@/api'
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 const loading = ref(false)
 const quickLoading = ref(false)
@@ -177,7 +159,7 @@ const getCaptcha = async () => {
     captchaImage.value = `${import.meta.env.VITE_API_BASE_URL}/frontend/app/captcha?time=${captchaTime.value}`
   } catch (error) {
     console.error('Failed to get captcha:', error)
-    showToast('Failed to load captcha')
+    showToast(t('register.loadCaptchaFailed'))
   }
 }
 
@@ -202,12 +184,12 @@ const extractRpcMessage = (rawMsg?: string) => {
 // 普通注册
 const onSubmit = async () => {
   if (!agreed.value) {
-    showToast('Please agree to the terms & conditions')
+    showToast(t('register.agreeTerms'))
     return
   }
 
   if (!formData.captchaCode) {
-    showToast('Please enter captcha code')
+    showToast(t('register.captchaRequired'))
     return
   }
 
@@ -224,13 +206,13 @@ const onSubmit = async () => {
     })
 
     if (res?.code && res.code !== 0) {
-      showToast(extractRpcMessage(res.msg) || 'Registration failed')
+      showToast(extractRpcMessage(res.msg) || t('register.failed'))
       refreshCaptcha()
       return
     }
 
     if (!res?.token) {
-      showToast(extractRpcMessage(res?.message) || 'Registration failed')
+      showToast(extractRpcMessage(res?.message) || t('register.failed'))
       refreshCaptcha()
       return
     }
@@ -287,7 +269,7 @@ const onSubmit = async () => {
       console.error('Failed to refresh balance:', error)
     }
 
-    showToast('Registration successful!')
+    showToast(t('register.success'))
 
     // 跳转到首页
     setTimeout(() => {
@@ -295,7 +277,7 @@ const onSubmit = async () => {
     }, 500)
   } catch (error: any) {
     console.error('Registration failed:', error)
-    const errorMsg = error?.response?.data?.message || error?.message || 'Registration failed'
+    const errorMsg = error?.response?.data?.message || error?.message || t('register.failed')
     showToast(errorMsg)
     // 刷新验证码
     refreshCaptcha()
@@ -307,7 +289,7 @@ const onSubmit = async () => {
 // 快速注册
 const handleQuickRegister = async () => {
   if (!agreed.value) {
-    showToast('Please agree to the terms & conditions')
+    showToast(t('register.agreeTerms'))
     return
   }
 
@@ -359,7 +341,7 @@ const handleQuickRegister = async () => {
       }
     }
 
-    showToast(res.message || 'Quick registration successful!')
+    showToast(res.message || t('register.quickSuccess'))
 
     // 跳转到首页
     setTimeout(() => {
@@ -367,7 +349,7 @@ const handleQuickRegister = async () => {
     }, 1000)
   } catch (error: any) {
     console.error('Quick registration failed:', error)
-    const errorMsg = error?.response?.data?.message || error?.message || 'Quick registration failed'
+    const errorMsg = error?.response?.data?.message || error?.message || t('register.quickFailed')
     showToast(errorMsg)
   } finally {
     quickLoading.value = false

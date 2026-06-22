@@ -2,18 +2,18 @@
   <div class="change-password-page">
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Change Login Password</span>
+      <span class="title">{{ t('route.changeLoginPassword') }}</span>
       <div class="placeholder"></div>
     </div>
 
     <div class="content">
       <div class="form-card">
-        <div class="form-title">Login Password</div>
+        <div class="form-title">{{ t('security.loginPassword') }}</div>
 
         <van-field
           v-model="oldPassword"
           :type="showOld ? 'text' : 'password'"
-          placeholder="Please enter old password"
+          :placeholder="t('security.oldPasswordPlaceholder')"
           clearable
         >
           <template #left-icon>
@@ -27,7 +27,7 @@
         <van-field
           v-model="newPassword"
           :type="showNew ? 'text' : 'password'"
-          placeholder="Please enter new password"
+          :placeholder="t('security.newPasswordPlaceholder')"
           clearable
           class="mt-12"
         >
@@ -46,7 +46,7 @@
           :disabled="submitting"
           @click="handleSubmit"
         >
-          Confirm
+          {{ t('common.confirm') }}
         </van-button>
       </div>
     </div>
@@ -60,10 +60,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showLoadingToast, closeToast } from 'vant'
 import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const oldPassword = ref('')
 const newPassword = ref('')
@@ -92,23 +94,23 @@ const goBack = () => {
 
 const validatePassword = (oldPwd: string, newPwd: string): boolean => {
   if (!oldPwd) {
-    showLocalToast('Please enter old password')
+    showLocalToast(t('security.enterOldPassword'))
     return false
   }
   if (!newPwd) {
-    showLocalToast('Please enter new password')
+    showLocalToast(t('security.enterNewPassword'))
     return false
   }
   if (newPwd.length < 6) {
-    showLocalToast('New password must be at least 6 characters')
+    showLocalToast(t('security.newPasswordMin6'))
     return false
   }
   if (newPwd.length > 20) {
-    showLocalToast('New password must not exceed 20 characters')
+    showLocalToast(t('security.newPasswordMax20'))
     return false
   }
   if (oldPwd === newPwd) {
-    showLocalToast('New password must be different from old password')
+    showLocalToast(t('security.passwordMustDiffer'))
     return false
   }
   return true
@@ -136,7 +138,7 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     showLoadingToast({
-      message: 'Changing...',
+      message: t('common.changing'),
       forbidClick: true,
       duration: 0,
     })
@@ -147,10 +149,10 @@ const handleSubmit = async () => {
     })
 
     closeToast()
-    showLocalToast(getResponseMessage(response, 'Password changed successfully'))
+    showLocalToast(getResponseMessage(response, t('security.passwordChangedSuccess')))
   } catch (error: any) {
     closeToast()
-    showLocalToast(error?.message || 'Failed to change password')
+    showLocalToast(error?.message || t('security.passwordChangeFailed'))
   } finally {
     submitting.value = false
   }

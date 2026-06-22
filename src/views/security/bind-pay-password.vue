@@ -2,20 +2,20 @@
   <div class="bind-password-page">
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Bind Assets Password</span>
+      <span class="title">{{ t('route.bindAssetsPassword') }}</span>
       <div class="placeholder"></div>
     </div>
 
     <div class="content">
       <div class="form-card">
-        <div class="form-title">Assets Password</div>
+        <div class="form-title">{{ t('security.assetsPassword') }}</div>
 
         <van-field
           v-model="newPassword"
           :type="showNew ? 'text' : 'tel'"
           inputmode="numeric"
           @update:model-value="(val) => (newPassword = sanitizePayPassword(String(val ?? '')))"
-          placeholder="Please enter new password (6 digits)"
+          :placeholder="t('security.newPassword6Placeholder')"
           maxlength="6"
           clearable
         >
@@ -34,7 +34,7 @@
           :disabled="submitting"
           @click="handleSubmit"
         >
-          Confirm
+          {{ t('common.confirm') }}
         </van-button>
       </div>
     </div>
@@ -48,10 +48,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showLoadingToast, closeToast } from 'vant'
 import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const newPassword = ref('')
 const showNew = ref(false)
@@ -80,12 +82,12 @@ const goBack = () => {
 
 const validatePassword = (newPwd: string): boolean => {
   if (!newPwd) {
-    showLocalToast('Please enter new password')
+    showLocalToast(t('security.enterNewPassword'))
     return false
   }
   const payPasswordRegex = /^[0-9]{6}$/
   if (!payPasswordRegex.test(newPwd)) {
-    showLocalToast('New password must be 6 digits')
+    showLocalToast(t('security.newPassword6Digits'))
     return false
   }
   return true
@@ -113,7 +115,7 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     showLoadingToast({
-      message: 'Binding...',
+      message: t('common.binding'),
       forbidClick: true,
       duration: 0,
     })
@@ -121,10 +123,10 @@ const handleSubmit = async () => {
     const response = await userApi.setPayPassword({ pay_password: newPassword.value })
 
     closeToast()
-    showLocalToast(getResponseMessage(response, 'Password bound successfully'))
+    showLocalToast(getResponseMessage(response, t('security.passwordBoundSuccess')))
   } catch (error: any) {
     closeToast()
-    showLocalToast(error?.message || 'Failed to bind password')
+    showLocalToast(error?.message || t('security.passwordBindFailed'))
   } finally {
     submitting.value = false
   }

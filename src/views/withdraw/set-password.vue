@@ -3,14 +3,14 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Withdraw Password</span>
+      <span class="title">{{ t('withdrawSetPassword.title') }}</span>
       <div class="placeholder"></div>
     </div>
 
     <!-- 设置密码表单 -->
     <div v-if="!isSuccess" class="content">
       <!-- 标题 -->
-      <div class="page-title">Set Withdraw Password</div>
+      <div class="page-title">{{ t('withdrawSetPassword.title') }}</div>
 
       <!-- 新密码输入 -->
       <div class="password-section">
@@ -92,12 +92,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { useUserStore } from '@/stores/user'
 import { signedFetch } from '@/utils/request'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 // 页面状态
 const isSuccess = ref(false)
@@ -203,24 +205,24 @@ const handleSubmit = async () => {
 
   // 验证密码长度
   if (newPwd.length !== 6) {
-    showToast('Please enter 6-digit password')
+    showToast(t('withdrawSetPassword.enterPassword'))
     return
   }
 
   if (confirmPwd.length !== 6) {
-    showToast('Please confirm your password')
+    showToast(t('withdrawSetPassword.confirmPassword'))
     return
   }
 
   // 验证两次密码是否一致
   if (newPwd !== confirmPwd) {
-    showToast('Passwords do not match')
+    showToast(t('withdrawSetPassword.mismatch'))
     return
   }
 
   // 验证是否全是数字
   if (!/^\d{6}$/.test(newPwd)) {
-    showToast('Password must be 6 digits')
+    showToast(t('withdrawSetPassword.mustBe6Digits'))
     return
   }
 
@@ -259,11 +261,11 @@ const handleSubmit = async () => {
       // 显示成功页面
       isSuccess.value = true
     } else {
-      showToast(result.msg || 'Failed to set password')
+      showToast(result.msg || t('withdrawSetPassword.failed'))
     }
   } catch (error) {
     console.error('Error setting password:', error)
-    showToast('Failed to set password')
+    showToast(t('withdrawSetPassword.failed'))
   } finally {
     isSubmitting.value = false
   }

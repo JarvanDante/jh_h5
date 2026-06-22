@@ -17,7 +17,7 @@
       <div class="global-tabbar">
         <div class="tabbar-item" :class="{ active: isHomeActive }" @click="navigateTo('/')">
           <van-icon :name="isHomeActive ? 'wap-home' : 'wap-home-o'" size="20" />
-          <span>Home</span>
+          <span>{{ t('tab.home') }}</span>
         </div>
         <div
           class="tabbar-item"
@@ -25,7 +25,7 @@
           @click="navigateTo('/promotion')"
         >
           <van-icon :name="currentRoute === '/promotion' ? 'gift' : 'gift-o'" size="20" />
-          <span>Promotion</span>
+          <span>{{ t('tab.promotion') }}</span>
         </div>
         <!-- Invite 活动下线，先注释底部中间入口 -->
         <!--
@@ -47,7 +47,7 @@
           @click="navigateTo('/deposit')"
         >
           <van-icon :name="currentRoute === '/deposit' ? 'gold-coin' : 'gold-coin-o'" size="20" />
-          <span>Deposit</span>
+          <span>{{ t('tab.deposit') }}</span>
         </div>
         <div
           class="tabbar-item"
@@ -55,7 +55,7 @@
           @click="navigateTo('/user')"
         >
           <van-icon :name="currentRoute === '/user' ? 'manager' : 'manager-o'" size="20" />
-          <span>Members</span>
+          <span>{{ t('tab.members') }}</span>
         </div>
       </div>
     </div>
@@ -65,10 +65,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 const appStore = useAppStore()
 const cacheViews = computed(() => appStore.cacheViews)
 const currentRoute = computed(() => route.path)

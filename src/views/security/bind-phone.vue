@@ -2,13 +2,13 @@
   <div class="bind-phone-page">
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Bind Phone</span>
+      <span class="title">{{ t('route.bindPhone') }}</span>
       <div class="placeholder"></div>
     </div>
 
     <div class="content">
       <div class="form-card">
-        <div class="form-title">Phone Number</div>
+        <div class="form-title">{{ t('security.phoneNumber') }}</div>
         <van-field
           v-model="phoneInput"
           type="tel"
@@ -31,7 +31,7 @@
           :disabled="submitting"
           @click="handleSubmit"
         >
-          Confirm
+          {{ t('common.confirm') }}
         </van-button>
       </div>
     </div>
@@ -45,10 +45,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showLoadingToast, closeToast } from 'vant'
 import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const phoneInput = ref('')
 const submitting = ref(false)
@@ -74,12 +76,12 @@ const goBack = () => {
 
 const validatePhone = (phone: string): boolean => {
   if (!phone) {
-    showLocalToast('Please enter your phone number')
+    showLocalToast(t('security.enterPhone'))
     return false
   }
   const phoneRegex = /^[0-9]{10}$/
   if (!phoneRegex.test(phone)) {
-    showLocalToast('Please enter a valid phone number')
+    showLocalToast(t('security.invalidPhone'))
     return false
   }
   return true
@@ -107,7 +109,7 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     showLoadingToast({
-      message: 'Binding...',
+      message: t('common.binding'),
       forbidClick: true,
       duration: 0,
     })
@@ -115,10 +117,10 @@ const handleSubmit = async () => {
     const response = await userApi.bindMobile({ mobile: phoneInput.value })
 
     closeToast()
-    showLocalToast(getResponseMessage(response, 'Phone bound successfully'))
+    showLocalToast(getResponseMessage(response, t('security.phoneBoundSuccess')))
   } catch (error: any) {
     closeToast()
-    showLocalToast(error?.message || 'Failed to bind phone')
+    showLocalToast(error?.message || t('security.phoneBindFailed'))
   } finally {
     submitting.value = false
   }

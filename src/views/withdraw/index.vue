@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Withdraw</span>
+      <span class="title">{{ t('withdraw.title') }}</span>
       <van-icon name="notes-o" size="24" color="#fff" @click="showHistory" />
     </div>
 
@@ -11,7 +11,7 @@
     <div class="info-cards">
       <div class="info-card">
         <div class="card-header">
-          <span class="card-title">Account Balance</span>
+          <span class="card-title">{{ t('withdraw.accountBalance') }}</span>
           <van-icon
             name="replay"
             size="20"
@@ -25,7 +25,7 @@
 
       <div class="info-card">
         <div class="card-header">
-          <span class="card-title">Rollover requirement</span>
+          <span class="card-title">{{ t('withdraw.rolloverRequirement') }}</span>
           <van-icon
             name="replay"
             size="20"
@@ -36,7 +36,7 @@
         </div>
         <div class="card-amount">{{ formatAmount(rolloverRequirement) }}</div>
         <div class="view-details" @click="showRolloverDetails">
-          View details <van-icon name="arrow" size="12" />
+          {{ t('withdraw.viewDetails') }} <van-icon name="arrow" size="12" />
         </div>
       </div>
     </div>
@@ -58,7 +58,7 @@
     <div class="amount-card" :class="{ 'card-disabled': hasRollover }">
       <!-- 流水未完成提示 -->
       <div v-if="hasRollover" class="rollover-tip">
-        ⚠️ Please complete rollover requirement before withdrawing
+        ⚠️ {{ t('withdraw.rolloverTip') }}
       </div>
 
       <!-- 快捷金额选择 -->
@@ -93,8 +93,8 @@
     <!-- 提现账户管理 -->
     <div class="account-section">
       <div class="section-header">
-        <span class="section-title">withdrawal account</span>
-        <span class="my-account" @click="goToMyAccount">my account</span>
+        <span class="section-title">{{ t('withdraw.withdrawalAccount') }}</span>
+        <span class="my-account" @click="goToMyAccount">{{ t('withdraw.myAccount') }}</span>
       </div>
 
       <!-- 无账户提示 -->
@@ -102,10 +102,10 @@
         <div class="no-account-icon">
           <van-icon name="card" size="80" color="#4b5563" />
         </div>
-        <div class="no-account-text">Please add a bank account for withdrawal purposes</div>
+        <div class="no-account-text">{{ t('withdraw.noAccountTip') }}</div>
         <van-button class="add-account-btn" @click="addAccount">
           <van-icon name="plus" size="16" />
-          add account
+          {{ t('withdraw.addAccount') }}
         </van-button>
       </div>
 
@@ -135,7 +135,7 @@
         :disabled="hasRollover"
         @click="handleWithdraw"
       >
-        {{ hasRollover ? 'Rollover Incomplete' : 'Withdraw Now' }}
+        {{ hasRollover ? t('withdraw.rolloverIncomplete') : t('withdraw.withdrawNow') }}
       </van-button>
     </div>
   </div>
@@ -144,6 +144,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast, showDialog, closeToast } from 'vant'
 import {
   getWithdrawList,
@@ -161,6 +162,7 @@ import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 // 账户余额
 const accountBalance = ref(0.0)
@@ -235,7 +237,7 @@ const loadWithdrawChannels = async () => {
     }
   } catch (error) {
     console.error('Failed to load withdraw channels:', error)
-    showToast('Failed to load withdrawal methods')
+    showToast(t('withdraw.loadMethodsFailed'))
   }
 }
 
@@ -285,7 +287,7 @@ const refreshBalance = async () => {
     }
   } catch (error) {
     console.error('Failed to refresh balance:', error)
-    showToast('Failed to refresh balance')
+    showToast(t('withdraw.refreshBalanceFailed'))
   } finally {
     // 动画持续1秒后才能再次点击
     setTimeout(() => {
@@ -329,7 +331,7 @@ const loadRolloverRequirement = async () => {
 
     rolloverRequirement.value = parseFloat(totalRemaining.toFixed(2))
   } catch (error: any) {
-    showToast(error.message || 'Failed to load rollover requirement')
+    showToast(error.message || t('withdraw.loadRolloverFailed'))
   } finally {
     setTimeout(() => {
       isRolloverRefreshing.value = false
@@ -395,57 +397,56 @@ const handleWithdraw = async () => {
   if (defaultBankCards.value.length === 0) {
     showToast({
       type: 'fail',
-      message: 'Please add a bank account first',
+      message: t('withdraw.addBankFirst'),
       duration: 2000,
     })
     return
   }
 
   if (!selectedMethod.value) {
-    showToast('Please select a withdrawal method')
+    showToast(t('withdraw.selectMethod'))
     return
   }
 
   if (!withdrawAmount.value || parseFloat(withdrawAmount.value) <= 0) {
-    showToast('Please select or enter a valid amount')
+    showToast(t('withdraw.selectValidAmount'))
     return
   }
 
   const amount = parseFloat(withdrawAmount.value)
 
   if (amount < minAmount.value) {
-    showToast(`Minimum withdrawal amount is ₱${formatAmount(minAmount.value)}`)
+    showToast(t('withdraw.minAmount', { amount: formatAmount(minAmount.value) }))
     return
   }
 
   if (maxAmount.value > 0 && amount > maxAmount.value) {
-    showToast(`Maximum withdrawal amount is ₱${formatAmount(maxAmount.value)}`)
+    showToast(t('withdraw.maxAmount', { amount: formatAmount(maxAmount.value) }))
     return
   }
 
   if (amount > accountBalance.value) {
-    showToast('Insufficient balance')
+    showToast(t('withdraw.insufficientBalance'))
     return
   }
 
   const channel = selectedChannel.value
   if (!channel) {
-    showToast('Please select a withdrawal method')
+    showToast(t('withdraw.selectMethod'))
     return
   }
 
   try {
     // 显示确认对话框
     await showDialog({
-      title: 'Confirm Withdrawal',
-      message: `Withdraw ₱${formatAmount(amount)} ${channel.name}?`,
+      title: t('withdraw.confirmTitle'),
+      message: t('withdraw.confirmMessage', { amount: formatAmount(amount), method: channel.name }),
       showCancelButton: true,
     })
 
-    // 显示加载提示
     showToast({
       type: 'loading',
-      message: 'Processing...',
+      message: t('common.processing'),
       duration: 0,
       forbidClick: true,
     })
@@ -457,7 +458,7 @@ const handleWithdraw = async () => {
         closeToast()
         showToast({
           type: 'fail',
-          message: recallRes.msg || recallRes.message || '回收游戏余额失败',
+          message: recallRes.msg || recallRes.message || t('withdraw.recallFailed'),
         })
         return
       }
@@ -465,7 +466,7 @@ const handleWithdraw = async () => {
         closeToast()
         showToast({
           type: 'fail',
-          message: recallRes.message || '回收游戏余额失败',
+          message: recallRes.message || t('withdraw.recallFailed'),
         })
         return
       }
@@ -476,7 +477,7 @@ const handleWithdraw = async () => {
         closeToast()
         showToast({
           type: 'fail',
-          message: nonceRes.msg || nonceRes.message || '获取nonce失败',
+          message: nonceRes.msg || nonceRes.message || t('withdraw.getNonceFailed'),
         })
         return
       }
@@ -484,7 +485,7 @@ const handleWithdraw = async () => {
         closeToast()
         showToast({
           type: 'fail',
-          message: 'Failed to get nonce',
+          message: t('withdraw.getNonceFailed'),
         })
         return
       }
@@ -506,7 +507,7 @@ const handleWithdraw = async () => {
       if (withdrawRes.code && withdrawRes.code !== 0) {
         showToast({
           type: 'fail',
-          message: withdrawRes.msg || withdrawRes.message || '提现失败',
+          message: withdrawRes.msg || withdrawRes.message || t('withdraw.submitFailed'),
         })
         return
       }
@@ -515,7 +516,7 @@ const handleWithdraw = async () => {
         // 显示成功提示（绿色对号），使用接口返回的 message
         showToast({
           type: 'success',
-          message: withdrawRes.message || 'Withdrawal successful!',
+          message: withdrawRes.message || t('withdraw.withdrawSuccess'),
           duration: 2000,
         })
 
@@ -532,7 +533,7 @@ const handleWithdraw = async () => {
       } else {
         showToast({
           type: 'fail',
-          message: withdrawRes.message || 'Withdrawal failed',
+          message: withdrawRes.message || t('withdraw.submitFailed'),
         })
       }
     } catch (error: any) {
@@ -540,7 +541,7 @@ const handleWithdraw = async () => {
       console.error('Withdrawal error:', error)
       showToast({
         type: 'fail',
-        message: error.message || 'Withdrawal failed, please try again',
+        message: error.message || t('withdraw.withdrawFailedRetry'),
       })
     }
   } catch {

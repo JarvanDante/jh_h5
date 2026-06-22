@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Deposit Record</span>
+      <span class="title">{{ t('depositHistory.title') }}</span>
       <div class="placeholder"></div>
     </div>
 
@@ -11,7 +11,7 @@
       <!-- 时间筛选和累计充值 -->
       <div class="filter-section">
         <div class="accumulated">
-          <span class="label">Total Deposit:</span>
+          <span class="label">{{ t('depositHistory.totalDeposit') }}</span>
           <span class="amount">{{ accumulatedDeposit }}</span>
         </div>
         <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
@@ -49,12 +49,12 @@
         v-model:loading="loading"
         :finished="finished"
         :immediate-check="false"
-        finished-text="No more records"
+        :finished-text="t('depositHistory.noMore')"
         @load="onLoad"
       >
         <div v-if="depositRecords.length === 0 && !loading" class="empty-state">
           <van-icon name="search" size="80" color="#4b5563" />
-          <div class="empty-text">No Record</div>
+          <div class="empty-text">{{ t('depositHistory.noRecord') }}</div>
         </div>
 
         <div class="record-list">
@@ -118,10 +118,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { getBalanceLog, type BalanceLogItem } from '@/api/modules/balance'
 
 const router = useRouter()
+const { t } = useI18n()
 
 // 下拉选择器显示状态
 const showPeriodPicker = ref(false)
@@ -230,7 +232,7 @@ const loadDepositRecords = async (isLoadMore = false) => {
       finished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || 'Failed to load records')
+    showToast(error.message || t('depositHistory.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -317,10 +319,10 @@ const selectPeriod = (value: number) => {
 const copyOrderNo = async (orderNo: string) => {
   try {
     await navigator.clipboard.writeText(orderNo)
-    showToast('Copied!')
+    showToast(t('depositPayment.copySuccess'))
   } catch (error) {
     console.error('复制失败:', error)
-    showToast('Copy failed')
+    showToast(t('depositPayment.copyFailed'))
   }
 }
 

@@ -2,17 +2,17 @@
   <div class="bind-email-page">
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Bind Email</span>
+      <span class="title">{{ t('route.bindEmail') }}</span>
       <div class="placeholder"></div>
     </div>
 
     <div class="content">
       <div class="form-card">
-        <div class="form-title">Email Address</div>
+        <div class="form-title">{{ t('security.emailAddress') }}</div>
         <van-field
           v-model="emailInput"
           type="email"
-          placeholder="Please enter your email address"
+          :placeholder="t('security.emailPlaceholder')"
           clearable
         >
           <template #left-icon>
@@ -27,7 +27,7 @@
           :disabled="submitting"
           @click="handleSubmit"
         >
-          Confirm
+          {{ t('common.confirm') }}
         </van-button>
       </div>
     </div>
@@ -41,10 +41,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showLoadingToast, closeToast } from 'vant'
 import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const emailInput = ref('')
 const submitting = ref(false)
@@ -70,12 +72,12 @@ const goBack = () => {
 
 const validateEmail = (email: string): boolean => {
   if (!email) {
-    showLocalToast('Please enter your email address')
+    showLocalToast(t('security.enterEmail'))
     return false
   }
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email)) {
-    showLocalToast('Please enter a valid email address')
+    showLocalToast(t('security.invalidEmail'))
     return false
   }
   return true
@@ -103,7 +105,7 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     showLoadingToast({
-      message: 'Binding...',
+      message: t('common.binding'),
       forbidClick: true,
       duration: 0,
     })
@@ -111,10 +113,10 @@ const handleSubmit = async () => {
     const response = await userApi.bindEmail({ email: emailInput.value })
 
     closeToast()
-    showLocalToast(getResponseMessage(response, 'Email bound successfully'))
+    showLocalToast(getResponseMessage(response, t('security.emailBoundSuccess')))
   } catch (error: any) {
     closeToast()
-    showLocalToast(error?.message || 'Failed to bind email')
+    showLocalToast(error?.message || t('security.emailBindFailed'))
   } finally {
     submitting.value = false
   }

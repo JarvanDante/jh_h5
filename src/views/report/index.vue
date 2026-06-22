@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Report</span>
+      <span class="title">{{ t('report.title') }}</span>
       <div class="placeholder"></div>
     </div>
 
@@ -16,7 +16,7 @@
       scrollable
       swipeable
     >
-      <van-tab title="Deposit" name="deposit">
+      <van-tab :title="t('report.tabDeposit')" name="deposit">
         <div
           class="content"
           @touchstart="handleTouchStart"
@@ -27,7 +27,7 @@
           <!-- 时间筛选和累计充值 -->
           <div class="filter-section">
             <div class="accumulated">
-              <span class="label">Total Deposit:</span>
+              <span class="label">{{ t('report.totalDeposit') }}</span>
               <span class="amount">₱{{ totalDeposit.toFixed(2) }}</span>
             </div>
             <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
@@ -65,31 +65,31 @@
             v-model:loading="depositLoading"
             :finished="depositFinished"
             :immediate-check="false"
-            finished-text="No more records"
+            :finished-text="t('report.noMore')"
             @load="onDepositLoad"
           >
             <div v-if="depositList.length === 0 && !depositLoading" class="empty-state">
               <van-icon name="search" size="80" color="#4b5563" />
-              <div class="empty-text">No Record</div>
+              <div class="empty-text">{{ t('report.noRecord') }}</div>
             </div>
 
             <div class="record-list">
               <div v-for="record in depositList" :key="record.id" class="record-item">
                 <!-- 金额 -->
                 <div class="amount-row">
-                  <span class="amount-label">Amount:</span>
+                  <span class="amount-label">{{ t('report.amount') }}</span>
                   <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
                 </div>
 
                 <!-- 备注 -->
                 <div v-if="record.remark" class="remark-row">
-                  <span class="remark-label">Remark:</span>
+                  <span class="remark-label">{{ t('report.remark') }}</span>
                   <span class="remark-value">{{ record.remark }}</span>
                 </div>
 
                 <!-- 时间 -->
                 <div class="time-row">
-                  <span class="time-label">Time:</span>
+                  <span class="time-label">{{ t('report.time') }}</span>
                   <span class="time-value">{{ record.date }}</span>
                 </div>
 
@@ -130,7 +130,7 @@
         </div>
       </van-tab>
 
-      <van-tab title="Withdraw" name="withdraw">
+      <van-tab :title="t('report.tabWithdraw')" name="withdraw">
         <div
           class="content"
           @touchstart="handleTouchStart"
@@ -141,7 +141,7 @@
           <!-- 时间筛选和累计提现 -->
           <div class="filter-section">
             <div class="accumulated">
-              <span class="label">Total Withdraw:</span>
+              <span class="label">{{ t('report.totalWithdraw') }}</span>
               <span class="amount">₱{{ totalWithdraw.toFixed(2) }}</span>
             </div>
             <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
@@ -179,31 +179,31 @@
             v-model:loading="withdrawLoading"
             :finished="withdrawFinished"
             :immediate-check="false"
-            finished-text="No more records"
+            :finished-text="t('report.noMore')"
             @load="onWithdrawLoad"
           >
             <div v-if="withdrawList.length === 0 && !withdrawLoading" class="empty-state">
               <van-icon name="search" size="80" color="#4b5563" />
-              <div class="empty-text">No Record</div>
+              <div class="empty-text">{{ t('report.noRecord') }}</div>
             </div>
 
             <div class="record-list">
               <div v-for="record in withdrawList" :key="record.id" class="record-item">
                 <!-- 金额 -->
                 <div class="amount-row">
-                  <span class="amount-label">Amount:</span>
+                  <span class="amount-label">{{ t('report.amount') }}</span>
                   <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
                 </div>
 
                 <!-- 备注 -->
                 <div v-if="record.remark" class="remark-row">
-                  <span class="remark-label">Remark:</span>
+                  <span class="remark-label">{{ t('report.remark') }}</span>
                   <span class="remark-value">{{ record.remark }}</span>
                 </div>
 
                 <!-- 时间 -->
                 <div class="time-row">
-                  <span class="time-label">Time:</span>
+                  <span class="time-label">{{ t('report.time') }}</span>
                   <span class="time-value">{{ record.date }}</span>
                 </div>
 
@@ -244,7 +244,7 @@
         </div>
       </van-tab>
 
-      <van-tab title="Bonus" name="bonus">
+      <van-tab :title="t('report.tabBonus')" name="bonus">
         <div
           class="content"
           @touchstart="handleTouchStart"
@@ -255,7 +255,7 @@
           <!-- 时间筛选和累计奖金 -->
           <div class="filter-section">
             <div class="accumulated">
-              <span class="label">Total Bonus:</span>
+              <span class="label">{{ t('report.totalBonus') }}</span>
               <span class="amount">₱{{ totalBonusAmount.toFixed(2) }}</span>
             </div>
             <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
@@ -293,31 +293,31 @@
             v-model:loading="bonusLoading"
             :finished="bonusFinished"
             :immediate-check="false"
-            finished-text="No more records"
+            :finished-text="t('report.noMore')"
             @load="onBonusLoad"
           >
             <div v-if="bonusList.length === 0 && !bonusLoading" class="empty-state">
               <van-icon name="search" size="80" color="#4b5563" />
-              <div class="empty-text">No Record</div>
+              <div class="empty-text">{{ t('report.noRecord') }}</div>
             </div>
 
             <div class="record-list">
               <div v-for="record in bonusList" :key="record.id" class="record-item">
                 <!-- 金额 -->
                 <div class="amount-row">
-                  <span class="amount-label">Amount:</span>
+                  <span class="amount-label">{{ t('report.amount') }}</span>
                   <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
                 </div>
 
                 <!-- 备注 -->
                 <div v-if="record.remark" class="remark-row">
-                  <span class="remark-label">Remark:</span>
+                  <span class="remark-label">{{ t('report.remark') }}</span>
                   <span class="remark-value">{{ record.remark }}</span>
                 </div>
 
                 <!-- 时间 -->
                 <div class="time-row">
-                  <span class="time-label">Time:</span>
+                  <span class="time-label">{{ t('report.time') }}</span>
                   <span class="time-value">{{ record.date }}</span>
                 </div>
 
@@ -358,7 +358,7 @@
         </div>
       </van-tab>
 
-      <van-tab title="Rebate" name="rebate">
+      <van-tab :title="t('report.tabRebate')" name="rebate">
         <div
           class="content"
           @touchstart="handleTouchStart"
@@ -369,7 +369,7 @@
           <!-- 时间筛选和累计返水 -->
           <div class="filter-section">
             <div class="accumulated">
-              <span class="label">Total Rebate:</span>
+              <span class="label">{{ t('report.totalRebate') }}</span>
               <span class="amount">₱{{ totalRebateAmount.toFixed(2) }}</span>
             </div>
             <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
@@ -407,31 +407,31 @@
             v-model:loading="rebateLoading"
             :finished="rebateFinished"
             :immediate-check="false"
-            finished-text="No more records"
+            :finished-text="t('report.noMore')"
             @load="onRebateLoad"
           >
             <div v-if="rebateList.length === 0 && !rebateLoading" class="empty-state">
               <van-icon name="search" size="80" color="#4b5563" />
-              <div class="empty-text">No Record</div>
+              <div class="empty-text">{{ t('report.noRecord') }}</div>
             </div>
 
             <div class="record-list">
               <div v-for="record in rebateList" :key="record.id" class="record-item">
                 <!-- 金额 -->
                 <div class="amount-row">
-                  <span class="amount-label">Amount:</span>
+                  <span class="amount-label">{{ t('report.amount') }}</span>
                   <span class="amount-value">₱{{ record.amount.toFixed(2) }}</span>
                 </div>
 
                 <!-- 备注 -->
                 <div v-if="record.remark" class="remark-row">
-                  <span class="remark-label">Remark:</span>
+                  <span class="remark-label">{{ t('report.remark') }}</span>
                   <span class="remark-value">{{ record.remark }}</span>
                 </div>
 
                 <!-- 时间 -->
                 <div class="time-row">
-                  <span class="time-label">Time:</span>
+                  <span class="time-label">{{ t('report.time') }}</span>
                   <span class="time-value">{{ record.date }}</span>
                 </div>
 
@@ -472,7 +472,7 @@
         </div>
       </van-tab>
 
-      <van-tab title="Bets" name="bet">
+      <van-tab :title="t('report.tabBets')" name="bet">
         <div
           class="content"
           @touchstart="handleTouchStart"
@@ -483,7 +483,7 @@
           <!-- 时间筛选 -->
           <div class="filter-section">
             <div class="accumulated">
-              <span class="label">Total Bets:</span>
+              <span class="label">{{ t('report.totalBets') }}</span>
               <span class="amount">{{ betList.length }}</span>
             </div>
             <div class="custom-select" @click="showPeriodPicker = !showPeriodPicker">
@@ -521,12 +521,12 @@
             v-model:loading="betLoading"
             :finished="betFinished"
             :immediate-check="false"
-            finished-text="No more records"
+            :finished-text="t('report.noMore')"
             @load="onBetLoad"
           >
             <div v-if="betList.length === 0 && !betLoading" class="empty-state">
               <van-icon name="search" size="80" color="#4b5563" />
-              <div class="empty-text">No Record</div>
+              <div class="empty-text">{{ t('report.noRecord') }}</div>
             </div>
 
             <div class="record-list">
@@ -542,18 +542,18 @@
                 <!-- 有效投注和赢取金额 -->
                 <div class="bet-amounts-row">
                   <div class="valid-bet">
-                    <span class="label">Valid Bet:</span>
+                    <span class="label">{{ t('report.betAmount') }}</span>
                     <span class="value">₱{{ record.validAmount.toFixed(2) }}</span>
                   </div>
                   <div class="win-amount">
-                    <span class="label">Win Amount:</span>
+                    <span class="label">{{ t('report.winAmount') }}</span>
                     <span class="value">₱{{ record.winAmount.toFixed(2) }}</span>
                   </div>
                 </div>
 
                 <!-- 净盈亏 -->
                 <div class="net-amount-row">
-                  <span class="net-label">Net Amount:</span>
+                  <span class="net-label">{{ t('report.netAmount') }}</span>
                   <span class="net-value" :class="record.netClass">
                     {{ record.netAmount < 0 ? '-' : '+' }}₱{{
                       Math.abs(record.netAmount).toFixed(2)
@@ -604,11 +604,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { getBalanceLog, type BalanceLogItem } from '@/api/modules/balance'
 import { gameApi, type BetHistoryItem } from '@/api/modules/game'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const goBack = () => {
   router.back()
@@ -663,19 +665,19 @@ const handleSwipe = () => {
 const showPeriodPicker = ref(false)
 const selectedPeriod = ref(0)
 
-const periodOptions = [
-  { text: 'Today', value: 0 },
-  { text: 'Last 3 Days', value: 3 },
-  { text: 'Last 5 Days', value: 5 },
-  { text: 'Last 7 Days', value: 7 },
-]
+const periodOptions = computed(() => [
+  { text: t('report.today'), value: 0 },
+  { text: t('report.last3Days'), value: 3 },
+  { text: t('report.last5Days'), value: 5 },
+  { text: t('report.last7Days'), value: 7 },
+])
 
-const periods = [
-  { label: 'Today', value: 0 },
-  { label: 'Last 3 Days', value: 3 },
-  { label: 'Last 5 Days', value: 5 },
-  { label: 'Last 7 Days', value: 7 },
-]
+const periods = computed(() => [
+  { label: t('report.today'), value: 0 },
+  { label: t('report.last3Days'), value: 3 },
+  { label: t('report.last5Days'), value: 5 },
+  { label: t('report.last7Days'), value: 7 },
+])
 
 // 充值记录
 const depositList = ref<any[]>([])
@@ -852,7 +854,7 @@ const loadDepositRecords = async (isLoadMore = false) => {
       depositFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || 'Failed to load deposit records')
+    showToast(error.message || t('report.loadDepositFailed'))
   } finally {
     depositLoading.value = false
   }
@@ -905,7 +907,7 @@ const loadWithdrawRecords = async (isLoadMore = false) => {
       withdrawFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || 'Failed to load withdraw records')
+    showToast(error.message || t('report.loadWithdrawFailed'))
   } finally {
     withdrawLoading.value = false
   }
@@ -983,7 +985,7 @@ const loadBetRecords = async (isLoadMore = false) => {
       betFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || 'Failed to load bet records')
+    showToast(error.message || t('report.loadBetFailed'))
   } finally {
     betLoading.value = false
   }
@@ -1047,7 +1049,7 @@ const loadBonusRecords = async (isLoadMore = false) => {
       bonusFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || 'Failed to load bonus records')
+    showToast(error.message || t('report.loadBonusFailed'))
   } finally {
     bonusLoading.value = false
   }
@@ -1111,7 +1113,7 @@ const loadRebateRecords = async (isLoadMore = false) => {
       rebateFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || 'Failed to load rebate records')
+    showToast(error.message || t('report.loadRebateFailed'))
   } finally {
     rebateLoading.value = false
   }
@@ -1132,8 +1134,8 @@ const onRebateLoad = async () => {
 
 // 获取时间段文本
 const getPeriodText = (value: number) => {
-  const option = periodOptions.find((o) => o.value === value)
-  return option ? option.text : 'Today'
+  const option = periodOptions.value.find((o) => o.value === value)
+  return option ? option.text : t('report.today')
 }
 
 // 选择时间段（从下拉选择器）
@@ -1215,10 +1217,10 @@ const selectPeriod = (value: number) => {
 const copyOrderNo = async (orderNo: string) => {
   try {
     await navigator.clipboard.writeText(orderNo)
-    showToast('Copied!')
+    showToast(t('common.copySuccess'))
   } catch (error) {
     console.error('复制失败:', error)
-    showToast('Copy failed')
+    showToast(t('common.copyFailed'))
   }
 }
 

@@ -13,7 +13,7 @@
         <van-icon name="arrow-left" size="24" color="#fff" class="back-icon" @click="goBack" />
       </template>
 
-      <van-tab title="Withdrawals" name="withdrawals">
+      <van-tab :title="t('withdrawHistory.tabWithdrawals')" name="withdrawals">
         <div class="content">
           <!-- 时间筛选和累计提现 -->
           <div class="filter-section">
@@ -121,7 +121,7 @@
         </div>
       </van-tab>
 
-      <van-tab title="Audit logs" name="audit">
+      <van-tab :title="t('withdrawHistory.tabAudit')" name="audit">
         <div class="content">
           <!-- 待审计金额和筛选 -->
           <div class="audit-header">
@@ -239,6 +239,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import {
   getBalanceLog,
@@ -249,6 +250,7 @@ import {
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 
 // 当前激活的 tab
 const activeTab = ref<'withdrawals' | 'audit'>('withdrawals')
@@ -391,7 +393,7 @@ const loadWithdrawRecords = async (isLoadMore = false) => {
       finished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || 'Failed to load records')
+    showToast(error.message || t('withdrawHistory.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -498,10 +500,10 @@ const selectPeriod = (value: number) => {
 const copyOrderNo = async (orderNo: string) => {
   try {
     await navigator.clipboard.writeText(orderNo)
-    showToast('Copied!')
+    showToast(t('depositPayment.copySuccess'))
   } catch (error) {
     console.error('复制失败:', error)
-    showToast('Copy failed')
+    showToast(t('depositPayment.copyFailed'))
   }
 }
 
@@ -623,7 +625,7 @@ const loadFlowRequirements = async (isLoadMore = false) => {
       flowFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || 'Failed to load flow requirements')
+    showToast(error.message || t('withdrawHistory.loadFlowFailed'))
   } finally {
     flowLoading.value = false
   }

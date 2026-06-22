@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <div class="back-btn" @click="goBack">Finish</div>
-      <span class="title">Deposit</span>
+      <span class="title">{{ t('depositPayment.title') }}</span>
       <van-icon name="notes-o" size="24" color="#fff" @click="showHistory" />
     </div>
 
@@ -84,10 +84,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast, showConfirmDialog } from 'vant'
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 
 // 订单信息
 const orderInfo = ref({
@@ -123,7 +125,7 @@ const showHistory = () => {
 // 保存图片
 const saveImage = () => {
   if (!orderInfo.value.image_url) {
-    showToast('Image not available')
+    showToast(t('depositPayment.imageNotAvailable'))
     return
   }
 
@@ -136,12 +138,12 @@ const saveImage = () => {
   link.click()
   document.body.removeChild(link)
 
-  showToast('QR code saved')
+  showToast(t('depositPayment.qrSaved'))
 }
 
 // 处理图片加载错误
 const handleImageError = () => {
-  showToast('Failed to load QR code')
+  showToast(t('depositPayment.qrLoadFailed'))
 }
 
 // 支付完成
@@ -152,7 +154,7 @@ const handleComplete = async () => {
       message: 'Have you completed the payment?',
     })
 
-    showToast('Payment confirmation submitted')
+    showToast(t('depositPayment.confirmSubmitted'))
 
     // 延迟跳转到首页
     setTimeout(() => {
@@ -185,11 +187,11 @@ onMounted(() => {
       }
     } catch (error) {
       console.error('Failed to parse order data:', error)
-      showToast('Invalid order data')
+      showToast(t('depositPayment.invalidOrder'))
       router.back()
     }
   } else {
-    showToast('Order data not found')
+    showToast(t('depositPayment.orderNotFound'))
     router.back()
   }
 })

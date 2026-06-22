@@ -1,4 +1,9 @@
 import { showToast } from 'vant'
+import i18n, { getStoredLocale, toLanguageHeader } from '@/i18n'
+
+function getLanguageHeader(): string {
+  return toLanguageHeader(getStoredLocale())
+}
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 const apiSignAppId = import.meta.env.VITE_API_SIGN_APP_ID || 'h5'
@@ -112,6 +117,7 @@ async function requestSignSession(force = false, tokenOverride = ''): Promise<Si
     const fetchSignSession = async (token?: string) => {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        language: getLanguageHeader(),
       }
       if (token) {
         headers.Authorization = `Bearer ${token}`
@@ -197,6 +203,7 @@ function emitGlobalLoadingEnd() {
 
 async function addSignatureHeaders(url: string, options: RequestInit): Promise<Headers> {
   const headers = new Headers(options.headers || {})
+  headers.set('language', getLanguageHeader())
   if (shouldSkipSignatureByPath(url)) {
     return headers
   }
@@ -272,6 +279,7 @@ class Request {
   private getHeaders(tokenOverride?: string): HeadersInit {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      language: getLanguageHeader(),
     }
 
     const token = tokenOverride || localStorage.getItem('user_token')
@@ -362,7 +370,7 @@ class Request {
     const resultMessage = this.normalizeMessage(result?.msg || result?.message)
 
     if (resultCode === 429) {
-      const message = 'The system is busy, please try again later. [code: 429]'
+      const message = i18n.global.t('common.systemBusy')
       result.msg = message
       result.message = message
 

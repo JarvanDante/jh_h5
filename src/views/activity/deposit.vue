@@ -7,28 +7,28 @@
           <van-icon name="arrow-left" size="20" color="#fff" />
         </div>
         <div class="title-area">
-          <div class="title">💰 DEPOSIT BONUS 💰</div>
-          <div class="subtitle">Deposit more, earn more!</div>
+          <div class="title">💰 {{ t('activityDeposit.title') }} 💰</div>
+          <div class="subtitle">{{ t('activityDeposit.subtitle') }}</div>
         </div>
       </div>
 
       <!-- 核心数据展示 -->
       <div class="hero-stats">
         <div class="stat-main">
-          <div class="stat-badge">LIMITED TIME</div>
-          <div class="stat-label">BONUS UP TO</div>
+          <div class="stat-badge">{{ t('activityDeposit.limitedTime') }}</div>
+          <div class="stat-label">{{ t('activityDeposit.bonusUpTo') }}</div>
           <div class="stat-percent">+100%</div>
-          <div class="stat-max">Max ₱8,888</div>
+          <div class="stat-max">{{ t('activityDeposit.maxBonus') }}</div>
         </div>
         <div class="stat-row">
           <div class="stat-item">
             <div class="stat-num">{{ claimedCount }}</div>
-            <div class="stat-desc">Claimed Today</div>
+            <div class="stat-desc">{{ t('activityDeposit.claimedToday') }}</div>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
             <div class="stat-num countdown">{{ countdown }}</div>
-            <div class="stat-desc">Ends In</div>
+            <div class="stat-desc">{{ t('activityDeposit.endsIn') }}</div>
           </div>
         </div>
       </div>
@@ -36,19 +36,19 @@
 
     <!-- 浮起的档位卡片区域 -->
     <div class="tiers-wrapper">
-      <div class="section-title">🎁 The More You Deposit, The More You Earn</div>
+      <div class="section-title">🎁 {{ t('activityDeposit.tiersTitle') }}</div>
       <div class="tier-scroll">
         <div v-for="(tier, i) in tiers" :key="i" class="tier-card" :class="{ best: tier.best }">
-          <div v-if="tier.best" class="best-tag">⭐ BEST</div>
-          <div v-else-if="tier.hot" class="hot-tag">🔥 HOT</div>
+          <div v-if="tier.best" class="best-tag">⭐ {{ t('activityDeposit.best') }}</div>
+          <div v-else-if="tier.hot" class="hot-tag">🔥 {{ t('activityDeposit.hot') }}</div>
           <div class="tier-top" :style="{ background: tier.gradient }">
             <div class="tier-percent-big">+{{ tier.percent }}%</div>
-            <div class="tier-deposit-label">Deposit ₱{{ tier.deposit }}</div>
+            <div class="tier-deposit-label">{{ t('activityDeposit.depositAmount', { amount: tier.deposit }) }}</div>
           </div>
           <div class="tier-bottom">
-            <div class="tier-bonus-label">You Get</div>
+            <div class="tier-bonus-label">{{ t('activityDeposit.youGet') }}</div>
             <div class="tier-bonus-amount">₱{{ tier.bonus }}</div>
-            <div class="tier-total">Total: ₱{{ tier.total }}</div>
+            <div class="tier-total">{{ t('activityDeposit.total', { amount: tier.total }) }}</div>
           </div>
         </div>
       </div>
@@ -56,18 +56,18 @@
 
     <!-- CTA 按钮 -->
     <div class="cta-area">
-      <div class="cta-btn" @click="goDeposit">💎 Deposit Now & Get Bonus</div>
-      <div class="cta-hint">Bonus credited instantly after deposit</div>
+      <div class="cta-btn" @click="goDeposit">💎 {{ t('activityDeposit.depositNow') }}</div>
+      <div class="cta-hint">{{ t('activityDeposit.bonusHint') }}</div>
     </div>
 
     <!-- 中奖滚动 -->
     <div class="winner-marquee">
-      <div class="marquee-label">🏆 Recent Bonus Winners</div>
+      <div class="marquee-label">🏆 {{ t('activityDeposit.recentWinners') }}</div>
       <div class="marquee-viewport">
         <div class="marquee-vertical">
           <div v-for="(w, i) in [...depositWinners, ...depositWinners]" :key="i" class="winner-row">
             <span class="winner-name">{{ w.name }}</span>
-            <span class="winner-text">deposited ₱{{ w.deposit }} got</span>
+            <span class="winner-text">{{ t('activityDeposit.depositedGot', { deposit: w.deposit }) }}</span>
             <span class="winner-amount">+₱{{ w.bonus }}</span>
           </div>
         </div>
@@ -76,7 +76,7 @@
 
     <!-- 规则 -->
     <div class="rules-section">
-      <div class="rules-title">📋 Rules</div>
+      <div class="rules-title">📋 {{ t('activityDeposit.rules') }}</div>
       <div class="rules-list">
         <div class="rule-item">1. Bonus is credited instantly to your account</div>
         <div class="rule-item">2. Each tier can be claimed once per user</div>
@@ -92,10 +92,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { getDepositBonusRecentWinners } from '@/api/modules/balance'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const tiers = [
   {

@@ -6,14 +6,14 @@
         <van-icon name="arrow-left" size="20" color="#fff" />
       </div>
       <div class="title-area">
-        <div class="title">🎰 LUCKY SPIN 🎰</div>
-        <div class="subtitle">Spin to Win Big Prizes!</div>
+        <div class="title">🎰 {{ t('activityLucky.title') }} 🎰</div>
+        <div class="subtitle">{{ t('activityLucky.subtitle') }}</div>
       </div>
     </div>
 
     <!-- 奖池金额 -->
     <div class="jackpot-banner">
-      <div class="jackpot-label">💎 JACKPOT PRIZE 💎</div>
+      <div class="jackpot-label">💎 {{ t('activityLucky.jackpotPrize') }} 💎</div>
       <div class="jackpot-amount">₱ {{ jackpotDisplay }}</div>
       <div class="jackpot-glow"></div>
     </div>
@@ -55,7 +55,7 @@
         >
           <div class="center-inner">
             <span class="spin-text">{{
-              isSpinning ? '...' : freeSpins <= 0 ? 'NO SPIN' : 'SPIN'
+              isSpinning ? '...' : freeSpins <= 0 ? t('activityLucky.noSpin') : t('activityLucky.spin')
             }}</span>
           </div>
         </div>
@@ -68,21 +68,21 @@
     <!-- 剩余次数 -->
     <div class="spin-info">
       <div class="spin-count">
-        <span class="label">Free Spins</span>
+        <span class="label">{{ t('activityLucky.freeSpins') }}</span>
         <span class="value">{{ freeSpins }}</span>
       </div>
       <div class="divider"></div>
       <div class="spin-count">
-        <span class="label">Total Won</span>
+        <span class="label">{{ t('activityLucky.totalWon') }}</span>
         <span class="value gold">₱{{ totalWon }}</span>
       </div>
     </div>
-    <div class="spin-meta">Today Spins: {{ todaySpinCount }}</div>
+    <div class="spin-meta">{{ t('activityLucky.todaySpins', { n: todaySpinCount }) }}</div>
 
     <!-- 我的记录 -->
     <div class="my-records">
-      <div class="records-title">🧾 My Recent Spins</div>
-      <div v-if="recordList.length === 0" class="records-empty">No spin records yet</div>
+      <div class="records-title">🧾 {{ t('activityLucky.myRecentSpins') }}</div>
+      <div v-if="recordList.length === 0" class="records-empty">{{ t('activityLucky.noSpinRecords') }}</div>
       <div v-else class="records-list">
         <div v-for="item in recordList.slice(0, 5)" :key="item.trade_no" class="record-row">
           <span class="record-time">{{ item.created_at || '-' }}</span>
@@ -94,12 +94,12 @@
 
     <!-- 中奖记录滚动（垂直从下往上） -->
     <div class="winner-marquee">
-      <div class="marquee-label">🏆 Recent Winners</div>
+      <div class="marquee-label">🏆 {{ t('activityLucky.recentWinners') }}</div>
       <div class="marquee-viewport">
         <div class="marquee-vertical">
           <div v-for="(winner, i) in [...winners, ...winners]" :key="i" class="winner-row">
             <span class="winner-name">{{ winner.name }}</span>
-            <span class="winner-text">won</span>
+            <span class="winner-text">{{ t('activityLucky.won') }}</span>
             <span class="winner-amount">₱{{ winner.amount }}</span>
           </div>
         </div>
@@ -108,15 +108,13 @@
 
     <!-- 规则说明 -->
     <div class="rules-section">
-      <div class="rules-title">📋 Activity Rules</div>
+      <div class="rules-title">📋 {{ t('activityLucky.activityRules') }}</div>
       <div class="rules-list">
-        <div class="rule-item">1. Register successfully to get 1 free spin</div>
-        <div class="rule-item">2. Each successful deposit earns 1 free spin</div>
-        <div class="rule-item">3. Each VIP level upgrade earns 1 free spin</div>
-        <div class="rule-item">
-          4. Spins = 1(Register) + Deposit Count + VIP Upgrade Count - Used Spins
-        </div>
-        <div class="rule-item">5. Prizes are credited instantly to your account</div>
+        <div class="rule-item">1. {{ t('activityLucky.rule1') }}</div>
+        <div class="rule-item">2. {{ t('activityLucky.rule2') }}</div>
+        <div class="rule-item">3. {{ t('activityLucky.rule3') }}</div>
+        <div class="rule-item">4. {{ t('activityLucky.rule4') }}</div>
+        <div class="rule-item">5. {{ t('activityLucky.rule5') }}</div>
       </div>
     </div>
 
@@ -125,10 +123,10 @@
       <div v-if="showPrizeDialog" class="prize-overlay" @click="closePrizeDialog">
         <div class="prize-dialog" @click.stop>
           <div class="prize-fireworks">🎆🎇🎆</div>
-          <div class="prize-congrats">🎉 Congratulations! 🎉</div>
-          <div class="prize-won-label">You Won</div>
+          <div class="prize-congrats">🎉 {{ t('activityLucky.congrats') }} 🎉</div>
+          <div class="prize-won-label">{{ t('activityLucky.youWon') }}</div>
           <div class="prize-won-amount">{{ wonPrize?.icon }} {{ wonPrize?.label }}</div>
-          <div class="prize-btn" @click="closePrizeDialog">Collect</div>
+          <div class="prize-btn" @click="closePrizeDialog">{{ t('activityLucky.collect') }}</div>
         </div>
       </div>
     </teleport>
@@ -137,6 +135,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { useRouter } from 'vue-router'
 import {
@@ -152,6 +151,7 @@ import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 interface WheelDisplayPrize {
   segmentNo: number
@@ -295,7 +295,7 @@ async function fetchLuckyInfo(showErrorToast = false) {
       freeSpinsPerDay.value = 0
       todaySpinCount.value = 0
       if (showErrorToast) {
-        showToast(resolveMessage(res, 'Failed to load lucky spin info'))
+        showToast(resolveMessage(res, t('activityLucky.loadInfoFailed')))
       }
       return
     }
@@ -309,7 +309,7 @@ async function fetchLuckyInfo(showErrorToast = false) {
     applyPrizeList(res.prize_list || [])
   } catch (e: any) {
     if (showErrorToast) {
-      showToast(e?.message || 'Failed to load lucky spin info')
+      showToast(e?.message || t('activityLucky.loadInfoFailed'))
     }
   }
 }
@@ -319,7 +319,7 @@ async function fetchRecentWinners(showErrorToast = false) {
     const res = await getLuckySpinRecentWinners({ limit: 20 })
     if (!res?.success) {
       if (showErrorToast) {
-        showToast(resolveMessage(res, 'Failed to load winner list'))
+        showToast(resolveMessage(res, t('activityLucky.loadWinnersFailed')))
       }
       return
     }
@@ -334,7 +334,7 @@ async function fetchRecentWinners(showErrorToast = false) {
     }
   } catch (e: any) {
     if (showErrorToast) {
-      showToast(e?.message || 'Failed to load winner list')
+      showToast(e?.message || t('activityLucky.loadWinnersFailed'))
     }
   }
 }
@@ -344,14 +344,14 @@ async function fetchSpinRecords(showErrorToast = false) {
     const res = await getLuckySpinRecords({ page: 1, size: 20 })
     if (!res?.success) {
       if (showErrorToast) {
-        showToast(resolveMessage(res, 'Failed to load spin records'))
+        showToast(resolveMessage(res, t('activityLucky.loadRecordsFailed')))
       }
       return
     }
     recordList.value = res.list || []
   } catch (e: any) {
     if (showErrorToast) {
-      showToast(e?.message || 'Failed to load spin records')
+      showToast(e?.message || t('activityLucky.loadRecordsFailed'))
     }
   }
 }
@@ -409,15 +409,15 @@ function findPrizeIndex(segmentNo: number): number {
 const spin = async () => {
   if (isSpinning.value) return
   if (!userStore.isLogin) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     return
   }
   if (!activityActive.value) {
-    showToast('Activity is not available')
+    showToast(t('activityLucky.activityUnavailable'))
     return
   }
   if (freeSpins.value <= 0) {
-    showToast('No free spins left today')
+    showToast(t('activityLucky.noFreeSpins'))
     return
   }
 
@@ -428,19 +428,19 @@ const spin = async () => {
     const res = await luckySpin()
     if (!res?.success) {
       isSpinning.value = false
-      showToast(resolveMessage(res, 'Spin failed'))
+      showToast(resolveMessage(res, t('activityLucky.spinFailed')))
       await fetchLuckyInfo(false)
       return
     }
     result = res
   } catch (e: any) {
     isSpinning.value = false
-    showToast(e?.message || 'Spin failed')
+    showToast(e?.message || t('activityLucky.spinFailed'))
     return
   }
   if (!result) {
     isSpinning.value = false
-    showToast('Spin failed')
+    showToast(t('activityLucky.spinFailed'))
     return
   }
 

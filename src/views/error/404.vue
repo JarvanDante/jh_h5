@@ -1,19 +1,21 @@
 <template>
   <div class="error-page">
-    <van-empty image="error" description="页面不存在">
-      <van-button round type="primary" @click="goHome">返回首页</van-button>
+    <van-empty image="error" :description="t('notFound.description')">
+      <van-button round type="primary" @click="goHome">{{ t('notFound.backHome') }}</van-button>
     </van-empty>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
-const router = useRouter();
+const router = useRouter()
+const { t } = useI18n()
 
 const goHome = () => {
-  router.replace("/home");
-};
+  router.replace('/home')
+}
 </script>
 
 <style lang="scss" scoped>

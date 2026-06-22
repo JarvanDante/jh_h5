@@ -2,22 +2,21 @@
   <van-overlay :show="show" @click="handleClose">
     <div class="dialog-wrapper" @click.stop>
       <div class="dialog-content">
-        <!-- 关闭按钮 -->
         <div class="close-btn" @click="handleClose">
           <van-icon name="cross" size="20" color="#999" />
         </div>
 
-        <!-- 提示文字 -->
-        <div class="message">For your fund's safety, please set up a fund password first</div>
+        <div class="message">{{ t('fundPassword.message') }}</div>
 
-        <!-- 确认按钮 -->
-        <van-button class="confirm-btn" block @click="handleConfirm">Confirm</van-button>
+        <van-button class="confirm-btn" block @click="handleConfirm">{{ t('common.confirm') }}</van-button>
       </div>
     </div>
   </van-overlay>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 interface Props {
   show: boolean
 }
@@ -29,6 +28,7 @@ interface Emits {
 
 defineProps<Props>()
 const emit = defineEmits<Emits>()
+const { t } = useI18n()
 
 const handleClose = () => {
   emit('update:show', false)

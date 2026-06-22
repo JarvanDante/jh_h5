@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { showToast } from 'vant'
+import i18n from '@/i18n'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -12,7 +13,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Home',
     component: () => import('@/views/home/index.vue'),
     meta: {
-      title: 'Home',
+      titleKey: 'route.home',
       keepAlive: true,
     },
   },
@@ -21,7 +22,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Login',
     component: () => import('@/views/login/index.vue'),
     meta: {
-      title: 'Login',
+      titleKey: 'route.login',
     },
   },
   {
@@ -29,7 +30,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Register',
     component: () => import('@/views/register/index.vue'),
     meta: {
-      title: 'Register',
+      titleKey: 'route.register',
     },
   },
   {
@@ -37,7 +38,7 @@ const routes: RouteRecordRaw[] = [
     name: 'User',
     component: () => import('@/views/user/index.vue'),
     meta: {
-      title: 'Profile',
+      titleKey: 'route.profile',
       requiresAuth: true,
     },
   },
@@ -46,7 +47,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Messages',
     component: () => import('@/views/messages/index.vue'),
     meta: {
-      title: 'Messages',
+      titleKey: 'route.messages',
       requiresAuth: true,
     },
   },
@@ -55,7 +56,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Support',
     component: () => import('@/views/support/index.vue'),
     meta: {
-      title: 'Support',
+      titleKey: 'route.support',
       requiresAuth: true,
     },
   },
@@ -64,7 +65,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Game',
     component: () => import('@/views/game/index.vue'),
     meta: {
-      title: 'Games',
+      titleKey: 'route.games',
     },
   },
   {
@@ -72,7 +73,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Promotion',
     component: () => import('@/views/promotion/index.vue'),
     meta: {
-      title: 'Promotions',
+      titleKey: 'route.promotions',
       requiresAuth: true,
     },
   },
@@ -80,44 +81,44 @@ const routes: RouteRecordRaw[] = [
     path: '/lucky_activity',
     name: 'LuckyActivity',
     component: () => import('@/views/activity/lucky.vue'),
-    meta: { title: 'Lucky Spin', requiresAuth: true },
+    meta: { titleKey: 'route.luckySpin', requiresAuth: true },
   },
   {
     path: '/signin_activity',
     name: 'SigninActivity',
     component: () => import('@/views/activity/signin.vue'),
-    meta: { title: 'Daily Check-in', requiresAuth: true },
+    meta: { titleKey: 'route.dailyCheckIn', requiresAuth: true },
   },
   {
     path: '/deposit_activity',
     name: 'DepositActivity',
     component: () => import('@/views/activity/deposit.vue'),
-    meta: { title: 'Deposit Bonus', requiresAuth: true },
+    meta: { titleKey: 'route.depositBonus', requiresAuth: true },
   },
   {
     path: '/register_activity',
     name: 'RegisterActivity',
     component: () => import('@/views/activity/register.vue'),
-    meta: { title: 'Registration Bonus', requiresAuth: true },
+    meta: { titleKey: 'route.registrationBonus', requiresAuth: true },
   },
   {
     path: '/rebate',
     name: 'RebateActivity',
     component: () => import('@/views/activity/rebate.vue'),
-    meta: { title: 'Rebate', requiresAuth: true },
+    meta: { titleKey: 'route.rebate', requiresAuth: true },
   },
   {
     path: '/vip',
     name: 'Vip',
     component: () => import('@/views/vip/index.vue'),
-    meta: { title: 'VIP Benefits' },
+    meta: { titleKey: 'route.vip' },
   },
   {
     path: '/invite_activity',
     name: 'InviteActivityOffline',
     component: () => import('@/views/error/404.vue'),
     meta: {
-      title: 'Page Not Found',
+      titleKey: 'route.notFound',
     },
   },
   {
@@ -125,7 +126,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Deposit',
     component: () => import('@/views/deposit/index.vue'),
     meta: {
-      title: 'Deposit',
+      titleKey: 'route.deposit',
       requiresAuth: true,
     },
   },
@@ -134,7 +135,7 @@ const routes: RouteRecordRaw[] = [
     name: 'DepositHistory',
     component: () => import('@/views/deposit/history.vue'),
     meta: {
-      title: 'Deposit History',
+      titleKey: 'route.depositHistory',
       requiresAuth: true,
     },
   },
@@ -143,7 +144,7 @@ const routes: RouteRecordRaw[] = [
     name: 'DepositPayment',
     component: () => import('@/views/deposit/payment.vue'),
     meta: {
-      title: 'Payment',
+      titleKey: 'route.payment',
       requiresAuth: true,
     },
   },
@@ -152,7 +153,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Withdraw',
     component: () => import('@/views/withdraw/index.vue'),
     meta: {
-      title: 'Withdraw',
+      titleKey: 'route.withdraw',
       requiresAuth: true,
     },
   },
@@ -161,7 +162,7 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawSetPassword',
     component: () => import('@/views/withdraw/set-password.vue'),
     meta: {
-      title: 'Set Withdrawal Password',
+      titleKey: 'route.setWithdrawPassword',
       requiresAuth: true,
     },
   },
@@ -170,7 +171,7 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawAccount',
     component: () => import('@/views/withdraw/account.vue'),
     meta: {
-      title: 'My Account',
+      titleKey: 'route.myAccount',
       requiresAuth: true,
     },
   },
@@ -179,7 +180,7 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawAddAccount',
     component: () => import('@/views/withdraw/add-account.vue'),
     meta: {
-      title: 'Add Withdrawal Account',
+      titleKey: 'route.addWithdrawAccount',
       requiresAuth: true,
     },
   },
@@ -188,7 +189,7 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawHistory',
     component: () => import('@/views/withdraw/history.vue'),
     meta: {
-      title: 'Withdrawal History',
+      titleKey: 'route.withdrawHistory',
       requiresAuth: true,
     },
   },
@@ -197,7 +198,7 @@ const routes: RouteRecordRaw[] = [
     name: 'WithdrawAuditDetail',
     component: () => import('@/views/withdraw/audit-detail.vue'),
     meta: {
-      title: 'Audit details',
+      titleKey: 'route.auditDetails',
       requiresAuth: true,
     },
   },
@@ -206,7 +207,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Report',
     component: () => import('@/views/report/index.vue'),
     meta: {
-      title: 'Report',
+      titleKey: 'route.report',
       requiresAuth: true,
     },
   },
@@ -215,7 +216,7 @@ const routes: RouteRecordRaw[] = [
     name: 'Security',
     component: () => import('@/views/security/index.vue'),
     meta: {
-      title: 'Security Center',
+      titleKey: 'route.securityCenter',
       requiresAuth: true,
     },
   },
@@ -224,7 +225,7 @@ const routes: RouteRecordRaw[] = [
     name: 'SecurityBindPhone',
     component: () => import('@/views/security/bind-phone.vue'),
     meta: {
-      title: 'Bind Phone',
+      titleKey: 'route.bindPhone',
       requiresAuth: true,
     },
   },
@@ -233,7 +234,7 @@ const routes: RouteRecordRaw[] = [
     name: 'SecurityBindEmail',
     component: () => import('@/views/security/bind-email.vue'),
     meta: {
-      title: 'Bind Email',
+      titleKey: 'route.bindEmail',
       requiresAuth: true,
     },
   },
@@ -242,7 +243,7 @@ const routes: RouteRecordRaw[] = [
     name: 'SecurityBindLoginPassword',
     component: () => import('@/views/security/bind-login-password.vue'),
     meta: {
-      title: 'Bind Login Password',
+      titleKey: 'route.bindLoginPassword',
       requiresAuth: true,
     },
   },
@@ -251,7 +252,7 @@ const routes: RouteRecordRaw[] = [
     name: 'SecurityBindPayPassword',
     component: () => import('@/views/security/bind-pay-password.vue'),
     meta: {
-      title: 'Bind Assets Password',
+      titleKey: 'route.bindAssetsPassword',
       requiresAuth: true,
     },
   },
@@ -260,7 +261,7 @@ const routes: RouteRecordRaw[] = [
     name: 'SecurityChangeLoginPassword',
     component: () => import('@/views/security/change-login-password.vue'),
     meta: {
-      title: 'Change Login Password',
+      titleKey: 'route.changeLoginPassword',
       requiresAuth: true,
     },
   },
@@ -269,7 +270,7 @@ const routes: RouteRecordRaw[] = [
     name: 'SecurityChangeAssetsPassword',
     component: () => import('@/views/security/change-assets-password.vue'),
     meta: {
-      title: 'Change Assets Password',
+      titleKey: 'route.changeAssetsPassword',
       requiresAuth: true,
     },
   },
@@ -278,7 +279,7 @@ const routes: RouteRecordRaw[] = [
     name: 'NotFound',
     component: () => import('@/views/error/404.vue'),
     meta: {
-      title: 'Page Not Found',
+      titleKey: 'route.notFound',
     },
   },
 ]
@@ -295,14 +296,14 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   window.dispatchEvent(new CustomEvent('app:global-loading-start'))
 
-  // 设置页面标题
-  document.title = (to.meta.title as string) || 'JH H5'
+  const titleKey = to.meta.titleKey as string | undefined
+  document.title = titleKey ? i18n.global.t(titleKey) : 'JH H5'
 
   // 检查是否需要登录
   if (to.meta.requiresAuth) {
     const userStore = useUserStore()
     if (!userStore.isLogin) {
-      showToast('Please login first')
+      showToast(i18n.global.t('common.pleaseLoginFirst'))
       next({
         path: '/login',
         query: { redirect: to.fullPath },

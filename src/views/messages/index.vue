@@ -1,17 +1,15 @@
 <template>
   <div class="messages-page">
-    <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="router.back()" />
-      <span class="title">Messages</span>
-      <span class="mark-all" @click="markAllRead">Read All</span>
+      <span class="title">{{ t('messages.title') }}</span>
+      <span class="mark-all" @click="markAllRead">{{ t('messages.readAll') }}</span>
     </div>
 
-    <!-- 消息列表 -->
     <div class="message-list">
-      <van-loading v-if="loading" type="spinner" size="24px" class="loading-center"
-        >Loading...</van-loading
-      >
+      <van-loading v-if="loading" type="spinner" size="24px" class="loading-center">{{
+        t('common.loading')
+      }}</van-loading>
       <template v-else-if="messages.length > 0">
         <div
           v-for="msg in messages"
@@ -33,11 +31,9 @@
           </div>
         </div>
       </template>
-      <van-empty v-else description="No messages yet" />
+      <van-empty v-else :description="t('messages.empty')" />
     </div>
 
-    <!-- 消息详情弹窗 -->
-    <!-- 消息详情弹窗 -->
     <div v-if="showDetail" class="detail-overlay" @click="showDetail = false">
       <div class="detail-popup" @click.stop>
         <div class="detail-close" @click="showDetail = false">
@@ -62,10 +58,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { userApi } from '@/api/modules/user'
 
 const router = useRouter()
+const { t } = useI18n()
 const loading = ref(false)
 const showDetail = ref(false)
 const currentMsg = ref<any>(null)
@@ -107,12 +105,12 @@ const formatTime = (time: string) => {
   const now = new Date()
   const diff = now.getTime() - d.getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'Just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1) return t('messages.justNow')
+  if (mins < 60) return t('messages.minutesAgo', { n: mins })
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return t('messages.hoursAgo', { n: hours })
   const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
+  if (days < 7) return t('messages.daysAgo', { n: days })
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${d.getFullYear()}-${month}-${day}`
@@ -134,17 +132,17 @@ const openMessage = async (msg: Message) => {
 const markAllRead = async () => {
   const unread = messages.value.filter((m) => !m.is_read)
   if (unread.length === 0) {
-    showToast('No unread messages')
+    showToast(t('messages.noUnread'))
     return
   }
 
   unread.forEach((m) => (m.is_read = true))
   try {
     await Promise.all(unread.map((m) => userApi.readMessage(m.id)))
-    showToast('All marked as read')
+    showToast(t('messages.allMarkedRead'))
   } catch (error) {
     console.error('批量标记已读失败:', error)
-    showToast('Failed to mark all')
+    showToast(t('messages.markAllFailed'))
   }
 }
 

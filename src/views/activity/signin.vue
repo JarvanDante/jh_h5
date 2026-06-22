@@ -6,15 +6,15 @@
         <van-icon name="arrow-left" size="20" color="#fff" />
       </div>
       <div class="title-area">
-        <div class="title">📅 DAILY CHECK-IN</div>
-        <div class="subtitle">Sign in every day, earn rewards!</div>
+        <div class="title">📅 {{ t('activitySignin.title') }}</div>
+        <div class="subtitle">{{ t('activitySignin.subtitle') }}</div>
       </div>
     </div>
 
     <!-- 签到天数进度 -->
     <div class="streak-bar">
       <div class="streak-label">
-        🔥 Signed Days: <em>{{ signedDays }}</em>
+        🔥 {{ t('activitySignin.signedDays', { n: signedDays }) }}
       </div>
       <div class="streak-progress">
         <div class="progress-track">
@@ -30,17 +30,17 @@
     <div class="monthly-summary">
       <div class="summary-item">
         <div class="s-value gold">{{ signedDays }}</div>
-        <div class="s-label">Signed Days</div>
+        <div class="s-label">{{ t('activitySignin.signedDaysLabel') }}</div>
       </div>
       <div class="summary-divider"></div>
       <div class="summary-item">
         <div class="s-value gold">₱{{ totalEarned }}</div>
-        <div class="s-label">Total Earned</div>
+        <div class="s-label">{{ t('activitySignin.totalEarned') }}</div>
       </div>
       <div class="summary-divider"></div>
       <div class="summary-item">
         <div class="s-value">{{ daysLeft }}</div>
-        <div class="s-label">Days Left</div>
+        <div class="s-label">{{ t('activitySignin.daysLeft') }}</div>
       </div>
     </div>
 
@@ -90,24 +90,16 @@
         :class="{ disabled: !active || todaySigned || isSubmitting }"
         @click="handleSignToday"
       >
-        {{
-          !active
-            ? 'Activity Not Available'
-            : isSubmitting
-              ? 'Processing...'
-              : todaySigned
-                ? '✅ Signed Today'
-                : '🎁 Sign In Now — Earn ₱' + todayReward
-        }}
+        {{ signBtnText }}
       </div>
     </div>
 
     <!-- 奖励说明 -->
     <div class="reward-table">
-      <div class="table-title">💰 Daily Rewards</div>
+      <div class="table-title">💰 {{ t('activitySignin.dailyRewards') }}</div>
       <div class="table-grid">
         <div v-for="(r, i) in rewardTiers" :key="i" class="tier-item">
-          <div class="tier-day">Day {{ r.day }}</div>
+          <div class="tier-day">{{ t('activitySignin.day', { n: r.day }) }}</div>
           <div class="tier-amount">₱{{ r.amount }}</div>
         </div>
       </div>
@@ -115,13 +107,13 @@
 
     <!-- 规则 -->
     <div class="rules-section">
-      <div class="rules-title">📋 Rules</div>
+      <div class="rules-title">📋 {{ t('activitySignin.rules') }}</div>
       <div class="rules-list">
-        <div class="rule-item">1. Daily bonus is based on current day amount configuration</div>
-        <div class="rule-item">2. No continuous sign-in required</div>
-        <div class="rule-item">3. Each user can claim once per day</div>
-        <div class="rule-item">4. Rewards are credited instantly to your balance</div>
-        <div class="rule-item">5. Monthly records reset every new month</div>
+        <div class="rule-item">1. {{ t('activitySignin.rule1') }}</div>
+        <div class="rule-item">2. {{ t('activitySignin.rule2') }}</div>
+        <div class="rule-item">3. {{ t('activitySignin.rule3') }}</div>
+        <div class="rule-item">4. {{ t('activitySignin.rule4') }}</div>
+        <div class="rule-item">5. {{ t('activitySignin.rule5') }}</div>
       </div>
     </div>
 
@@ -130,10 +122,10 @@
       <div v-if="showSignDialog" class="sign-overlay" @click="showSignDialog = false">
         <div class="sign-dialog" @click.stop>
           <div class="dialog-icon">🎉</div>
-          <div class="dialog-title">Check-in Successful!</div>
+          <div class="dialog-title">{{ t('activitySignin.checkInSuccess') }}</div>
           <div class="dialog-reward">+ ₱{{ lastReward }}</div>
-          <div class="dialog-streak">🔥 {{ streakDays }} day streak</div>
-          <div class="dialog-btn" @click="showSignDialog = false">OK</div>
+          <div class="dialog-streak">🔥 {{ t('activitySignin.dayStreak', { n: streakDays }) }}</div>
+          <div class="dialog-btn" @click="showSignDialog = false">{{ t('common.ok') }}</div>
         </div>
       </div>
     </teleport>
@@ -142,24 +134,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { claimSigninReward, getSigninActivityInfo, type SigninDayInfo } from '@/api/modules/balance'
 
-const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
+const { t, tm } = useI18n()
+
+const weekdays = computed(() => tm('activitySignin.weekdays') as string[])
+const monthNames = computed(() => tm('activitySignin.months') as string[])
 
 const now = new Date()
 const year = ref(now.getFullYear())
@@ -176,7 +158,7 @@ const showSignDialog = ref(false)
 const lastReward = ref('0.00')
 const isSubmitting = ref(false)
 
-const monthName = computed(() => monthNames[month.value - 1] || '')
+const monthName = computed(() => monthNames.value[month.value - 1] || '')
 const totalDaysInMonth = computed(() => new Date(year.value, month.value, 0).getDate())
 const firstDayOffset = computed(() => new Date(year.value, month.value - 1, 1).getDay())
 const daysLeft = computed(() => Math.max(totalDaysInMonth.value - today.value, 0))
@@ -184,6 +166,13 @@ const streakDays = computed(() => signedDays.value)
 
 const todaySigned = computed(() => signedDaysSet.value.has(today.value))
 const todayReward = computed(() => formatMoney(dayRewardMap.value[today.value] || 0))
+
+const signBtnText = computed(() => {
+  if (!active.value) return t('activitySignin.activityNotAvailable')
+  if (isSubmitting.value) return t('common.processing')
+  if (todaySigned.value) return `✅ ${t('activitySignin.signedToday')}`
+  return `🎁 ${t('activitySignin.signInNow', { amount: todayReward.value })}`
+})
 
 const rewardTiers = computed(() => {
   const list = Object.entries(dayRewardMap.value)
@@ -224,7 +213,7 @@ async function fetchSigninInfo(showErrorToast = true) {
     const res = await getSigninActivityInfo()
     if (!res?.success) {
       active.value = false
-      if (showErrorToast) showToast(res?.message || 'Failed to get sign-in info')
+      if (showErrorToast) showToast(res?.message || t('activitySignin.loadInfoFailed'))
       return
     }
 
@@ -237,7 +226,7 @@ async function fetchSigninInfo(showErrorToast = true) {
     applySigninData(res.day_list || [])
   } catch (e: any) {
     active.value = false
-    if (showErrorToast) showToast(e?.message || 'Failed to get sign-in info')
+    if (showErrorToast) showToast(e?.message || t('activitySignin.loadInfoFailed'))
   }
 }
 
@@ -264,7 +253,7 @@ function handleSign(day: number) {
 
 async function handleSignToday() {
   if (!active.value) {
-    showToast('Activity not available')
+    showToast(t('activitySignin.activityNotAvailable'))
     return
   }
   if (todaySigned.value || isSubmitting.value) return
@@ -273,7 +262,7 @@ async function handleSignToday() {
   try {
     const res = await claimSigninReward()
     if (!res?.success) {
-      showToast(res?.message || 'Sign in failed')
+      showToast(res?.message || t('activitySignin.signInFailed'))
       return
     }
 
@@ -281,7 +270,7 @@ async function handleSignToday() {
     showSignDialog.value = true
     await fetchSigninInfo(false)
   } catch (e: any) {
-    showToast(e?.message || 'Sign in failed')
+    showToast(e?.message || t('activitySignin.signInFailed'))
   } finally {
     isSubmitting.value = false
   }

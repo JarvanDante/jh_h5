@@ -3,15 +3,15 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">Deposit</span>
+      <span class="title">{{ t('deposit.title') }}</span>
       <van-icon name="notes-o" size="24" color="#fff" @click="showHistory" />
     </div>
 
     <!-- 在线存款标签 -->
     <div class="deposit-online-section">
       <div class="section-header">
-        <span class="reco-badge">RECO</span>
-        <span class="section-title">Deposite on-line</span>
+        <span class="reco-badge">{{ t('common.reco') }}</span>
+        <span class="section-title">{{ t('deposit.onlineTitle') }}</span>
       </div>
     </div>
 
@@ -24,7 +24,7 @@
         :class="{ active: selectedMethod === channel.id }"
         @click="selectMethod(channel.id)"
       >
-        <span v-if="channel.sort >= 90" class="reco-badge-small">RECO</span>
+        <span v-if="channel.sort >= 90" class="reco-badge-small">{{ t('common.reco') }}</span>
         <div class="card-content">
           <div class="method-name">{{ channel.name }}</div>
           <div class="method-icon">🔥</div>
@@ -48,7 +48,7 @@
       </div>
       <div class="gift-display">
         <van-icon name="cross" size="16" color="#999" />
-        <span class="gift-label">GIFT</span>
+        <span class="gift-label">{{ t('common.gift') }}</span>
         <span class="gift-amount">+{{ giftAmount }}</span>
       </div>
     </div>
@@ -68,7 +68,7 @@
 
     <!-- 存款按钮 -->
     <div class="deposit-action">
-      <van-button class="deposit-btn" block @click="handleDeposit">Deposit Now</van-button>
+      <van-button class="deposit-btn" block @click="handleDeposit">{{ t('deposit.depositNow') }}</van-button>
     </div>
   </div>
 </template>
@@ -76,12 +76,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast, showLoadingToast, closeToast } from 'vant'
 import { getPaymentList, getDepositNonce, createDepositOrder, type PaymentChannel } from '@/api'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 // 返回
 const goBack = () => {
@@ -136,7 +138,7 @@ const loadPaymentChannels = async () => {
     }
   } catch (error) {
     console.error('Failed to load payment channels:', error)
-    showToast('Failed to load payment methods')
+    showToast(t('deposit.loadMethodsFailed'))
   }
 }
 
@@ -177,24 +179,24 @@ const showHistory = () => {
 const handleDeposit = async () => {
   // 检查登录状态
   if (!userStore.isLogin) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
 
   if (!selectedMethod.value) {
-    showToast('Please select a payment method')
+    showToast(t('deposit.selectMethod'))
     return
   }
 
   if (!depositAmount.value || parseFloat(depositAmount.value) <= 0) {
-    showToast('Please enter a valid amount')
+    showToast(t('deposit.selectValidAmount'))
     return
   }
 
   const channel = selectedChannel.value
   if (!channel) {
-    showToast('Payment channel not found')
+    showToast(t('deposit.channelNotFound'))
     return
   }
 
@@ -202,19 +204,19 @@ const handleDeposit = async () => {
 
   // 检查金额范围
   if (amount < channel.each_min) {
-    showToast(`Minimum amount is ₱${channel.each_min}`)
+    showToast(t('deposit.minAmountShort', { amount: channel.each_min }))
     return
   }
 
   if (channel.each_max > 0 && amount > channel.each_max) {
-    showToast(`Maximum amount is ₱${channel.each_max}`)
+    showToast(t('deposit.maxAmountShort', { amount: channel.each_max }))
     return
   }
 
   try {
     // 显示加载提示
     showLoadingToast({
-      message: 'Processing...',
+      message: t('common.processing'),
       forbidClick: true,
       duration: 0,
     })
@@ -225,7 +227,7 @@ const handleDeposit = async () => {
 
     if (!nonceRes.nonce) {
       closeToast()
-      showToast('Failed to get nonce')
+      showToast(t('deposit.getNonceFailed'))
       return
     }
 
@@ -253,7 +255,7 @@ const handleDeposit = async () => {
         },
       })
     } else {
-      showToast('Failed to create order')
+      showToast(t('deposit.createOrderFailedShort'))
     }
   } catch (error: any) {
     closeToast()
@@ -265,7 +267,7 @@ const handleDeposit = async () => {
     } else if (error.message) {
       showToast(error.message)
     } else {
-      showToast('Deposit failed, please try again')
+      showToast(t('deposit.depositFailed'))
     }
   }
 }

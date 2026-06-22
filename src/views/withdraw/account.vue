@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">my account</span>
+      <span class="title">{{ t('withdrawAccount.title') }}</span>
       <div class="placeholder"></div>
     </div>
 
@@ -94,10 +94,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast, showDialog } from 'vant'
 import { getBankCardList, setDefaultBankCard, deleteBankCard, type BankCard } from '@/api'
 
 const router = useRouter()
+const { t } = useI18n()
 
 // 选中的提现方式
 const selectedMethod = ref(1) // 1=Gcash, 2=Maya
@@ -153,15 +155,15 @@ const handleSetDefault = async (cardId: number) => {
   try {
     const res = await setDefaultBankCard(cardId)
     if (res.success) {
-      showToast('Set as default successfully')
+      showToast(t('withdrawAccount.setDefaultSuccess'))
       // 重新加载银行卡列表
       await loadBankCards()
     } else {
-      showToast(res.message || 'Failed to set default')
+      showToast(res.message || t('withdrawAccount.setDefaultFailed'))
     }
   } catch (error: any) {
     console.error('设置默认银行卡失败:', error)
-    showToast(error.message || 'Failed to set default')
+    showToast(error.message || t('withdrawAccount.setDefaultFailed'))
   }
 }
 
@@ -169,25 +171,25 @@ const handleSetDefault = async (cardId: number) => {
 const handleDelete = async (cardId: number) => {
   try {
     await showDialog({
-      title: 'Confirm Delete',
-      message: 'Are you sure you want to delete this account?',
+      title: t('common.confirm'),
+      message: t('withdrawAccount.deleteConfirm'),
       showCancelButton: true,
-      confirmButtonText: 'Delete',
+      confirmButtonText: t('common.confirm'),
       confirmButtonColor: '#ee0a24',
     })
 
     const res = await deleteBankCard(cardId)
     if (res.success) {
-      showToast('Deleted successfully')
+      showToast(t('withdrawAccount.deleteSuccess'))
       // 重新加载银行卡列表
       await loadBankCards()
     } else {
-      showToast(res.message || 'Failed to delete')
+      showToast(res.message || t('withdrawAccount.deleteFailed'))
     }
   } catch (error: any) {
     if (error !== 'cancel') {
       console.error('删除失败:', error)
-      showToast(error.message || 'Failed to delete')
+      showToast(error.message || t('withdrawAccount.deleteFailed'))
     }
   }
 }

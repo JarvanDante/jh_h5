@@ -2,7 +2,7 @@
   <div class="audit-detail-page">
     <div class="top-bar">
       <van-icon name="arrow-left" size="22" color="#fff" @click="goBack" />
-      <div class="title">Audit details</div>
+      <div class="title">{{ t('withdrawAudit.title') }}</div>
       <div class="spacer" />
     </div>
 
@@ -12,7 +12,7 @@
         <span class="value">{{ getFlowTypeText(detail.source_type) }}</span>
       </div>
       <div class="detail-row">
-        <span class="label">Audit status</span>
+        <span class="label">{{ t('withdrawAudit.auditStatus') }}</span>
         <span class="value status" :class="getFlowStatusClass(detail.status)">
           {{ getFlowStatusText(detail.status) }}
         </span>
@@ -65,9 +65,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import type { UserFlowRequirement } from '@/api/modules/balance'
 
 const router = useRouter()
+const { t } = useI18n()
 const detail = ref<UserFlowRequirement | null>(null)
 
 onMounted(() => {

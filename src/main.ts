@@ -3,6 +3,8 @@ import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from './App.vue'
 import router from './router'
+import i18n from './i18n'
+import { useLocaleStore } from './stores/locale'
 
 // Vant 样式
 import 'vant/lib/index.css'
@@ -30,6 +32,11 @@ const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 
 app.use(pinia)
+app.use(i18n)
+
+const localeStore = useLocaleStore()
+localeStore.setLocale(localeStore.locale)
+
 app.use(router)
 
 app.mount('#app')

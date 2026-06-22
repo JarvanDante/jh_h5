@@ -1,28 +1,23 @@
 <template>
   <div class="game-page">
-    <!-- 游戏加载中 -->
     <div v-if="loading" class="loading-container">
-      <van-loading type="spinner" size="48px" color="#552583">加载游戏中...</van-loading>
+      <van-loading type="spinner" size="48px" color="#552583">{{ t('game.loading') }}</van-loading>
     </div>
 
-    <!-- 游戏容器 -->
     <div v-if="!loading && !error" class="game-wrapper">
-      <!-- 游戏iframe -->
       <iframe :src="gameUrl" class="game-iframe" frameborder="0" allow="autoplay"></iframe>
 
-      <!-- 返回按钮覆盖层 -->
       <div class="back-button-overlay">
         <div class="back-button" @click="goBack">
           <van-icon name="arrow-left" size="24" color="#fff" />
-          <span>back</span>
+          <span>{{ t('game.back') }}</span>
         </div>
       </div>
     </div>
 
-    <!-- 错误提示 -->
     <div v-if="error" class="error-container">
-      <van-empty description="游戏加载失败">
-        <van-button type="primary" @click="goBack">返回首页</van-button>
+      <van-empty :description="t('game.loadFailed')">
+        <van-button type="primary" @click="goBack">{{ t('game.backHome') }}</van-button>
       </van-empty>
     </div>
   </div>
@@ -31,6 +26,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { gameApi } from '@/api/modules/game'
 import { useUserStore } from '@/stores/user'
@@ -38,24 +34,22 @@ import { useUserStore } from '@/stores/user'
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 const loading = ref(true)
 const error = ref(false)
 const gameUrl = ref('')
 
-// 获取路由参数
 const gameId = ref(Number(route.query.game_id) || 0)
 const gameKey = ref(String(route.query.key) || '')
 
-// 返回上一页
 const goBack = () => {
   router.back()
 }
 
-// 进入游戏
 const enterGame = async () => {
   if (!gameId.value) {
-    showToast('游戏ID不能为空')
+    showToast(t('game.idRequired'))
     error.value = true
     loading.value = false
     return
@@ -74,11 +68,11 @@ const enterGame = async () => {
     if (res?.url) {
       gameUrl.value = res.url
     } else {
-      showToast('获取游戏链接失败')
+      showToast(t('game.urlFailed'))
       error.value = true
     }
   } catch (err: any) {
-    showToast(err?.message || '进入游戏失败')
+    showToast(err?.message || t('game.enterFailed'))
     error.value = true
   } finally {
     loading.value = false
@@ -86,20 +80,16 @@ const enterGame = async () => {
 }
 
 onMounted(() => {
-  // 检查是否登录，如果未登录直接跳转到登录页，不显示游戏页面
   if (!userStore.isLogin) {
-    showToast('Please login first')
+    showToast(t('common.pleaseLoginFirst'))
     router.push('/login')
     return
   }
 
-  // 已登录才进入游戏
   enterGame()
 })
 
-onUnmounted(() => {
-  // 组件卸载时无需特殊清理
-})
+onUnmounted(() => {})
 </script>
 
 <style lang="scss" scoped>
@@ -115,7 +105,6 @@ onUnmounted(() => {
   z-index: 9999;
   overflow: hidden;
 
-  // 游戏容器
   .game-wrapper {
     position: relative;
     width: 100%;
@@ -123,7 +112,6 @@ onUnmounted(() => {
     background: #000;
   }
 
-  // 游戏iframe
   .game-iframe {
     position: absolute;
     top: 0;
@@ -134,7 +122,6 @@ onUnmounted(() => {
     z-index: 1;
   }
 
-  // 返回按钮覆盖层
   .back-button-overlay {
     position: absolute;
     top: 0;
@@ -145,7 +132,6 @@ onUnmounted(() => {
     z-index: 999999;
   }
 
-  // 返回按钮
   .back-button {
     position: absolute;
     top: 16px;
@@ -181,7 +167,6 @@ onUnmounted(() => {
     }
   }
 
-  // 加载中容器
   .loading-container {
     position: absolute;
     top: 0;
@@ -196,7 +181,6 @@ onUnmounted(() => {
     z-index: 2;
   }
 
-  // 错误容器
   .error-container {
     position: absolute;
     top: 0;

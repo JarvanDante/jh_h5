@@ -3,7 +3,7 @@
     <!-- 顶部导航栏 -->
     <div class="top-bar">
       <van-icon name="arrow-left" size="24" color="#fff" @click="goBack" />
-      <span class="title">add account</span>
+      <span class="title">{{ t('withdrawAddAccount.title') }}</span>
       <div class="placeholder"></div>
     </div>
 
@@ -89,10 +89,12 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
 import { addBankCard } from '@/api'
 
 const router = useRouter()
+const { t } = useI18n()
 
 // 选中的提现方式
 const selectedMethod = ref(1) // 1=Gcash, 2=Maya
@@ -125,20 +127,20 @@ const goBack = () => {
 const handleSubmit = async () => {
   // 验证姓名
   if (!formData.name || !formData.name.trim()) {
-    showToast('Please enter your name')
+    showToast(t('withdrawAddAccount.enterName'))
     return
   }
 
   // 验证账号
   if (!formData.accountNumber || !formData.accountNumber.trim()) {
-    showToast('Please enter your account number')
+    showToast(t('withdrawAddAccount.enterAccount'))
     return
   }
 
   // 验证手机号格式（菲律宾手机号通常是10位数字，以9开头）
   const phoneRegex = /^9\d{9}$/
   if (!phoneRegex.test(formData.accountNumber)) {
-    showToast('Please enter a valid account number (10 digits starting with 9)')
+    showToast(t('withdrawAddAccount.invalidAccount'))
     return
   }
 
@@ -151,17 +153,17 @@ const handleSubmit = async () => {
     })
 
     if (res.success) {
-      showToast('Account added successfully')
+      showToast(t('withdrawAddAccount.success'))
       // 返回上一页
       setTimeout(() => {
         router.back()
       }, 1000)
     } else {
-      showToast(res.message || 'Failed to add account')
+      showToast(res.message || t('withdrawAddAccount.failed'))
     }
   } catch (error: any) {
     console.error('添加账户失败:', error)
-    showToast(error.message || 'Failed to add account')
+    showToast(error.message || t('withdrawAddAccount.failed'))
   }
 }
 </script>
