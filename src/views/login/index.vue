@@ -82,6 +82,7 @@ import { showAppToast } from '@/utils/toast'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api'
 import { signedFetch } from '@/utils/request'
+import { notifyIfRateLimited } from '@/utils/rate-limit'
 
 const router = useRouter()
 const route = useRoute()
@@ -177,6 +178,7 @@ const onSubmit = async () => {
     })
 
     const result = await response.json()
+    if (notifyIfRateLimited(result?.code)) return
 
     if (result.code === 0 && result.data) {
       // 登录成功

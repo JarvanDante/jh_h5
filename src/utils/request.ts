@@ -1,5 +1,5 @@
-import { showToast } from 'vant'
-import i18n, { getStoredLocale, toLanguageHeader } from '@/i18n'
+import { getStoredLocale, toLanguageHeader } from '@/i18n'
+import { notifyIfRateLimited, notifyRateLimited } from '@/utils/rate-limit'
 
 function getLanguageHeader(): string {
   return toLanguageHeader(getStoredLocale())
@@ -23,7 +23,6 @@ type SignSession = {
 
 let currentSignSession: SignSession | null = null
 let signSessionPromise: Promise<SignSession | null> | null = null
-let last429ToastAt = 0
 
 function isInvalidTokenMessage(message?: string): boolean {
   if (!message) return false
@@ -135,6 +134,10 @@ async function requestSignSession(force = false, tokenOverride = ''): Promise<Si
 
     // 先尝试携带当前 token 获取签名会话
     let { result } = await fetchSignSession(tokenSnapshot || undefined)
+    if (notifyIfRateLimited(result?.code)) {
+      currentSignSession = null
+      return null
+    }
 
     // token 无效时，回退为匿名签名会话，避免首页等公共接口完全不可用
     if (
@@ -147,6 +150,10 @@ async function requestSignSession(force = false, tokenOverride = ''): Promise<Si
       localStorage.removeItem('user')
       clearSignSession()
       ;({ result } = await fetchSignSession())
+      if (notifyIfRateLimited(result?.code)) {
+        currentSignSession = null
+        return null
+      }
     }
 
     if (result?.code !== 0 || !result?.data?.key_id || !result?.data?.sign_key) {
@@ -370,15 +377,7 @@ class Request {
     const resultMessage = this.normalizeMessage(result?.msg || result?.message)
 
     if (resultCode === 429) {
-      const message = i18n.global.t('common.systemBusy')
-      result.msg = message
-      result.message = message
-
-      const now = Date.now()
-      if (now - last429ToastAt > 2000) {
-        showToast(message)
-        last429ToastAt = now
-      }
+      notifyRateLimited()
     }
 
     if (resultCode === 401) {

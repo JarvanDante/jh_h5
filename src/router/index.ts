@@ -275,6 +275,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/rate-limited',
+    name: 'RateLimited',
+    component: () => import('@/views/error/rate-limit.vue'),
+    meta: {
+      titleKey: 'route.rateLimited',
+      hideTabbar: true,
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/error/404.vue'),

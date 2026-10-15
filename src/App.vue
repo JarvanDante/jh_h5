@@ -14,7 +14,7 @@
       </router-view>
 
       <!-- 全局底部导航栏 -->
-      <div class="global-tabbar">
+      <div v-if="showTabbar" class="global-tabbar">
         <div class="tabbar-item" :class="{ active: isHomeActive }" @click="navigateTo('/')">
           <van-icon :name="isHomeActive ? 'wap-home' : 'wap-home-o'" size="20" />
           <span>{{ t('tab.home') }}</span>
@@ -67,6 +67,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
+import { unlockRateLimited } from '@/utils/rate-limit'
 
 const router = useRouter()
 const route = useRoute()
@@ -74,6 +75,12 @@ const { t } = useI18n()
 const appStore = useAppStore()
 const cacheViews = computed(() => appStore.cacheViews)
 const currentRoute = computed(() => route.path)
+const showTabbar = computed(() => !route.meta.hideTabbar)
+
+const onRateLimited = () => {
+  if (route.path === '/rate-limited') return
+  router.replace('/rate-limited').catch(() => unlockRateLimited())
+}
 const showGlobalLoading = ref(true)
 let loadingCount = 0
 let loadingShownAt = Date.now()
@@ -206,12 +213,14 @@ onMounted(() => {
   window.addEventListener('app:global-loading-start', onGlobalLoadingStart)
   window.addEventListener('app:global-loading-end', onGlobalLoadingEnd)
   window.addEventListener('app:global-loading-reset', onGlobalLoadingReset)
+  window.addEventListener('app:rate-limited', onRateLimited)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('app:global-loading-start', onGlobalLoadingStart)
   window.removeEventListener('app:global-loading-end', onGlobalLoadingEnd)
   window.removeEventListener('app:global-loading-reset', onGlobalLoadingReset)
+  window.removeEventListener('app:rate-limited', onRateLimited)
   if (showTimer) {
     window.clearTimeout(showTimer)
     showTimer = null

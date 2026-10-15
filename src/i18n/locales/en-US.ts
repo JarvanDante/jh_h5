@@ -74,6 +74,7 @@ export default {
     changeLoginPassword: 'Change Login Password',
     changeAssetsPassword: 'Change Assets Password',
     notFound: 'Page Not Found',
+    rateLimited: 'Please try again later',
     luckySpin: 'Lucky Spin',
     dailyCheckIn: 'Daily Check-in',
     depositBonus: 'Deposit Bonus',
@@ -332,6 +333,11 @@ export default {
   notFound: {
     description: 'Page not found',
     backHome: 'Back to Home',
+  },
+  rateLimit: {
+    title: 'A bit too busy',
+    description: 'There are too many requests. Please wait a moment and try again.',
+    retry: 'Try again',
   },
   messages: {
     title: 'Messages',

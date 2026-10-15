@@ -74,6 +74,7 @@ export default {
     changeLoginPassword: '修改登录密码',
     changeAssetsPassword: '修改资金密码',
     notFound: '页面不存在',
+    rateLimited: '请稍后再试',
     luckySpin: '幸运转盘',
     dailyCheckIn: '每日签到',
     depositBonus: '充值活动',
@@ -332,6 +333,11 @@ export default {
   notFound: {
     description: '页面不存在',
     backHome: '返回首页',
+  },
+  rateLimit: {
+    title: '访问有点频繁',
+    description: '请求太多了，请稍等一会儿再试。',
+    retry: '重新试试',
   },
   messages: {
     title: '消息',
