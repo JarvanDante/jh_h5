@@ -146,6 +146,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast, showDialog, closeToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import {
   getWithdrawList,
   type WithdrawChannel,
@@ -331,7 +332,7 @@ const loadRolloverRequirement = async () => {
 
     rolloverRequirement.value = parseFloat(totalRemaining.toFixed(2))
   } catch (error: any) {
-    showToast(error.message || t('withdraw.loadRolloverFailed'))
+    showAppToast(error, t('withdraw.loadRolloverFailed'))
   } finally {
     setTimeout(() => {
       isRolloverRefreshing.value = false
@@ -456,18 +457,12 @@ const handleWithdraw = async () => {
       const recallRes: any = await recallGameBalance()
       if (recallRes.code && recallRes.code !== 0) {
         closeToast()
-        showToast({
-          type: 'fail',
-          message: recallRes.msg || recallRes.message || t('withdraw.recallFailed'),
-        })
+        showAppToast(recallRes, t('withdraw.recallFailed'), { type: 'fail' })
         return
       }
       if (!recallRes.success) {
         closeToast()
-        showToast({
-          type: 'fail',
-          message: recallRes.message || t('withdraw.recallFailed'),
-        })
+        showAppToast(recallRes, t('withdraw.recallFailed'), { type: 'fail' })
         return
       }
 
@@ -475,10 +470,7 @@ const handleWithdraw = async () => {
       const nonceRes: any = await getWithdrawNonce()
       if (nonceRes.code && nonceRes.code !== 0) {
         closeToast()
-        showToast({
-          type: 'fail',
-          message: nonceRes.msg || nonceRes.message || t('withdraw.getNonceFailed'),
-        })
+        showAppToast(nonceRes, t('withdraw.getNonceFailed'), { type: 'fail' })
         return
       }
       if (!nonceRes.nonce) {
@@ -505,20 +497,12 @@ const handleWithdraw = async () => {
 
       // 检查是否有错误码（如 429 请求过于频繁）
       if (withdrawRes.code && withdrawRes.code !== 0) {
-        showToast({
-          type: 'fail',
-          message: withdrawRes.msg || withdrawRes.message || t('withdraw.submitFailed'),
-        })
+        showAppToast(withdrawRes, t('withdraw.submitFailed'), { type: 'fail' })
         return
       }
 
       if (withdrawRes.success) {
-        // 显示成功提示（绿色对号），使用接口返回的 message
-        showToast({
-          type: 'success',
-          message: withdrawRes.message || t('withdraw.withdrawSuccess'),
-          duration: 2000,
-        })
+        showAppToast(withdrawRes, t('withdraw.withdrawSuccess'), { type: 'success', duration: 2000 })
 
         // 刷新余额
         await refreshBalance()
@@ -531,18 +515,12 @@ const handleWithdraw = async () => {
           router.push('/withdraw/history')
         }, 2000)
       } else {
-        showToast({
-          type: 'fail',
-          message: withdrawRes.message || t('withdraw.submitFailed'),
-        })
+        showAppToast(withdrawRes, t('withdraw.submitFailed'), { type: 'fail' })
       }
     } catch (error: any) {
       closeToast()
       console.error('Withdrawal error:', error)
-      showToast({
-        type: 'fail',
-        message: error.message || t('withdraw.withdrawFailedRetry'),
-      })
+      showAppToast(error, t('withdraw.withdrawFailedRetry'), { type: 'fail' })
     }
   } catch {
     // 用户取消了确认对话框

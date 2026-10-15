@@ -111,6 +111,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { pickToastMessage, showAppToast } from '@/utils/toast'
 import { useUserStore } from '@/stores/user'
 import { refreshBalance as refreshBalanceApi, userApi } from '@/api'
 
@@ -206,13 +207,13 @@ const onSubmit = async () => {
     })
 
     if (res?.code && res.code !== 0) {
-      showToast(extractRpcMessage(res.msg) || t('register.failed'))
+      showToast(pickToastMessage(extractRpcMessage(res.msg), t('register.failed')))
       refreshCaptcha()
       return
     }
 
     if (!res?.token) {
-      showToast(extractRpcMessage(res?.message) || t('register.failed'))
+      showToast(pickToastMessage(extractRpcMessage(res?.message), t('register.failed')))
       refreshCaptcha()
       return
     }
@@ -277,8 +278,7 @@ const onSubmit = async () => {
     }, 500)
   } catch (error: any) {
     console.error('Registration failed:', error)
-    const errorMsg = error?.response?.data?.message || error?.message || t('register.failed')
-    showToast(errorMsg)
+    showAppToast(error?.response?.data || error, t('register.failed'))
     // 刷新验证码
     refreshCaptcha()
   } finally {
@@ -341,7 +341,7 @@ const handleQuickRegister = async () => {
       }
     }
 
-    showToast(res.message || t('register.quickSuccess'))
+    showAppToast(res, t('register.quickSuccess'))
 
     // 跳转到首页
     setTimeout(() => {
@@ -349,8 +349,7 @@ const handleQuickRegister = async () => {
     }, 1000)
   } catch (error: any) {
     console.error('Quick registration failed:', error)
-    const errorMsg = error?.response?.data?.message || error?.message || t('register.quickFailed')
-    showToast(errorMsg)
+    showAppToast(error?.response?.data || error, t('register.quickFailed'))
   } finally {
     quickLoading.value = false
   }

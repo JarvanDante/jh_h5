@@ -31,13 +31,19 @@
         <!-- 二维码图片 -->
         <div class="qr-code-section">
           <img
-            v-if="orderInfo.image_url"
-            :src="orderInfo.image_url"
+            v-if="qrSrc"
+            :src="qrSrc"
             alt="Payment QR Code"
             class="qr-code-image"
             @error="handleImageError"
           />
           <van-loading v-else type="spinner" size="48px" color="#552583">Loading...</van-loading>
+        </div>
+
+        <!-- 支付提示 -->
+        <div class="payment-tip">
+          <div v-if="isHtmlTip" class="tip-html" v-html="displayTip"></div>
+          <div v-else class="tip-text">{{ displayTip }}</div>
         </div>
       </div>
 
@@ -82,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast, showConfirmDialog } from 'vant'
@@ -99,7 +105,41 @@ const orderInfo = ref({
   image_url: '',
   sys_trade_no: '',
   result: '',
+  remark: '',
 })
+
+const qrBroken = ref(false)
+
+const buildAccountQrUrl = (account: string) => {
+  if (!account) return ''
+  return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encodeURIComponent(account)}`
+}
+
+const isUsableImageUrl = (url: string) => {
+  if (!url) return false
+  if (/localhost:19000/i.test(url)) return false
+  return /^https?:\/\//i.test(url)
+}
+
+const qrSrc = computed(() => {
+  if (!qrBroken.value && isUsableImageUrl(orderInfo.value.image_url)) {
+    return encodeURI(orderInfo.value.image_url)
+  }
+  return buildAccountQrUrl(orderInfo.value.channel_card_no)
+})
+
+const displayTip = computed(() => {
+  const remark = orderInfo.value.remark?.trim()
+  if (remark) return remark
+  const result = orderInfo.value.result?.trim()
+  if (result && result.toLowerCase() !== 'ok') return result
+  return t('depositPayment.defaultTip', {
+    channel: orderInfo.value.channel_name || 'wallet',
+    account: orderInfo.value.channel_card_no || '-',
+  })
+})
+
+const isHtmlTip = computed(() => /<\/?[a-z][\s\S]*>/i.test(displayTip.value))
 
 // 充值金额
 const depositAmount = ref('0')
@@ -124,14 +164,14 @@ const showHistory = () => {
 
 // 保存图片
 const saveImage = () => {
-  if (!orderInfo.value.image_url) {
+  if (!qrSrc.value) {
     showToast(t('depositPayment.imageNotAvailable'))
     return
   }
 
   // 创建一个隐藏的 a 标签来下载图片
   const link = document.createElement('a')
-  link.href = orderInfo.value.image_url
+  link.href = qrSrc.value
   link.download = `payment_qr_${orderInfo.value.order_sn}.jpg`
   link.target = '_blank'
   document.body.appendChild(link)
@@ -143,6 +183,10 @@ const saveImage = () => {
 
 // 处理图片加载错误
 const handleImageError = () => {
+  if (!qrBroken.value && orderInfo.value.channel_card_no) {
+    qrBroken.value = true
+    return
+  }
   showToast(t('depositPayment.qrLoadFailed'))
 }
 
@@ -184,6 +228,7 @@ onMounted(() => {
         image_url: data.image_url || '',
         sys_trade_no: data.sys_trade_no || '',
         result: data.result || '',
+        remark: data.remark || '',
       }
     } catch (error) {
       console.error('Failed to parse order data:', error)
@@ -321,6 +366,22 @@ onMounted(() => {
         max-height: 170px;
         object-fit: contain;
         border-radius: 8px;
+      }
+    }
+
+    .payment-tip {
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: #f3f4f6;
+      border-radius: 10px;
+      min-height: 40px;
+
+      .tip-text,
+      .tip-html {
+        color: #374151;
+        font-size: 13px;
+        line-height: 1.5;
+        word-break: break-word;
       }
     }
   }

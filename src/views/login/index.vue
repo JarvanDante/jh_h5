@@ -78,6 +78,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast, showDialog } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api'
 import { signedFetch } from '@/utils/request'
@@ -255,7 +256,7 @@ const onSubmit = async () => {
       router.replace(redirect || '/home')
     } else {
       // 登录失败
-      showToast(result.msg || t('login.loginFailed'))
+      showAppToast(result, t('login.loginFailed'))
       // 刷新验证码
       refreshCaptcha()
       // 清空验证码输入

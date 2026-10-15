@@ -94,6 +94,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { useUserStore } from '@/stores/user'
 import { signedFetch } from '@/utils/request'
 
@@ -261,7 +262,7 @@ const handleSubmit = async () => {
       // 显示成功页面
       isSuccess.value = true
     } else {
-      showToast(result.msg || t('withdrawSetPassword.failed'))
+      showAppToast(result, t('withdrawSetPassword.failed'))
     }
   } catch (error) {
     console.error('Error setting password:', error)

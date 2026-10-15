@@ -241,6 +241,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import {
   getBalanceLog,
   getUserFlowRequirements,
@@ -393,7 +394,7 @@ const loadWithdrawRecords = async (isLoadMore = false) => {
       finished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || t('withdrawHistory.loadFailed'))
+    showAppToast(error, t('withdrawHistory.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -625,7 +626,7 @@ const loadFlowRequirements = async (isLoadMore = false) => {
       flowFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || t('withdrawHistory.loadFlowFailed'))
+    showAppToast(error, t('withdrawHistory.loadFlowFailed'))
   } finally {
     flowLoading.value = false
   }

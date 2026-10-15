@@ -606,6 +606,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { getBalanceLog, type BalanceLogItem } from '@/api/modules/balance'
 import { gameApi, type BetHistoryItem } from '@/api/modules/game'
 
@@ -854,7 +855,7 @@ const loadDepositRecords = async (isLoadMore = false) => {
       depositFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || t('report.loadDepositFailed'))
+    showAppToast(error, t('report.loadDepositFailed'))
   } finally {
     depositLoading.value = false
   }
@@ -907,7 +908,7 @@ const loadWithdrawRecords = async (isLoadMore = false) => {
       withdrawFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || t('report.loadWithdrawFailed'))
+    showAppToast(error, t('report.loadWithdrawFailed'))
   } finally {
     withdrawLoading.value = false
   }
@@ -985,7 +986,7 @@ const loadBetRecords = async (isLoadMore = false) => {
       betFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || t('report.loadBetFailed'))
+    showAppToast(error, t('report.loadBetFailed'))
   } finally {
     betLoading.value = false
   }
@@ -1049,7 +1050,7 @@ const loadBonusRecords = async (isLoadMore = false) => {
       bonusFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || t('report.loadBonusFailed'))
+    showAppToast(error, t('report.loadBonusFailed'))
   } finally {
     bonusLoading.value = false
   }
@@ -1113,7 +1114,7 @@ const loadRebateRecords = async (isLoadMore = false) => {
       rebateFinished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || t('report.loadRebateFailed'))
+    showAppToast(error, t('report.loadRebateFailed'))
   } finally {
     rebateLoading.value = false
   }

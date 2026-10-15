@@ -124,6 +124,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/modules/user'
 import { gameApi } from '@/api/modules/game'
@@ -252,10 +253,10 @@ async function handleWashCode() {
       washResult.value = res
       showResultDialog.value = true
     } else {
-      showToast(res?.message || t('activityRebate.washCodeFailed'))
+      showAppToast(res, t('activityRebate.washCodeFailed'))
     }
   } catch (e: any) {
-    showToast(e?.message || t('activityRebate.washCodeFailed'))
+    showAppToast(e, t('activityRebate.washCodeFailed'))
   } finally {
     isWashing.value = false
   }

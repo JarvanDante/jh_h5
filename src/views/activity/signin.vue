@@ -136,6 +136,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { claimSigninReward, getSigninActivityInfo, type SigninDayInfo } from '@/api/modules/balance'
 
 const { t, tm } = useI18n()
@@ -213,7 +214,7 @@ async function fetchSigninInfo(showErrorToast = true) {
     const res = await getSigninActivityInfo()
     if (!res?.success) {
       active.value = false
-      if (showErrorToast) showToast(res?.message || t('activitySignin.loadInfoFailed'))
+      if (showErrorToast) showAppToast(res, t('activitySignin.loadInfoFailed'))
       return
     }
 
@@ -226,7 +227,7 @@ async function fetchSigninInfo(showErrorToast = true) {
     applySigninData(res.day_list || [])
   } catch (e: any) {
     active.value = false
-    if (showErrorToast) showToast(e?.message || t('activitySignin.loadInfoFailed'))
+    if (showErrorToast) showAppToast(e, t('activitySignin.loadInfoFailed'))
   }
 }
 
@@ -262,7 +263,7 @@ async function handleSignToday() {
   try {
     const res = await claimSigninReward()
     if (!res?.success) {
-      showToast(res?.message || t('activitySignin.signInFailed'))
+      showAppToast(res, t('activitySignin.signInFailed'))
       return
     }
 
@@ -270,7 +271,7 @@ async function handleSignToday() {
     showSignDialog.value = true
     await fetchSigninInfo(false)
   } catch (e: any) {
-    showToast(e?.message || t('activitySignin.signInFailed'))
+    showAppToast(e, t('activitySignin.signInFailed'))
   } finally {
     isSubmitting.value = false
   }

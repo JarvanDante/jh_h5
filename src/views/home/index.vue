@@ -171,11 +171,11 @@
               <div class="game-name">{{ game.name }}</div>
             </div>
             <van-icon
-              :name="isGameFavorite(game.id) ? 'star' : 'star-o'"
-              :color="isGameFavorite(game.id) ? '#FDB927' : '#999'"
+              :name="isGameFavorite(game) ? 'star' : 'star-o'"
+              :color="isGameFavorite(game) ? '#FDB927' : '#999'"
               size="18"
               class="favorite-icon"
-              :class="{ active: isGameFavorite(game.id) }"
+              :class="{ active: isGameFavorite(game) }"
               @click.stop="toggleFavorite(game)"
             />
             <!-- 热门标签 -->
@@ -280,8 +280,9 @@ import { useLocaleStore } from '@/stores/locale'
 import type { AppLocale } from '@/i18n'
 import { userApi } from '@/api/modules/user'
 import { gameApi } from '@/api/modules/game'
-import { refreshBalance as refreshBalanceApi } from '@/api'
+import { recallGameBalance } from '@/api'
 import { signedFetch } from '@/utils/request'
+import { showAppToast } from '@/utils/toast'
 import type { AdItem, NoticeItem } from '@/api/modules/user'
 import type { GameCategory, GameItem } from '@/api/modules/game'
 import AdPopup from '@/components/AdPopup.vue'
@@ -640,7 +641,7 @@ const filteredGames = computed(() => {
     result = result.filter((game) => Number(game.is_favorite || 0) === 1)
   } else if (activeHall.value === 'hot') {
     // 显示热门游戏
-    result = result.filter((game) => game.hot === 1)
+    result = result.filter((game) => Number(game.hot) === 1)
   } else if (activeHall.value !== 'hot') {
     // 如果选中的是平台，按平台过滤
     const selectedHall = gameHalls.value.find((hall) => hall.id === activeHall.value)
@@ -791,22 +792,49 @@ const toggleFavorite = async (game: GameItem) => {
       style: game.style,
       game_img: game.img || game.img1 || '',
     })
-    game.is_favorite = Number(res?.is_favorite || 0)
-    const tip =
-      res?.message ||
-      (game.is_favorite === 1 ? t('home.addedToFavorites') : t('home.removedFromFavorites'))
-    showToast(tip)
+    const nextFlag = readFavoriteFlag(res, Number(game.is_favorite) === 1 ? 0 : 1)
+    const target =
+      gameList.value.find((it) => it.platform === game.platform && it.code === game.code) || game
+    target.is_favorite = nextFlag
+    showToast(nextFlag === 1 ? t('home.addedToFavorites') : t('home.removedFromFavorites'))
   } catch (error) {
     console.error('收藏操作失败:', error)
     showToast(t('common.operationFailed'))
   }
 }
 
-// 检查游戏是否被收藏
-const isGameFavorite = (gameId: number) => {
-  const game = gameList.value.find((it) => Number(it.id) === Number(gameId))
-  return Number(game?.is_favorite || 0) === 1
+const readFavoriteFlag = (item: any, fallback = 0) => {
+  const raw = item?.is_favorite ?? item?.isFavorite
+  if (raw === undefined || raw === null || raw === '') return fallback
+  return Number(raw) === 1 ? 1 : 0
 }
+
+const favoriteKey = (item: { platform?: string; code?: string }) =>
+  `${item.platform || ''}|${item.code || ''}`
+
+const loadFavoriteKeySet = async () => {
+  const keys = new Set<string>()
+  if (!isLogin.value) return keys
+  try {
+    const favRes = await gameApi.getFavoriteGameList()
+    for (const item of favRes?.list || []) {
+      const key = favoriteKey(item)
+      if (key !== '|') keys.add(key)
+    }
+  } catch (error) {
+    console.error('获取收藏列表失败:', error)
+  }
+  return keys
+}
+
+const markFavoriteGames = (list: GameItem[], favoriteKeys: Set<string>) =>
+  list.map((game) => ({
+    ...game,
+    is_favorite: favoriteKeys.has(favoriteKey(game)) || readFavoriteFlag(game) === 1 ? 1 : 0,
+  }))
+
+// 检查游戏是否被收藏
+const isGameFavorite = (game: GameItem) => readFavoriteFlag(game) === 1
 
 const handleTelegram = () => {
   let tgUrl = ''
@@ -856,7 +884,26 @@ const refreshBalance = async () => {
   try {
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 
-    // 先调用刷新余额接口
+    try {
+      const recallRes: any = await recallGameBalance()
+      if (recallRes?.code && recallRes.code !== 0) {
+        showAppToast(recallRes, t('home.recallFailed'))
+      } else if (recallRes && recallRes.success === false) {
+        showAppToast(recallRes, t('home.recallFailed'))
+      } else {
+        const amount = Number(recallRes?.recalled_amount || 0)
+        showToast(
+          amount > 0
+            ? t('home.recallSuccessAmount', { amount: amount.toFixed(2) })
+            : t('home.recallSuccess'),
+        )
+      }
+    } catch (error) {
+      console.error('Failed to recall game balance:', error)
+      showToast(t('home.recallFailed'))
+    }
+
+    // 再刷新中心钱包余额
     const refreshBalanceUrl = `${apiBaseUrl}/frontend/balance/refresh-balance`
     const refreshBalanceResponse = await signedFetch(refreshBalanceUrl, {
       method: 'GET',
@@ -970,7 +1017,7 @@ const refreshBalance = async () => {
       // 触发余额动画
       animateBalance(oldBalance, refreshBalanceResult.data.balance || '0.000')
     } else {
-      showToast(refreshBalanceResult.msg || t('home.refreshBalanceFailed'))
+      showAppToast(refreshBalanceResult, t('home.refreshBalanceFailed'))
     }
   } catch (error) {
     console.error('Failed to refresh balance:', error)
@@ -1007,7 +1054,7 @@ const fetchAdList = async () => {
       // position=1 的是 banner 轮播
       const bannerAds = res.list
         .filter((ad: AdItem) => ad.position === 1)
-        .sort((a: AdItem, b: AdItem) => (b.sort ?? 0) - (a.sort ?? 0))
+        .sort((a: AdItem, b: AdItem) => (a.sort ?? 0) - (b.sort ?? 0))
       if (bannerAds.length > 0) {
         banners.value = bannerAds.map((ad: AdItem) => ({
           ...ad,
@@ -1206,11 +1253,16 @@ const fetchGameList = async () => {
     console.log('游戏列表响应:', res)
 
     if (res?.list && res.list.length > 0) {
-      gameList.value = res.list.map((game: any) => ({
-        ...game,
-        img: normalizeAssetUrl(game.img || game.cover),
-        cover: normalizeAssetUrl(game.cover || game.img),
-      }))
+      const favoriteKeys = await loadFavoriteKeySet()
+      gameList.value = markFavoriteGames(
+        res.list.map((game: any) => ({
+          ...game,
+          is_favorite: readFavoriteFlag(game),
+          img: normalizeAssetUrl(game.img || game.cover),
+          cover: normalizeAssetUrl(game.cover || game.img),
+        })),
+        favoriteKeys,
+      )
       gameListTotal.value = res.total
       console.log('游戏列表:', gameList.value)
     } else {
@@ -1395,13 +1447,14 @@ onUnmounted(() => {
           width: 100%;
           height: 100%;
           object-fit: contain;
-          border-radius: 6px;
+          border-radius: 50%;
         }
 
         width: 40px;
         height: 40px;
-        border-radius: 8px;
-        background: #fdb927;
+        border-radius: 50%;
+        background: transparent;
+        overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -2224,13 +2277,14 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    border-radius: 6px;
+    border-radius: 50%;
   }
 
   width: 40px;
   height: 40px;
-  border-radius: 10px;
-  background: #fdb927;
+  border-radius: 50%;
+  background: transparent;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;

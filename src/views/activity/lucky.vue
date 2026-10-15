@@ -137,6 +137,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { pickToastMessage } from '@/utils/toast'
 import { useRouter } from 'vue-router'
 import {
   getLuckySpinInfo,
@@ -283,7 +284,7 @@ function parseWinnerName(name: string, userId: number): string {
 }
 
 function resolveMessage(payload: any, fallback: string): string {
-  return payload?.message || payload?.msg || fallback
+  return pickToastMessage(payload, fallback)
 }
 
 async function fetchLuckyInfo(showErrorToast = false) {
@@ -309,7 +310,7 @@ async function fetchLuckyInfo(showErrorToast = false) {
     applyPrizeList(res.prize_list || [])
   } catch (e: any) {
     if (showErrorToast) {
-      showToast(e?.message || t('activityLucky.loadInfoFailed'))
+      showToast(pickToastMessage(e, t('activityLucky.loadInfoFailed')))
     }
   }
 }
@@ -334,7 +335,7 @@ async function fetchRecentWinners(showErrorToast = false) {
     }
   } catch (e: any) {
     if (showErrorToast) {
-      showToast(e?.message || t('activityLucky.loadWinnersFailed'))
+      showToast(pickToastMessage(e, t('activityLucky.loadWinnersFailed')))
     }
   }
 }
@@ -351,7 +352,7 @@ async function fetchSpinRecords(showErrorToast = false) {
     recordList.value = res.list || []
   } catch (e: any) {
     if (showErrorToast) {
-      showToast(e?.message || t('activityLucky.loadRecordsFailed'))
+      showToast(pickToastMessage(e, t('activityLucky.loadRecordsFailed')))
     }
   }
 }
@@ -435,7 +436,7 @@ const spin = async () => {
     result = res
   } catch (e: any) {
     isSpinning.value = false
-    showToast(e?.message || t('activityLucky.spinFailed'))
+    showToast(pickToastMessage(e, t('activityLucky.spinFailed')))
     return
   }
   if (!result) {

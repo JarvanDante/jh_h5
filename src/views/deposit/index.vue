@@ -78,6 +78,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast, showLoadingToast, closeToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { getPaymentList, getDepositNonce, createDepositOrder, type PaymentChannel } from '@/api'
 import { useUserStore } from '@/stores/user'
 
@@ -244,9 +245,14 @@ const handleDeposit = async () => {
     console.log('Deposit order response:', orderRes)
 
     // 3. 处理返回结果 - 跳转到支付页面显示二维码
-    if (orderRes.result === 'ok' && orderRes.image_url) {
+    if (orderRes.result === 'ok') {
       // 将订单数据编码后传递给支付页面
-      const orderData = encodeURIComponent(JSON.stringify(orderRes))
+      const orderData = encodeURIComponent(
+        JSON.stringify({
+          ...orderRes,
+          remark: selectedChannel.value?.remark || '',
+        }),
+      )
       router.push({
         path: '/deposit/payment',
         query: {
@@ -262,13 +268,7 @@ const handleDeposit = async () => {
     console.error('Deposit failed:', error)
 
     // 处理错误信息
-    if (error.response?.data?.msg) {
-      showToast(error.response.data.msg)
-    } else if (error.message) {
-      showToast(error.message)
-    } else {
-      showToast(t('deposit.depositFailed'))
-    }
+    showAppToast(error.response?.data || error, t('deposit.depositFailed'))
   }
 }
 

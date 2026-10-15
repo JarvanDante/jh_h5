@@ -120,6 +120,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { getBalanceLog, type BalanceLogItem } from '@/api/modules/balance'
 
 const router = useRouter()
@@ -232,7 +233,7 @@ const loadDepositRecords = async (isLoadMore = false) => {
       finished.value = false
     }
   } catch (error: any) {
-    showToast(error.message || t('depositHistory.loadFailed'))
+    showAppToast(error, t('depositHistory.loadFailed'))
   } finally {
     loading.value = false
   }

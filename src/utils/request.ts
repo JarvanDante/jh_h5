@@ -7,7 +7,7 @@ function getLanguageHeader(): string {
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 const apiSignAppId = import.meta.env.VITE_API_SIGN_APP_ID || 'h5'
-const signSkipPathSuffixes = ['/login', '/logout', '/refresh-token', '/captcha', '/sign-session']
+const signSkipPathSuffixes = ['/login', '/logout', '/refresh-token', '/captcha', '/sign-session', '/register', '/quickRegister']
 const signSessionRenewSkewMs = 30 * 1000
 const allowInsecureNoSign =
   import.meta.env.VITE_ALLOW_INSECURE_NO_SIGN === '1' ||
@@ -450,7 +450,14 @@ class Request {
         result.message = this.normalizeMessage(result.message)
       }
     }
-    return result.data || result
+
+    const data = result?.data
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      if (result.msg && !data.msg) data.msg = result.msg
+      if (result.message && !data.message) data.message = result.message
+      return data
+    }
+    return data || result
   }
 
   async get<T = any>(url: string, options?: { params?: Record<string, any> }): Promise<T> {

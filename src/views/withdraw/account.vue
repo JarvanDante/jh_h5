@@ -96,6 +96,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast, showDialog } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { getBankCardList, setDefaultBankCard, deleteBankCard, type BankCard } from '@/api'
 
 const router = useRouter()
@@ -159,11 +160,11 @@ const handleSetDefault = async (cardId: number) => {
       // 重新加载银行卡列表
       await loadBankCards()
     } else {
-      showToast(res.message || t('withdrawAccount.setDefaultFailed'))
+      showAppToast(res, t('withdrawAccount.setDefaultFailed'))
     }
   } catch (error: any) {
     console.error('设置默认银行卡失败:', error)
-    showToast(error.message || t('withdrawAccount.setDefaultFailed'))
+    showAppToast(error, t('withdrawAccount.setDefaultFailed'))
   }
 }
 
@@ -184,12 +185,12 @@ const handleDelete = async (cardId: number) => {
       // 重新加载银行卡列表
       await loadBankCards()
     } else {
-      showToast(res.message || t('withdrawAccount.deleteFailed'))
+      showAppToast(res, t('withdrawAccount.deleteFailed'))
     }
   } catch (error: any) {
     if (error !== 'cancel') {
       console.error('删除失败:', error)
-      showToast(error.message || t('withdrawAccount.deleteFailed'))
+      showAppToast(error, t('withdrawAccount.deleteFailed'))
     }
   }
 }

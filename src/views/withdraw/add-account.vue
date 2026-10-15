@@ -91,6 +91,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { addBankCard } from '@/api'
 
 const router = useRouter()
@@ -159,11 +160,11 @@ const handleSubmit = async () => {
         router.back()
       }, 1000)
     } else {
-      showToast(res.message || t('withdrawAddAccount.failed'))
+      showAppToast(res, t('withdrawAddAccount.failed'))
     }
   } catch (error: any) {
     console.error('添加账户失败:', error)
-    showToast(error.message || t('withdrawAddAccount.failed'))
+    showAppToast(error, t('withdrawAddAccount.failed'))
   }
 }
 </script>

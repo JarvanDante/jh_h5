@@ -28,6 +28,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { showToast } from 'vant'
+import { showAppToast } from '@/utils/toast'
 import { gameApi } from '@/api/modules/game'
 import { useUserStore } from '@/stores/user'
 
@@ -72,7 +73,7 @@ const enterGame = async () => {
       error.value = true
     }
   } catch (err: any) {
-    showToast(err?.message || t('game.enterFailed'))
+    showAppToast(err, t('game.enterFailed'))
     error.value = true
   } finally {
     loading.value = false

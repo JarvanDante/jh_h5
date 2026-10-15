@@ -276,12 +276,14 @@ html {
 }
 
 
-// Vant Toast (force readable)
+// Vant Toast：必须同时写 --van-toast-background（Vant 4 变量名）和实色，避免白底白字空框
 .van-toast {
   --van-toast-text-color: #fff;
-  --van-toast-background-color: rgba(0, 0, 0, 0.78);
+  --van-toast-background: rgba(0, 0, 0, 0.78);
+  background: rgba(0, 0, 0, 0.78) !important;
+  color: #fff !important;
   max-width: 84vw;
-  min-width: 160px;
+  min-width: 120px;
   padding: 12px 16px;
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
@@ -289,7 +291,7 @@ html {
 }
 
 .van-toast__text {
-  color: #fff;
+  color: #fff !important;
   line-height: 1.35;
   text-align: center;
   white-space: normal;

@@ -180,6 +180,8 @@ import { getVipUpgradeProgress, type VipUpgradeProgressResponse } from '@/api/mo
 import type { GradeInfo } from '@/api/modules/user'
 import FundPasswordDialog from '@/components/FundPasswordDialog.vue'
 import { signedFetch } from '@/utils/request'
+import { recallGameBalance } from '@/api'
+import { showAppToast } from '@/utils/toast'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -344,7 +346,26 @@ const refreshBalance = async () => {
   try {
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 
-    // 先调用刷新余额接口
+    try {
+      const recallRes: any = await recallGameBalance()
+      if (recallRes?.code && recallRes.code !== 0) {
+        showAppToast(recallRes, t('home.recallFailed'))
+      } else if (recallRes && recallRes.success === false) {
+        showAppToast(recallRes, t('home.recallFailed'))
+      } else {
+        const amount = Number(recallRes?.recalled_amount || 0)
+        showToast(
+          amount > 0
+            ? t('home.recallSuccessAmount', { amount: amount.toFixed(2) })
+            : t('home.recallSuccess'),
+        )
+      }
+    } catch (error) {
+      console.error('Failed to recall game balance:', error)
+      showToast(t('home.recallFailed'))
+    }
+
+    // 再刷新中心钱包余额
     const refreshBalanceUrl = `${apiBaseUrl}/frontend/balance/refresh-balance`
     const refreshBalanceResponse = await signedFetch(refreshBalanceUrl, {
       method: 'GET',
@@ -461,7 +482,7 @@ const refreshBalance = async () => {
       // 同步刷新VIP进度（充值后可能变化）
       fetchVipProgress()
     } else {
-      showToast(refreshBalanceResult.msg || t('home.refreshBalanceFailed'))
+      showAppToast(refreshBalanceResult, t('home.refreshBalanceFailed'))
     }
   } catch (error) {
     console.error('Failed to refresh balance:', error)
