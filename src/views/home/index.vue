@@ -1422,7 +1422,7 @@ onUnmounted(() => {
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 414px;
+    max-width: 480px;
     z-index: 100;
     display: flex;
     justify-content: space-between;
@@ -1431,7 +1431,7 @@ onUnmounted(() => {
     background: $gradient-purple;
     box-shadow: $shadow-md;
 
-    @media (max-width: 414px) {
+    @media (max-width: 480px) {
       left: 0;
       transform: none;
       max-width: 100%;
@@ -1802,7 +1802,7 @@ onUnmounted(() => {
     &.sidebar-fixed {
       position: fixed;
       top: 72px;
-      left: calc(50% - 207px + 8px);
+      left: calc(50% - 240px + 8px);
       width: 80px;
       max-height: calc(100vh - 64px - 60px);
       overflow-y: auto;
@@ -1812,7 +1812,7 @@ onUnmounted(() => {
         display: none;
       }
 
-      @media (max-width: 414px) {
+      @media (max-width: 480px) {
         left: 8px;
       }
     }
@@ -2114,11 +2114,11 @@ onUnmounted(() => {
   // 浮动活动入口
   .float-activity {
     position: fixed;
-    right: calc(50% - 207px + 2px);
+    right: calc(50% - 240px + 2px);
     top: 400px;
     z-index: 998;
 
-    @media (max-width: 414px) {
+    @media (max-width: 480px) {
       right: 2px;
     }
     width: 56px;
@@ -2182,14 +2182,14 @@ onUnmounted(() => {
 
   .float-buttons {
     position: fixed;
-    right: calc(50% - 207px + 8px);
+    right: calc(50% - 240px + 8px);
     bottom: 120px;
     display: flex;
     flex-direction: column;
     gap: 6px;
     z-index: 999;
 
-    @media (max-width: 414px) {
+    @media (max-width: 480px) {
       right: 8px;
     }
 
@@ -2228,12 +2228,12 @@ onUnmounted(() => {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 414px;
+  max-width: 480px;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
   z-index: 9998;
 
-  @media (max-width: 414px) {
+  @media (max-width: 480px) {
     left: 0;
     transform: none;
     max-width: 100%;
@@ -2243,7 +2243,7 @@ onUnmounted(() => {
 .drawer-panel {
   position: fixed;
   top: 0;
-  right: calc(50% - 207px);
+  right: calc(50% - 240px);
   width: 220px;
   height: 100%;
   background: linear-gradient(180deg, #552583 0%, #3a1a5e 100%);
@@ -2253,7 +2253,7 @@ onUnmounted(() => {
   z-index: 9999;
   overflow: hidden;
 
-  @media (max-width: 414px) {
+  @media (max-width: 480px) {
     right: 0;
   }
 }
@@ -2368,7 +2368,7 @@ onUnmounted(() => {
 
 .lhc-panel {
   position: fixed;
-  right: calc((100vw - min(100vw, 414px)) / 2 + 8px);
+  right: calc((100vw - min(100vw, 480px)) / 2 + 8px);
   bottom: 72px;
   width: 300px;
   height: 430px;

@@ -318,7 +318,7 @@ onMounted(() => {
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 414px;
+    max-width: 480px;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     z-index: 100;
@@ -327,7 +327,7 @@ onMounted(() => {
     justify-content: center;
     padding: 0 24px;
 
-    @media (max-width: 414px) {
+    @media (max-width: 480px) {
       left: 0;
       transform: none;
       max-width: 100%;

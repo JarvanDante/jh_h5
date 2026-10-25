@@ -316,7 +316,7 @@ const navigateTo = (path: string) => {
 
 .app-container {
   width: 100%;
-  max-width: 414px;
+  max-width: 480px;
   height: 100%;
   background: #000;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
@@ -325,8 +325,8 @@ const navigateTo = (path: string) => {
   overflow-x: hidden;
 }
 
-// 移动设备适配：小于 414px 时占满屏幕
-@media (max-width: 414px) {
+// 手机（含宽屏）占满屏幕，更宽的窗口保持 480 居中
+@media (max-width: 480px) {
   #app {
     background: #000;
   }
@@ -344,7 +344,7 @@ const navigateTo = (path: string) => {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 414px;
+  max-width: 480px;
   height: 60px;
   background: #1f1f1f;
   border-top: 1px solid #333;
@@ -389,7 +389,7 @@ const navigateTo = (path: string) => {
     }
   }
 
-  @media (max-width: 414px) {
+  @media (max-width: 480px) {
     left: 0;
     transform: none;
     max-width: 100%;
