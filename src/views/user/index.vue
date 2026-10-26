@@ -169,6 +169,11 @@
   </div>
 </template>
 
+<script lang="ts">
+// 会员页会被挂载两次，自动回收用模块级时间挡住第二次。
+let memberAutoRecallAt = 0
+</script>
+
 <script setup lang="ts">
 import { ref, computed, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
@@ -330,7 +335,7 @@ const copyId = () => {
   showToast(t('user.copyIdSuccess'))
 }
 
-const refreshBalance = async () => {
+const refreshBalance = async (options?: { silentEmpty?: boolean }) => {
   if (!userStore.isLogin) {
     showToast(t('common.pleaseLoginFirst'))
     return
@@ -354,11 +359,11 @@ const refreshBalance = async () => {
         showAppToast(recallRes, t('home.recallFailed'))
       } else {
         const amount = Number(recallRes?.recalled_amount || 0)
-        showToast(
-          amount > 0
-            ? t('home.recallSuccessAmount', { amount: amount.toFixed(2) })
-            : t('home.recallSuccess'),
-        )
+        if (amount > 0) {
+          showToast(t('home.recallSuccessAmount', { amount: amount.toFixed(2) }))
+        } else if (!options?.silentEmpty) {
+          showToast(t('home.recallSuccess'))
+        }
       }
     } catch (error) {
       console.error('Failed to recall game balance:', error)
@@ -770,9 +775,13 @@ onMounted(async () => {
 
   // 清除可能损坏的数据
   try {
-    // 如果已登录，自动刷新余额
+    // 如果已登录，自动回收并刷新余额。没有可回收金额时不提示。
     if (userStore.isLogin) {
-      refreshBalance()
+      const now = Date.now()
+      if (now - memberAutoRecallAt > 1500) {
+        memberAutoRecallAt = now
+        refreshBalance({ silentEmpty: true })
+      }
     }
   } catch (error) {
     console.error('Error on mount:', error)
