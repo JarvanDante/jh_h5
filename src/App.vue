@@ -87,10 +87,12 @@ let loadingShownAt = Date.now()
 let showTimer: number | null = null
 let hideTimer: number | null = null
 let forceHideTimer: number | null = null
-// 防闪烁：耗时小于 300ms 的加载不展示
+// 不足 300ms 的请求不展示。一次进页面会连着打好几个接口，
+// 全部结束后再静默一小段，避免每个接口各闪一次。
 const showDelayMs = 300
 const minLoadingMs = 100
-const maxLoadingMs = 2000
+const settleMs = 450
+const maxLoadingMs = 12000
 
 const scheduleForceHide = () => {
   // 兜底：避免计数异常导致全局 loading 永久不消失
@@ -146,7 +148,7 @@ const hideLoading = () => {
   }
 
   const elapsed = Date.now() - loadingShownAt
-  const remain = Math.max(0, minLoadingMs - elapsed)
+  const remain = Math.max(settleMs, minLoadingMs - elapsed)
 
   if (hideTimer) {
     window.clearTimeout(hideTimer)
